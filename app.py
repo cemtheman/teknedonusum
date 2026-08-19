@@ -1,10 +1,16 @@
 import streamlit as st
 
 from calculations.fleet import calculate_fleet
+from calculations.presentation import build_technical_scenario_presentation
+from calculations.technical_scenario import evaluate_preliminary_technical_scenario
+from config.commission_constraints import DALYAN_COMMISSION_CONSTRAINTS
+from config.geometry import PRELIMINARY_VESSEL_GEOMETRY
+from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
 from config.vessel_factory import build_vessel_specs
 from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
+from ui.technical_scenario import render_technical_scenario
 from ui.vessel_detail import render_vessel_details
 
 
@@ -71,6 +77,37 @@ def main():
   )
 
   render_fleet_dashboard(VESSEL_SPECS, inputs, fleet)
+
+  geometry = PRELIMINARY_VESSEL_GEOMETRY["v1"]
+  assumptions = V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
+  scenario = evaluate_preliminary_technical_scenario(
+      geometry=geometry,
+      constraints=DALYAN_COMMISSION_CONSTRAINTS,
+      passenger_capacity=VESSEL_SPECS["v1"]["capacity"],
+      speed_knots=DALYAN_COMMISSION_CONSTRAINTS.minimum_required_speed_knots,
+      daily_distance_nm=inputs.daily_miles,
+      form_factor=assumptions.form_factor,
+      residual_resistance_n=assumptions.residual_resistance_n,
+      appendage_resistance_n=assumptions.appendage_resistance_n,
+      propulsive_efficiency=assumptions.propulsive_efficiency,
+      motor_efficiency=assumptions.motor_efficiency,
+      design_margin_fraction=assumptions.design_margin_fraction,
+      battery_capacity_kwh=VESSEL_SPECS["v1"]["batCapacity"],
+      usable_energy_fraction=assumptions.usable_energy_fraction,
+      operational_reserve_fraction=assumptions.operational_reserve_fraction,
+      hotel_load_kw=assumptions.hotel_load_kw,
+      roof_length_fraction_of_loa=assumptions.roof_length_fraction_of_loa,
+      usable_roof_width_m=assumptions.usable_roof_width_m,
+      panel_coverage_fraction=assumptions.panel_coverage_fraction,
+      panel_efficiency=assumptions.panel_efficiency,
+      peak_sun_hours=assumptions.peak_sun_hours,
+      solar_derating_factor=assumptions.solar_derating_factor,
+  )
+  presentation = build_technical_scenario_presentation(scenario)
+  st.markdown(
+      "### 12 m / 24 Yolcu Tek Gövdeli Tekne — Ön Teknik Referans Senaryosu"
+  )
+  render_technical_scenario(presentation)
 
   render_vessel_details(VESSEL_SPECS, inputs)
 

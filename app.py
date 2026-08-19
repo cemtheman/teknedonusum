@@ -9,6 +9,7 @@ from calculations.fleet import calculate_fleet
 from calculations.vessel_physics import calc_calibrated_vessel_physics
 from config.vessels import BASE_VESSEL_SPECS
 from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
+from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 
 
@@ -99,120 +100,7 @@ fleet = calculate_fleet(
     inputs.operating_days,
 )
 
-total_vessels = fleet.total_vessels
-total_capacity = fleet.total_capacity
-grants_per_type = fleet.grants_per_type
-fleet_total_cost = fleet.fleet_total_cost
-fleet_total_grant = fleet.fleet_total_grant
-fleet_total_capex = fleet.fleet_total_capex
-fleet_total_co2_reduction = fleet.fleet_total_co2_reduction
-fleet_daily_solar_kwh = fleet.fleet_daily_solar_kwh
-fleet_daily_grid_kwh = fleet.fleet_daily_grid_kwh
-fleet_daily_brut_kwh = fleet.fleet_daily_brut_kwh
-equivalent_trees = fleet.equivalent_trees
-fleet_annual_grid_kwh = fleet.fleet_annual_grid_kwh
-fleet_annual_solar_kwh = fleet.fleet_annual_solar_kwh
-solar_coverage_ratio = fleet.solar_coverage_ratio
-
-# --- Fleet Summary Dashboard Section ---
-st.subheader("🚢 Filo Geneli Toplam Dönüşüm ve Finansman Özeti")
-f_kpi1, f_kpi2, f_kpi3, f_kpi4 = st.columns(4)
-with f_kpi1:
-  st.metric("Hedef Dönüştürülecek Tekne", f"{total_vessels} Adet")
-with f_kpi2:
-  st.metric("Toplam Filo Yolcu Kapasitesi", f"{total_capacity:,} Kişi")
-with f_kpi3:
-  st.metric("İhtiyaç Duyulan Toplam Hibe", f"₺{int(fleet_total_grant):,}")
-with f_kpi4:
-  st.metric("Toplam Net Özkaynak Yatırımı", f"₺{int(fleet_total_capex):,}")
-
-# Fleet Breakdown Table
-fleet_summary_df = pd.DataFrame({
-    "Tekne Tipi & Kategori": [
-        "Tip 1: 12m Monohull (Kooperatif %55)",
-        "Tip 2: 13.5m Katamaran (Kooperatif %55)",
-        "Tip 3: 14m Katamaran (Kooperatif %70)",
-        "Tip 4A: 12m Monohull (Bireysel %40)",
-        "Tip 4B: 13.5m Katamaran (Bireysel %40)",
-        "TOPLAM",
-    ],
-    "Adet": [
-        inputs.count_v1,
-        inputs.count_v2,
-        inputs.count_v3,
-        inputs.count_v4_24,
-        inputs.count_v4_32,
-        total_vessels,
-    ],
-    "Birim Kapasite": ["24 Kişi", "32 Kişi", "54 Kişi", "24 Kişi", "32 Kişi", "-"],
-    "Toplam Kapasite": [
-        f"{inputs.count_v1 * 24} Kişi",
-        f"{inputs.count_v2 * 32} Kişi",
-        f"{inputs.count_v3 * 54} Kişi",
-        f"{inputs.count_v4_24 * 24} Kişi",
-        f"{inputs.count_v4_32 * 32} Kişi",
-        f"{total_capacity:,} Kişi",
-    ],
-    "Birim Maliyet (EUR)": [
-        f"€{VESSEL_SPECS['v1']['totalCostEur']:,}",
-        f"€{VESSEL_SPECS['v2']['totalCostEur']:,}",
-        f"€{VESSEL_SPECS['v3']['totalCostEur']:,}",
-        f"€{VESSEL_SPECS['v4_24']['totalCostEur']:,}",
-        f"€{VESSEL_SPECS['v4_32']['totalCostEur']:,}",
-        "-",
-    ],
-    "Birim Maliyet (TL)": [
-        f"₺{VESSEL_SPECS['v1']['totalCost']:,}",
-        f"₺{VESSEL_SPECS['v2']['totalCost']:,}",
-        f"₺{VESSEL_SPECS['v3']['totalCost']:,}",
-        f"₺{VESSEL_SPECS['v4_24']['totalCost']:,}",
-        f"₺{VESSEL_SPECS['v4_32']['totalCost']:,}",
-        "-",
-    ],
-    "Brüt Yatırım (TL)": [
-        f"₺{inputs.count_v1 * VESSEL_SPECS['v1']['totalCost']:,}",
-        f"₺{inputs.count_v2 * VESSEL_SPECS['v2']['totalCost']:,}",
-        f"₺{inputs.count_v3 * VESSEL_SPECS['v3']['totalCost']:,}",
-        f"₺{inputs.count_v4_24 * VESSEL_SPECS['v4_24']['totalCost']:,}",
-        f"₺{inputs.count_v4_32 * VESSEL_SPECS['v4_32']['totalCost']:,}",
-        f"₺{fleet_total_cost:,}",
-    ],
-    "Toplam Hibe Miktarı": [
-        f"₺{int(inputs.count_v1 * grants_per_type['v1']):,}",
-        f"₺{int(inputs.count_v2 * grants_per_type['v2']):,}",
-        f"₺{int(inputs.count_v3 * grants_per_type['v3']):,}",
-        f"₺{int(inputs.count_v4_24 * grants_per_type['v4_24']):,}",
-        f"₺{int(inputs.count_v4_32 * grants_per_type['v4_32']):,}",
-        f"₺{int(fleet_total_grant):,}",
-    ],
-    "Net Özkaynak İhtiyacı": [
-        f"₺{int(inputs.count_v1 * (VESSEL_SPECS['v1']['totalCost'] - grants_per_type['v1'])):,}",
-        f"₺{int(inputs.count_v2 * (VESSEL_SPECS['v2']['totalCost'] - grants_per_type['v2'])):,}",
-        f"₺{int(inputs.count_v3 * (VESSEL_SPECS['v3']['totalCost'] - grants_per_type['v3'])):,}",
-        f"₺{int(inputs.count_v4_24 * (VESSEL_SPECS['v4_24']['totalCost'] - grants_per_type['v4_24'])):,}",
-        f"₺{int(inputs.count_v4_32 * (VESSEL_SPECS['v4_32']['totalCost'] - grants_per_type['v4_32'])):,}",
-        f"₺{int(fleet_total_capex):,}",
-    ],
-})
-st.table(fleet_summary_df)
-
-# CO2 Reduction & Tree Equivalent Banner
-co2_html = f"""
-<div style="background-color: #ECFDF5; border: 1.5px solid #10B981; border-radius: 8px; padding: 14px 20px; text-align: center; margin-top: 10px; margin-bottom: 12px;">
-    <p style="font-size: 1.25rem; font-weight: 700; color: #065F46; margin: 0;">🌱 Filo Dönüşümü İle Yıllık Toplam CO₂ Salınım Azaltımı: {fleet_total_co2_reduction:,.1f} Ton / Yıl</p>
-    <p style="font-size: 1.05rem; font-weight: 600; color: #047857; margin: 4px 0 0 0;">🌳 Bu Çevresel Kazanç Yılda Yaklaşık <b>{equivalent_trees:,} Yetişkin Ağacın</b> Temizlediği Karbon Miktarına Eşdeğerdir.</p>
-</div>
-"""
-st.markdown(co2_html, unsafe_allow_html=True)
-
-# Solar & Grid Electricity Balance Banner
-solar_html = f"""
-<div style="background-color: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 8px; padding: 14px 20px; text-align: center; margin-bottom: 20px;">
-    <p style="font-size: 1.25rem; font-weight: 700; color: #1E40AF; margin: 0;">⚡ Filo Elektrik ve Şebeke Şarj İhtiyacı Dengesi ({inputs.sun_hours} Saat/Gün Güneşlenme)</p>
-    <p style="font-size: 1.05rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">☀️ Günlük Güneş Üretimi: <b>{fleet_daily_solar_kwh:,.1f} kWh</b> (%{solar_coverage_ratio:.1f} Karşılama) | 🔌 Liman Şebeke Şarj İhtiyacı: <b>{fleet_daily_grid_kwh:,.1f} kWh/gün</b> (Sezonluk: <b>{fleet_annual_grid_kwh:,.0f} kWh/sezon</b>)</p>
-</div>
-"""
-st.markdown(solar_html, unsafe_allow_html=True)
+render_fleet_dashboard(VESSEL_SPECS, inputs, fleet)
 
 st.divider()
 

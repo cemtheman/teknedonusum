@@ -53,7 +53,7 @@ def evaluate_commission_compliance(
           actual_value=passenger_capacity,
           required_value=(
               " / ".join(str(value) for value in constraints.allowed_passenger_capacities)
-              + " passengers"
+              + " yolcu"
           ),
           status=(
               ComplianceStatus.PASS
@@ -64,7 +64,7 @@ def evaluate_commission_compliance(
       ComplianceCheck(
           criterion="minimum_speed",
           actual_value=achieved_speed_knots,
-          required_value=f">= {constraints.minimum_required_speed_knots:.1f} knots",
+          required_value=f"≥ {constraints.minimum_required_speed_knots:.1f} knot",
           status=(
               ComplianceStatus.PASS
               if achieved_speed_knots >= constraints.minimum_required_speed_knots
@@ -74,7 +74,7 @@ def evaluate_commission_compliance(
       ComplianceCheck(
           criterion="minimum_navigation_range",
           actual_value=navigation_range_nm,
-          required_value=f">= {constraints.minimum_navigation_range_nm:.1f} NM",
+          required_value=f"≥ {constraints.minimum_navigation_range_nm:.1f} NM",
           status=(
               ComplianceStatus.PASS
               if navigation_range_nm >= constraints.minimum_navigation_range_nm
@@ -84,7 +84,7 @@ def evaluate_commission_compliance(
       ComplianceCheck(
           criterion="motor_efficiency",
           actual_value=motor_efficiency,
-          required_value=f">= {constraints.minimum_motor_efficiency * 100:.1f}%",
+          required_value=f"≥ %{constraints.minimum_motor_efficiency * 100:.1f}",
           status=(
               ComplianceStatus.PASS
               if motor_efficiency >= constraints.minimum_motor_efficiency
@@ -94,7 +94,7 @@ def evaluate_commission_compliance(
       ComplianceCheck(
           criterion="battery_capacity",
           actual_value=battery_capacity_kwh,
-          required_value=f">= {constraints.minimum_battery_capacity_kwh:.1f} kWh",
+          required_value=f"≥ {constraints.minimum_battery_capacity_kwh:.1f} kWh",
           status=(
               ComplianceStatus.PASS
               if battery_capacity_kwh >= constraints.minimum_battery_capacity_kwh
@@ -105,7 +105,8 @@ def evaluate_commission_compliance(
           criterion="roof_length_fraction",
           actual_value=roof_length_fraction_of_loa,
           required_value=(
-              f">= {constraints.minimum_roof_length_fraction_of_loa * 100:.1f}% of LOA"
+              "≥ LOA'nın "
+              f"%{constraints.minimum_roof_length_fraction_of_loa * 100:.1f}'ı"
           ),
           status=(
               ComplianceStatus.PASS

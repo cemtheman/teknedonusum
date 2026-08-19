@@ -107,13 +107,13 @@ def test_categories_are_preliminary_estimates():
 def test_compliance_mapping_is_exact():
   scenario, presentation = build_presentation()
   expected_labels = [
-      "LOA",
-      "Passenger Capacity",
-      "Minimum Speed",
-      "Navigation Range",
-      "Motor Efficiency",
-      "Battery Capacity",
-      "Roof Length",
+      "Tam Boy (LOA)",
+      "Yolcu Kapasitesi",
+      "Asgari Hız",
+      "Seyir Menzili",
+      "Motor Verimi",
+      "Batarya Kapasitesi",
+      "Çatı Uzunluğu",
   ]
 
   assert [value.label for value in presentation.compliance_values] == expected_labels

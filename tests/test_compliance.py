@@ -111,12 +111,12 @@ def test_required_value_strings_and_raw_actual_values():
   result = evaluate()
   checks = checks_by_criterion(result)
   assert checks["loa"].required_value == "12.0–14.0 m"
-  assert checks["passenger_capacity"].required_value == "24 / 32 / 54 passengers"
-  assert checks["minimum_speed"].required_value == ">= 10.0 knots"
-  assert checks["minimum_navigation_range"].required_value == ">= 15.0 NM"
-  assert checks["motor_efficiency"].required_value == ">= 95.0%"
-  assert checks["battery_capacity"].required_value == ">= 20.0 kWh"
-  assert checks["roof_length_fraction"].required_value == ">= 80.0% of LOA"
+  assert checks["passenger_capacity"].required_value == "24 / 32 / 54 yolcu"
+  assert checks["minimum_speed"].required_value == "≥ 10.0 knot"
+  assert checks["minimum_navigation_range"].required_value == "≥ 15.0 NM"
+  assert checks["motor_efficiency"].required_value == "≥ %95.0"
+  assert checks["battery_capacity"].required_value == "≥ 20.0 kWh"
+  assert checks["roof_length_fraction"].required_value == "≥ LOA'nın %80.0'ı"
   assert checks["motor_efficiency"].actual_value == 0.95
 
 

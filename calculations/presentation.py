@@ -8,13 +8,13 @@ from models.presentation import (
 
 
 COMPLIANCE_LABELS = {
-    "loa": "LOA",
-    "passenger_capacity": "Passenger Capacity",
-    "minimum_speed": "Minimum Speed",
-    "minimum_navigation_range": "Navigation Range",
-    "motor_efficiency": "Motor Efficiency",
-    "battery_capacity": "Battery Capacity",
-    "roof_length_fraction": "Roof Length",
+    "loa": "Tam Boy (LOA)",
+    "passenger_capacity": "Yolcu Kapasitesi",
+    "minimum_speed": "Asgari Hız",
+    "minimum_navigation_range": "Seyir Menzili",
+    "motor_efficiency": "Motor Verimi",
+    "battery_capacity": "Batarya Kapasitesi",
+    "roof_length_fraction": "Çatı Uzunluğu",
 }
 
 
@@ -27,35 +27,35 @@ def build_technical_scenario_presentation(
   primary_values = (
       TechnicalDisplayValue(
           key="installed_motor_power",
-          label="Installed Motor Power",
+          label="Kurulu Motor Gücü",
           value=scenario.propulsion.installed_power_kw,
           unit="kW",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="electrical_input_power",
-          label="Electrical Input Power",
+          label="Elektriksel Giriş Gücü",
           value=scenario.propulsion.electrical_input_power_kw,
           unit="kW",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="battery_navigation_range",
-          label="Battery-only Navigation Range",
+          label="Yalnız Batarya ile Seyir Menzili",
           value=scenario.navigation_energy.navigation_range_nm,
           unit="NM",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="daily_solar_energy",
-          label="Daily Solar Production",
+          label="Günlük Güneş Enerjisi Üretimi",
           value=scenario.solar.daily_solar_energy_kwh,
           unit="kWh/day",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="net_external_energy",
-          label="Net External Energy Requirement",
+          label="Günlük Harici Enerji İhtiyacı",
           value=scenario.daily_energy_balance.net_external_energy_required_kwh,
           unit="kWh/day",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
@@ -74,35 +74,35 @@ def build_technical_scenario_presentation(
   detail_values = (
       TechnicalDisplayValue(
           key="effective_power",
-          label="Effective Power",
+          label="Efektif Güç",
           value=scenario.resistance.effective_power_kw,
           unit="kW",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="motor_output_power",
-          label="Motor Mechanical Output",
+          label="Motor Çıkış Gücü",
           value=scenario.propulsion.motor_output_power_kw,
           unit="kW",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="energy_per_nm",
-          label="Energy per Nautical Mile",
+          label="Mil Başına Enerji Tüketimi",
           value=scenario.navigation_energy.energy_per_nm_kwh,
           unit="kWh/NM",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="solar_coverage",
-          label="Solar Coverage",
+          label="Güneş Enerjisi Karşılama Oranı",
           value=scenario.daily_energy_balance.solar_coverage_ratio,
           unit="ratio",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,
       ),
       TechnicalDisplayValue(
           key="excess_solar_energy",
-          label="Excess Solar Energy",
+          label="Fazla Güneş Enerjisi",
           value=scenario.daily_energy_balance.excess_solar_energy_kwh,
           unit="kWh/day",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,

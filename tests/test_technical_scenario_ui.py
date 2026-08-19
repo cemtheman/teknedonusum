@@ -74,11 +74,11 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   streamlit.error.assert_not_called()
   assert streamlit.metric.call_count == 10
   assert [call.args[0] for call in streamlit.metric.call_args_list[:5]] == [
-      "Installed Motor Power",
-      "Electrical Input Power",
-      "Battery-only Navigation Range",
-      "Daily Solar Production",
-      "Net External Energy Requirement",
+      "Kurulu Motor Gücü",
+      "Elektriksel Giriş Gücü",
+      "Yalnız Batarya ile Seyir Menzili",
+      "Günlük Güneş Enerjisi Üretimi",
+      "Günlük Harici Enerji İhtiyacı",
   ]
   assert [call.args[1] for call in streamlit.metric.call_args_list[:5]] == [
       "25.9 kW",
@@ -88,17 +88,17 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
       "63.1 kWh/gün",
   ]
   assert [call.args[0] for call in streamlit.metric.call_args_list[5:]] == [
-      "Effective Power",
-      "Motor Mechanical Output",
-      "Energy per Nautical Mile",
-      "Solar Coverage",
-      "Excess Solar Energy",
+      "Efektif Güç",
+      "Motor Çıkış Gücü",
+      "Mil Başına Enerji Tüketimi",
+      "Güneş Enerjisi Karşılama Oranı",
+      "Fazla Güneş Enerjisi",
   ]
   assert [call.args[1] for call in streamlit.metric.call_args_list[5:]] == [
       "13.53 kW",
       "22.54 kW",
       "2.52 kWh/NM",
-      "28.5%",
+      "%28.5",
       "0.00 kWh/gün",
   ]
 
@@ -106,17 +106,17 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   assert len(lines) == 7
   assert all(line.startswith("✅") for line in lines)
   assert [line.split(":", 1)[0] for line in lines] == [
-      "✅ LOA",
-      "✅ Passenger Capacity",
-      "✅ Minimum Speed",
-      "✅ Navigation Range",
-      "✅ Motor Efficiency",
-      "✅ Battery Capacity",
-      "✅ Roof Length",
+      "✅ Tam Boy (LOA)",
+      "✅ Yolcu Kapasitesi",
+      "✅ Asgari Hız",
+      "✅ Seyir Menzili",
+      "✅ Motor Verimi",
+      "✅ Batarya Kapasitesi",
+      "✅ Çatı Uzunluğu",
   ]
-  assert "Minimum Speed: 10.0 knot" in lines[2]
-  assert "Motor Efficiency: 95.0%" in lines[4]
-  assert "Roof Length: 80.0% LOA" in lines[6]
+  assert "Asgari Hız: 10.0 knot" in lines[2]
+  assert "Motor Verimi: %95.0 — Gereken: ≥ %95.0" in lines[4]
+  assert "Çatı Uzunluğu: LOA'nın %80.0'ı" in lines[6]
 
 
 def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
@@ -134,7 +134,7 @@ def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
   lines = compliance_lines(streamlit)
   assert len(lines) == 7
   assert all(line.startswith("✅") for line in lines[:6])
-  assert lines[6].startswith("❌ Roof Length: 79.0% LOA")
+  assert lines[6].startswith("❌ Çatı Uzunluğu: LOA'nın %79.0'ı")
 
 
 def test_render_structure_calls_are_exact(monkeypatch):
@@ -152,4 +152,20 @@ def test_render_structure_calls_are_exact(monkeypatch):
       "Teknik Hesap Detayları",
       expanded=False,
   )
-  streamlit.info.assert_called_once()
+  assert [call.args[0] for call in streamlit.caption.call_args_list] == [
+      "Bu bölüm, ön tasarım varsayımlarıyla hesaplanan teknik sonuçları "
+      "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir.",
+      "⚠️ Güç, menzil, güneş enerjisi üretimi ve enerji ihtiyacı sonuçları "
+      "ön tasarım tahminleridir; doğrulanmış nihai tekne performans değerleri "
+      "değildir.",
+      "Efektif güç, teknenin hidrodinamik direncini yenmek için gereken "
+      "güçtür. Kurulu motor gücü ise sevk verimi ve tasarım marjı dikkate "
+      "alınarak elde edilen ön boyutlandırma değeridir.",
+  ]
+  streamlit.info.assert_called_once_with(
+      "Bu analiz ön mühendislik yapılabilirlik değerlendirmesi amacıyla "
+      "hazırlanmıştır. Gerçek tekne geometrisi, direnç/CFD analizleri veya "
+      "model deneyleri, pervane eşleştirmesi, üretici motor verileri ve deniz "
+      "tecrübeleri ile doğrulanmadan nihai tasarım veya sertifikasyon hesabı "
+      "olarak kullanılamaz."
+  )

@@ -24,11 +24,11 @@ def _format_compliance_actual(value):
   if value.criterion == "minimum_navigation_range":
     return f"{value.actual_value:.1f} NM"
   if value.criterion == "motor_efficiency":
-    return f"{value.actual_value * 100:.1f}%"
+    return f"%{value.actual_value * 100:.1f}"
   if value.criterion == "battery_capacity":
     return f"{value.actual_value:.1f} kWh"
   if value.criterion == "roof_length_fraction":
-    return f"{value.actual_value * 100:.1f}% LOA"
+    return f"LOA'nın %{value.actual_value * 100:.1f}'ı"
   return str(value.actual_value)
 
 
@@ -40,7 +40,7 @@ def _format_detail_value(value):
   if value.key == "energy_per_nm":
     return f"{value.value:.2f} kWh/NM"
   if value.key == "solar_coverage":
-    return f"{value.value * 100:.1f}%"
+    return f"%{value.value * 100:.1f}"
   if value.key == "excess_solar_energy":
     return f"{value.value:.2f} kWh/gün"
   return str(value.value)
@@ -70,8 +70,9 @@ def render_technical_scenario(
       st.metric(value.label, _format_primary_value(value))
 
   st.caption(
-      "⚠️ Güç, menzil, güneş üretimi ve enerji sonuçları "
-      "ön tasarım tahminleridir; doğrulanmış nihai tekne performansı değildir."
+      "⚠️ Güç, menzil, güneş enerjisi üretimi ve enerji ihtiyacı sonuçları "
+      "ön tasarım tahminleridir; doğrulanmış nihai tekne performans değerleri "
+      "değildir."
   )
 
   st.markdown("#### Teknik Komisyon Kriterleri")
@@ -95,14 +96,15 @@ def render_technical_scenario(
       with column:
         st.metric(value.label, _format_detail_value(value))
     st.caption(
-        "Effective power gövde direncini yenmek için gereken güçtür. "
-        "Installed motor power ise propulsif verim ve tasarım marjı "
-        "dahil ön boyutlandırma sonucudur."
+        "Efektif güç, teknenin hidrodinamik direncini yenmek için gereken "
+        "güçtür. Kurulu motor gücü ise sevk verimi ve tasarım marjı dikkate "
+        "alınarak elde edilen ön boyutlandırma değeridir."
     )
 
   st.info(
-      "Bu analiz preliminary engineering feasibility amaçlıdır. "
-      "Gerçek tekne geometrisi, direnç/CFD veya model deneyleri, "
-      "pervane eşleştirmesi, üretici motor verileri ve deniz tecrübesi "
-      "ile doğrulanmadan nihai tasarım veya sertifikasyon hesabı olarak kullanılamaz."
+      "Bu analiz ön mühendislik yapılabilirlik değerlendirmesi amacıyla "
+      "hazırlanmıştır. Gerçek tekne geometrisi, direnç/CFD analizleri veya "
+      "model deneyleri, pervane eşleştirmesi, üretici motor verileri ve deniz "
+      "tecrübeleri ile doğrulanmadan nihai tasarım veya sertifikasyon hesabı "
+      "olarak kullanılamaz."
   )

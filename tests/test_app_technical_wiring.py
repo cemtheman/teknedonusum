@@ -24,10 +24,12 @@ def test_technical_scenario_imports_are_present():
   required_imports = {
       "from calculations.presentation import build_technical_scenario_presentation",
       "from calculations.technical_scenario import evaluate_preliminary_technical_scenario",
+      "from calculations.vessel_comparison import build_vessel_technical_comparison",
       "from config.commission_constraints import DALYAN_COMMISSION_CONSTRAINTS",
       "from config.geometry import PRELIMINARY_VESSEL_GEOMETRY",
       "from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS",
       "from ui.technical_scenario import render_technical_scenario",
+      "from ui.vessel_comparison import render_vessel_technical_comparison",
   }
   assert all(import_line in APP_SOURCE for import_line in required_imports)
 
@@ -83,6 +85,18 @@ def test_scenario_uses_required_dynamic_sources_and_assumptions():
 def test_render_order_preserves_legacy_flow():
   fleet_position = APP_SOURCE.index("render_fleet_dashboard(")
   scenario_position = APP_SOURCE.index("render_technical_scenario(")
+  comparison_position = APP_SOURCE.index("render_vessel_technical_comparison(")
   details_position = APP_SOURCE.index("render_vessel_details(")
 
-  assert fleet_position < scenario_position < details_position
+  assert fleet_position < scenario_position < comparison_position < details_position
+
+
+def test_comparison_uses_current_sidebar_operational_inputs():
+  comparison_call = calls_named("build_vessel_technical_comparison")[0]
+
+  assert len(calls_named("build_vessel_technical_comparison")) == 1
+  assert len(calls_named("render_vessel_technical_comparison")) == 1
+  assert keyword_source(comparison_call, "vessel_specs") == "VESSEL_SPECS"
+  assert keyword_source(comparison_call, "cruise_speed") == "inputs.cruise_speed"
+  assert keyword_source(comparison_call, "daily_miles") == "inputs.daily_miles"
+  assert keyword_source(comparison_call, "sun_hours") == "inputs.sun_hours"

@@ -3,6 +3,7 @@ import streamlit as st
 from calculations.fleet import calculate_fleet
 from calculations.presentation import build_technical_scenario_presentation
 from calculations.technical_scenario import evaluate_preliminary_technical_scenario
+from calculations.vessel_comparison import build_vessel_technical_comparison
 from config.commission_constraints import DALYAN_COMMISSION_CONSTRAINTS
 from config.geometry import PRELIMINARY_VESSEL_GEOMETRY
 from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
@@ -11,6 +12,7 @@ from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 from ui.technical_scenario import render_technical_scenario
+from ui.vessel_comparison import render_vessel_technical_comparison
 from ui.vessel_detail import render_vessel_details
 
 
@@ -108,6 +110,14 @@ def main():
       "### 12 m / 24 Yolcu Tek Gövdeli Tekne — Ön Teknik Referans Senaryosu"
   )
   render_technical_scenario(presentation)
+
+  comparison = build_vessel_technical_comparison(
+      vessel_specs=VESSEL_SPECS,
+      cruise_speed=inputs.cruise_speed,
+      daily_miles=inputs.daily_miles,
+      sun_hours=inputs.sun_hours,
+  )
+  render_vessel_technical_comparison(comparison)
 
   render_vessel_details(VESSEL_SPECS, inputs)
 

@@ -102,9 +102,10 @@ def build_vessel_technical_comparison(
           estimated_navigation_range_nm=(
               v1_scenario.navigation_energy.navigation_range_nm
           ),
-          commission_compliance_status=(
-              v1_scenario.compliance.overall_status
-          ),
+          # Full commission compliance is unavailable until verified vessel
+          # speed capability can be evaluated. The evaluated subset remains
+          # available internally on v1_scenario.compliance.
+          commission_compliance_status=None,
           estimate_basis="preliminary_technical_scenario",
       )
   ]

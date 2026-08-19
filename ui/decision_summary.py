@@ -34,8 +34,8 @@ def build_decision_summary_table(rows):
               row.selected_cruise_speed_knots
           ),
           "Batarya (kWh)": _format_decimal(row.battery_capacity_kwh),
-          "Günlük enerji (kWh/gün)": _format_decimal(
-              row.daily_energy_requirement_kwh
+          "Günlük sevk enerjisi (kWh/gün)": _format_decimal(
+              row.daily_propulsion_energy_kwh
           ),
           "Güneş katkısı (kWh/gün)": _format_decimal(
               row.solar_energy_contribution_kwh
@@ -74,7 +74,9 @@ def render_vessel_decision_summary(rows, assumption_rows) -> None:
   st.subheader("📊 Tekne Alternatifleri Karar Özeti")
   st.caption(
       "Sonuçlar ön karar-destek tahminleridir; v1 ile v2/v3 şu aşamada "
-      "farklı teknik hesap derinliği kullanır."
+      "farklı teknik hesap derinliği kullanır. Tam teknik uygunluk, "
+      "doğrulanmış tekne hız kabiliyeti dahil tüm kriterler "
+      "değerlendirildiğinde belirlenebilir."
   )
   st.dataframe(table, hide_index=True, use_container_width=True)
   st.download_button(

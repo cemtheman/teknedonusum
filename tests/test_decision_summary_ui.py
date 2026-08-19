@@ -4,7 +4,6 @@ import pytest
 
 from calculations.assumptions_transparency import AssumptionSourceRow
 from calculations.decision_summary import VesselDecisionSummaryRow
-from models.compliance import ComplianceStatus
 from ui import decision_summary as decision_summary_ui
 
 
@@ -12,7 +11,7 @@ def rows():
   common = {
       "selected_cruise_speed_knots": 6.0,
       "battery_capacity_kwh": 100.0,
-      "daily_energy_requirement_kwh": 43.4758,
+      "daily_propulsion_energy_kwh": 43.4758,
       "solar_energy_contribution_kwh": 54.432,
       "net_grid_energy_requirement_kwh": 0.0,
       "investment_cost_tl": 7999770.0,
@@ -27,7 +26,7 @@ def rows():
           vessel_name="Tip 1",
           passenger_capacity=24,
           estimated_navigation_range_nm=28.0198,
-          commission_compliance_status=ComplianceStatus.PASS,
+          commission_compliance_status=None,
           simple_payback_seasons=4.9994,
           **common,
       ),
@@ -45,7 +44,7 @@ def rows():
           vessel_name="Tip 3",
           passenger_capacity=54,
           estimated_navigation_range_nm=None,
-          commission_compliance_status=ComplianceStatus.FAIL,
+          commission_compliance_status=None,
           simple_payback_seasons=2.2005,
           **common,
       ),
@@ -68,7 +67,7 @@ def test_turkish_formatting_and_unavailable_labels():
 
   assert len(table) == 3
   assert table.loc[0, "Seçilen hız (knot)"] == "6,0"
-  assert table.loc[0, "Günlük enerji (kWh/gün)"] == "43,5"
+  assert table.loc[0, "Günlük sevk enerjisi (kWh/gün)"] == "43,5"
   assert table.loc[0, "Yatırım maliyeti"] == "₺7.999.770"
   assert table.loc[0, "Yıllık işletme tasarrufu"] == "₺647.576"
   assert table.loc[0, "Geri ödeme (sezon)"] == "5,0"
@@ -76,9 +75,9 @@ def test_turkish_formatting_and_unavailable_labels():
   assert table.loc[1, "Tahmini menzil (NM)"] == "Mevcut değil"
   assert table.loc[1, "Geri ödeme (sezon)"] == "Mevcut değil"
   assert list(table["Teknik uygunluk"]) == [
-      "Uygun",
       "Henüz değerlendirilmedi",
-      "Uygun değil",
+      "Henüz değerlendirilmedi",
+      "Henüz değerlendirilmedi",
   ]
 
 
@@ -93,7 +92,9 @@ def test_renderer_is_compact_and_renders_three_rows(monkeypatch):
   streamlit.subheader.assert_called_once_with("📊 Tekne Alternatifleri Karar Özeti")
   streamlit.caption.assert_called_once_with(
       "Sonuçlar ön karar-destek tahminleridir; v1 ile v2/v3 şu aşamada "
-      "farklı teknik hesap derinliği kullanır."
+      "farklı teknik hesap derinliği kullanır. Tam teknik uygunluk, "
+      "doğrulanmış tekne hız kabiliyeti dahil tüm kriterler "
+      "değerlendirildiğinde belirlenebilir."
   )
   streamlit.dataframe.assert_called_once_with(
       table,

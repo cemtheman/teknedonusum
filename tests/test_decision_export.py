@@ -66,6 +66,7 @@ def test_workbook_contains_exact_intended_sheets_and_vessel_rows():
   assert workbook.sheetnames == ["Karar Özeti", "Varsayımlar"]
   sheet = workbook["Karar Özeti"]
   assert sheet.max_row == 4
+  assert sheet["E1"].value == "Günlük sevk enerjisi (kWh/gün)"
   assert [sheet.cell(row, 1).value for row in range(2, 5)] == [
       "V1 — Tip 1: 12m Monohull",
       "V2 — Tip 2: 13.5m Katamaran",
@@ -79,7 +80,7 @@ def test_current_values_flow_into_export_as_numeric_cells():
 
   assert sheet["C2"].value == 6.0
   assert sheet["D2"].value == 80
-  assert sheet["E2"].value == decisions[0].daily_energy_requirement_kwh
+  assert sheet["E2"].value == decisions[0].daily_propulsion_energy_kwh
   assert sheet["J2"].value == 5999550
   assert sheet["M4"].value == pytest.approx(
       decisions[2].annual_operating_saving_tl
@@ -92,6 +93,7 @@ def test_unavailable_values_remain_explicit():
 
   assert sheet["H3"].value == "Mevcut değil"
   assert sheet["H4"].value == "Mevcut değil"
+  assert sheet["I2"].value == "Henüz değerlendirilmedi"
   assert sheet["I3"].value == "Henüz değerlendirilmedi"
   assert sheet["I4"].value == "Henüz değerlendirilmedi"
 

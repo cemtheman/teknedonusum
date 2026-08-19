@@ -14,7 +14,7 @@ class VesselDecisionSummaryRow:
   passenger_capacity: int
   selected_cruise_speed_knots: float
   battery_capacity_kwh: float
-  daily_energy_requirement_kwh: float
+  daily_propulsion_energy_kwh: float
   solar_energy_contribution_kwh: float
   net_grid_energy_requirement_kwh: float
   estimated_navigation_range_nm: float | None
@@ -67,7 +67,7 @@ def build_vessel_decision_summary(
           battery_capacity_kwh=(
               technical_by_id[vessel_id].battery_capacity_kwh
           ),
-          daily_energy_requirement_kwh=(
+          daily_propulsion_energy_kwh=(
               technical_by_id[vessel_id].daily_propulsion_energy_kwh
           ),
           solar_energy_contribution_kwh=(

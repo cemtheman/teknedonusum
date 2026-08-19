@@ -9,7 +9,6 @@ from calculations.vessel_comparison import (
 )
 from config.commission_constraints import DALYAN_COMMISSION_CONSTRAINTS
 from config.vessels import BASE_VESSEL_SPECS
-from models.compliance import ComplianceStatus
 
 
 def comparison(**overrides):
@@ -59,8 +58,8 @@ def test_cruise_speed_affects_all_comparison_power_outputs():
         slow[vessel_id].calculated_cruise_power_kw
         < fast[vessel_id].calculated_cruise_power_kw
     )
-  assert slow["v1"].commission_compliance_status is ComplianceStatus.PASS
-  assert fast["v1"].commission_compliance_status is ComplianceStatus.PASS
+  assert slow["v1"].commission_compliance_status is None
+  assert fast["v1"].commission_compliance_status is None
 
 
 def test_daily_miles_affects_all_daily_propulsion_energy_outputs():
@@ -90,13 +89,13 @@ def test_sun_hours_affects_solar_and_net_grid_outputs():
     )
 
 
-def test_only_v1_exposes_existing_range_and_full_compliance():
+def test_only_v1_exposes_range_but_full_compliance_remains_unavailable():
   rows = rows_by_id(comparison(cruise_speed=10.0))
 
   assert rows["v1"].estimated_navigation_range_nm == pytest.approx(
       22.831668369348257
   )
-  assert rows["v1"].commission_compliance_status is ComplianceStatus.PASS
+  assert rows["v1"].commission_compliance_status is None
   for vessel_id in ("v2", "v3"):
     assert rows[vessel_id].estimated_navigation_range_nm is None
     assert rows[vessel_id].commission_compliance_status is None

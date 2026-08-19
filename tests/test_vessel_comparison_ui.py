@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from calculations.vessel_comparison import VesselTechnicalComparisonRow
-from models.compliance import ComplianceStatus
 from ui import vessel_comparison as vessel_comparison_ui
 
 
@@ -32,7 +31,7 @@ def comparison_rows():
           solar_energy_contribution_kwh=25.17768,
           net_grid_energy_requirement_kwh=63.120729,
           estimated_navigation_range_nm=22.831668,
-          commission_compliance_status=ComplianceStatus.PASS,
+          commission_compliance_status=None,
           estimate_basis="preliminary_technical_scenario",
       ),
       VesselTechnicalComparisonRow(
@@ -47,7 +46,7 @@ def comparison_rows():
           vessel_name="Tip 3",
           passenger_capacity=54,
           battery_capacity_kwh=140.0,
-          **(shared | {"commission_compliance_status": ComplianceStatus.FAIL}),
+          **shared,
       ),
   )
 
@@ -57,9 +56,9 @@ def test_table_formats_three_rows_statuses_basis_and_unavailable_values():
 
   assert len(table) == 3
   assert list(table["Teknik uygunluk"]) == [
-      "Uygun",
       "Henüz değerlendirilmedi",
-      "Uygun değil",
+      "Henüz değerlendirilmedi",
+      "Henüz değerlendirilmedi",
   ]
   assert list(table["Tahmin dayanağı"]) == [
       "Ön teknik senaryo",
@@ -100,7 +99,9 @@ def test_renderer_displays_exactly_three_rows(monkeypatch):
   )
   streamlit.caption.assert_called_once_with(
       "v1 ile v2/v3 şu aşamada aynı teknik hesap derinliğini kullanmaz. "
-      "Tablo ön karşılaştırma içindir; doğrulanmış tekne performansı değildir."
+      "Tablo ön karşılaştırma içindir; doğrulanmış tekne performansı değildir. "
+      "Tam teknik uygunluk, doğrulanmış tekne hız kabiliyeti dahil tüm "
+      "kriterler değerlendirildiğinde belirlenebilir."
   )
 
 

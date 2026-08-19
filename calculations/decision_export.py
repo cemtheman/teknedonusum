@@ -15,7 +15,7 @@ DECISION_HEADERS = (
     "Yolcu kapasitesi",
     "Seçilen hız (knot)",
     "Batarya kapasitesi (kWh)",
-    "Günlük enerji ihtiyacı (kWh/gün)",
+    "Günlük sevk enerjisi (kWh/gün)",
     "Güneş katkısı (kWh/gün)",
     "Net şebeke ihtiyacı (kWh/gün)",
     "Tahmini menzil (NM)",
@@ -82,7 +82,7 @@ def build_decision_summary_xlsx(decision_rows, assumption_rows) -> bytes:
         row.passenger_capacity,
         row.selected_cruise_speed_knots,
         row.battery_capacity_kwh,
-        row.daily_energy_requirement_kwh,
+        row.daily_propulsion_energy_kwh,
         row.solar_energy_contribution_kwh,
         row.net_grid_energy_requirement_kwh,
         (

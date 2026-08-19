@@ -70,7 +70,7 @@ def test_joins_exactly_v1_v2_v3_and_maps_fields():
   assert [row.vessel_id for row in rows] == ["v1", "v2", "v3"]
   row = rows[0]
   assert row.passenger_capacity == 24
-  assert row.daily_energy_requirement_kwh == 50.0
+  assert row.daily_propulsion_energy_kwh == 50.0
   assert row.solar_energy_contribution_kwh == 20.0
   assert row.net_grid_energy_requirement_kwh == 35.0
   assert row.investment_cost_tl == 6000000.0
@@ -116,7 +116,7 @@ def test_existing_builder_baselines_flow_through_unchanged():
 
   rows = build_vessel_decision_summary(technical, economic)
 
-  assert rows[0].daily_energy_requirement_kwh == pytest.approx(
+  assert rows[0].daily_propulsion_energy_kwh == pytest.approx(
       63.19910343132616
   )
   assert rows[0].estimated_navigation_range_nm == pytest.approx(

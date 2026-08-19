@@ -109,7 +109,7 @@ def test_compliance_mapping_is_exact():
   expected_labels = [
       "Tam Boy (LOA)",
       "Yolcu Kapasitesi",
-      "Asgari Hız",
+      "Seçilen Senaryo Hızı",
       "Seyir Menzili",
       "Motor Verimi",
       "Batarya Kapasitesi",

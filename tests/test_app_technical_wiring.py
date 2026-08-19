@@ -51,10 +51,9 @@ def test_scenario_uses_required_dynamic_sources_and_assumptions():
   assert keyword_source(scenario_call, "passenger_capacity") == (
       "VESSEL_SPECS['v1']['capacity']"
   )
-  assert keyword_source(scenario_call, "speed_knots") == (
-      "DALYAN_COMMISSION_CONSTRAINTS.minimum_required_speed_knots"
-  )
+  assert keyword_source(scenario_call, "speed_knots") == "inputs.cruise_speed"
   assert keyword_source(scenario_call, "daily_distance_nm") == "inputs.daily_miles"
+  assert keyword_source(scenario_call, "peak_sun_hours") == "inputs.sun_hours"
   assert keyword_source(scenario_call, "battery_capacity_kwh") == (
       "VESSEL_SPECS['v1']['batCapacity']"
   )
@@ -73,7 +72,6 @@ def test_scenario_uses_required_dynamic_sources_and_assumptions():
       "usable_roof_width_m",
       "panel_coverage_fraction",
       "panel_efficiency",
-      "peak_sun_hours",
       "solar_derating_factor",
   }
   assert all(

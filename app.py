@@ -84,7 +84,7 @@ def main():
       geometry=geometry,
       constraints=DALYAN_COMMISSION_CONSTRAINTS,
       passenger_capacity=VESSEL_SPECS["v1"]["capacity"],
-      speed_knots=DALYAN_COMMISSION_CONSTRAINTS.minimum_required_speed_knots,
+      speed_knots=inputs.cruise_speed,
       daily_distance_nm=inputs.daily_miles,
       form_factor=assumptions.form_factor,
       residual_resistance_n=assumptions.residual_resistance_n,
@@ -100,7 +100,7 @@ def main():
       usable_roof_width_m=assumptions.usable_roof_width_m,
       panel_coverage_fraction=assumptions.panel_coverage_fraction,
       panel_efficiency=assumptions.panel_efficiency,
-      peak_sun_hours=assumptions.peak_sun_hours,
+      peak_sun_hours=inputs.sun_hours,
       solar_derating_factor=assumptions.solar_derating_factor,
   )
   presentation = build_technical_scenario_presentation(scenario)

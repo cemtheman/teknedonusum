@@ -76,7 +76,9 @@ def render_technical_scenario(
   st.subheader("⚙️ Ön Teknik Uygunluk ve Enerji Değerlendirmesi")
   st.caption(
       "Bu bölüm, ön tasarım varsayımlarıyla hesaplanan teknik sonuçları "
-      "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir."
+      "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir. "
+      "Seçilen senaryo hızı, komisyonun asgari hız kriteriyle karşılaştırılır; "
+      "bu sonuç doğrulanmış tekne hız kabiliyeti değildir."
   )
 
   if presentation.overall_status is ComplianceStatus.PASS:

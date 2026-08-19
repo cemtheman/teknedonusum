@@ -118,6 +118,14 @@ def test_passenger_capacity_only_fails_passenger_compliance():
   assert failed == ["passenger_capacity"]
 
 
+def test_selected_speed_below_commission_minimum_is_non_compliant():
+  result = evaluate(speed_knots=6.0)
+
+  assert result.resistance.speed_knots == 6.0
+  assert check_status(result, "minimum_speed") is ComplianceStatus.FAIL
+  assert result.compliance.overall_status is ComplianceStatus.FAIL
+
+
 def test_daily_distance_changes_only_operational_energy_balance():
   short_day = evaluate(daily_distance_nm=20.0)
   baseline = evaluate()

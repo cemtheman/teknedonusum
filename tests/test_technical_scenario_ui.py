@@ -108,13 +108,16 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   assert [line.split(":", 1)[0] for line in lines] == [
       "✅ Tam Boy (LOA)",
       "✅ Yolcu Kapasitesi",
-      "✅ Asgari Hız",
+      "✅ Seçilen Senaryo Hızı",
       "✅ Seyir Menzili",
       "✅ Motor Verimi",
       "✅ Batarya Kapasitesi",
       "✅ Çatı Uzunluğu / LOA",
   ]
-  assert "Asgari Hız: 10,0 knot · Kriter: ≥ 10,0 knot" in lines[2]
+  assert (
+      "Seçilen Senaryo Hızı: 10,0 knot · Kriter: ≥ 10,0 knot"
+      in lines[2]
+  )
   assert "Motor Verimi: %95 · Kriter: ≥ %95" in lines[4]
   assert "Çatı Uzunluğu / LOA: %80 · Kriter: ≥ %80" in lines[6]
 
@@ -154,7 +157,9 @@ def test_render_structure_calls_are_exact(monkeypatch):
   )
   assert [call.args[0] for call in streamlit.caption.call_args_list] == [
       "Bu bölüm, ön tasarım varsayımlarıyla hesaplanan teknik sonuçları "
-      "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir.",
+      "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir. "
+      "Seçilen senaryo hızı, komisyonun asgari hız kriteriyle karşılaştırılır; "
+      "bu sonuç doğrulanmış tekne hız kabiliyeti değildir.",
       "⚠️ Güç, menzil, güneş enerjisi üretimi ve enerji ihtiyacı sonuçları "
       "ön tasarım tahminleridir; doğrulanmış nihai tekne performans değerleri "
       "değildir.",

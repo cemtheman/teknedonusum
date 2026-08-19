@@ -10,7 +10,7 @@ from models.presentation import (
 COMPLIANCE_LABELS = {
     "loa": "Tam Boy (LOA)",
     "passenger_capacity": "Yolcu Kapasitesi",
-    "minimum_speed": "Asgari Hız",
+    "minimum_speed": "Seçilen Senaryo Hızı",
     "minimum_navigation_range": "Seyir Menzili",
     "motor_efficiency": "Motor Verimi",
     "battery_capacity": "Batarya Kapasitesi",

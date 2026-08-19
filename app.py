@@ -105,13 +105,15 @@ def main():
       comparison,
       economic_comparison,
   )
-  render_vessel_decision_summary(decision_summary)
-
   assumptions_transparency = build_assumptions_transparency(
       inputs=inputs,
       vessel_specs=VESSEL_SPECS,
       eur_is_live=eur_is_live,
       diesel_is_live=diesel_is_live,
+  )
+  render_vessel_decision_summary(
+      decision_summary,
+      assumptions_transparency,
   )
   render_assumptions_transparency(assumptions_transparency)
 

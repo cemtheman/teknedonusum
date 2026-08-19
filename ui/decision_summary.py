@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from calculations.decision_summary import VesselDecisionSummaryRow
+from calculations.decision_export import build_decision_summary_xlsx
 from ui.vessel_comparison import STATUS_LABELS
 
 
@@ -65,8 +66,9 @@ def build_decision_summary_table(rows):
   ])
 
 
-def render_vessel_decision_summary(rows) -> None:
+def render_vessel_decision_summary(rows, assumption_rows) -> None:
   table = build_decision_summary_table(rows)
+  workbook_bytes = build_decision_summary_xlsx(rows, assumption_rows)
 
   st.divider()
   st.subheader("📊 Tekne Alternatifleri Karar Özeti")
@@ -75,3 +77,11 @@ def render_vessel_decision_summary(rows) -> None:
       "farklı teknik hesap derinliği kullanır."
   )
   st.dataframe(table, hide_index=True, use_container_width=True)
+  st.download_button(
+      "📥 Karar Özetini İndir",
+      data=workbook_bytes,
+      file_name="sessiz_akim_karar_ozeti.xlsx",
+      mime=(
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ),
+  )

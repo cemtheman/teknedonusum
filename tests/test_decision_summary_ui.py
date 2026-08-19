@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from calculations.assumptions_transparency import AssumptionSourceRow
 from calculations.decision_summary import VesselDecisionSummaryRow
 from models.compliance import ComplianceStatus
 from ui import decision_summary as decision_summary_ui
@@ -51,6 +52,17 @@ def rows():
   )
 
 
+def assumption_rows():
+  return (
+      AssumptionSourceRow(
+          "Seyir hızı",
+          "6 knot",
+          "Kullanıcı girdisi",
+          "Mevcut operasyon senaryosu.",
+      ),
+  )
+
+
 def test_turkish_formatting_and_unavailable_labels():
   table = decision_summary_ui.build_decision_summary_table(rows())
 
@@ -74,7 +86,7 @@ def test_renderer_is_compact_and_renders_three_rows(monkeypatch):
   streamlit = MagicMock()
   monkeypatch.setattr(decision_summary_ui, "st", streamlit)
 
-  decision_summary_ui.render_vessel_decision_summary(rows())
+  decision_summary_ui.render_vessel_decision_summary(rows(), assumption_rows())
 
   table = streamlit.dataframe.call_args.args[0]
   assert len(table) == 3
@@ -87,6 +99,13 @@ def test_renderer_is_compact_and_renders_three_rows(monkeypatch):
       table,
       hide_index=True,
       use_container_width=True,
+  )
+  download = streamlit.download_button.call_args
+  assert download.args[0] == "📥 Karar Özetini İndir"
+  assert isinstance(download.kwargs["data"], bytes)
+  assert download.kwargs["file_name"] == "sessiz_akim_karar_ozeti.xlsx"
+  assert download.kwargs["mime"] == (
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   )
 
 

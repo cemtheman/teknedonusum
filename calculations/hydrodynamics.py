@@ -1,8 +1,14 @@
 """Preliminary calm-water hydrodynamic fundamentals for Köyceğiz–Dalyan vessel studies.
 
-These are unrestricted calm water preliminary calculations. The resistance model
-contains only the frictional component; it excludes wave/residual resistance,
-appendages, shallow-water effects, and catamaran interference.
+This preliminary unrestricted calm-water framework calculates ITTC-1957-based
+frictional resistance, form-factor-corrected friction as viscous resistance, and
+total resistance. Residual resistance is an externally supplied/calibrated input,
+and appendage resistance is an externally supplied input. Total resistance is the
+sum of the viscous, residual, and appendage components.
+
+The framework does not include empirical wave/residual prediction, shallow-water
+correction, channel-bank effects, catamaran interference, propeller/shaft
+efficiency, or installed motor power prediction.
 """
 
 import math
@@ -85,3 +91,52 @@ def calculate_frictional_resistance(
       * wetted_surface_area_m2
       * friction_coefficient
   )
+
+
+def calculate_viscous_resistance(
+    speed_knots,
+    waterline_length_m,
+    wetted_surface_area_m2,
+    form_factor,
+    water_density_kg_m3=WATER_DENSITY_KG_M3,
+    kinematic_viscosity_m2_s=KINEMATIC_VISCOSITY_M2_S,
+):
+  # Required user/calibration input; not a commission-defined default value.
+  if form_factor < 0:
+    raise ValueError("form_factor must be non-negative")
+
+  frictional_resistance_n = calculate_frictional_resistance(
+      speed_knots,
+      waterline_length_m,
+      wetted_surface_area_m2,
+      water_density_kg_m3,
+      kinematic_viscosity_m2_s,
+  )
+  return (1.0 + form_factor) * frictional_resistance_n
+
+
+def calculate_total_resistance(
+    viscous_resistance_n,
+    residual_resistance_n,
+    appendage_resistance_n=0.0,
+):
+  if viscous_resistance_n < 0:
+    raise ValueError("viscous_resistance_n must be non-negative")
+  if residual_resistance_n < 0:
+    raise ValueError("residual_resistance_n must be non-negative")
+  if appendage_resistance_n < 0:
+    raise ValueError("appendage_resistance_n must be non-negative")
+
+  return (
+      viscous_resistance_n
+      + residual_resistance_n
+      + appendage_resistance_n
+  )
+
+
+def calculate_effective_power_kw(total_resistance_n, speed_knots):
+  if total_resistance_n < 0:
+    raise ValueError("total_resistance_n must be non-negative")
+
+  speed_m_s = knots_to_mps(speed_knots)
+  return total_resistance_n * speed_m_s / 1000.0

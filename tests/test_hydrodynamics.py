@@ -1,10 +1,13 @@
 import pytest
 
 from calculations.hydrodynamics import (
+    calculate_effective_power_kw,
     calculate_frictional_resistance,
     calculate_froude_number,
     calculate_ittc_friction_coefficient,
     calculate_reynolds_number,
+    calculate_total_resistance,
+    calculate_viscous_resistance,
     knots_to_mps,
 )
 
@@ -104,3 +107,76 @@ def test_invalid_water_density_is_rejected(water_density_kg_m3):
 def test_invalid_reynolds_number_is_rejected(reynolds_number):
   with pytest.raises(ValueError):
     calculate_ittc_friction_coefficient(reynolds_number)
+
+
+def test_viscous_resistance():
+  result = calculate_viscous_resistance(
+      speed_knots=6.0,
+      waterline_length_m=11.4,
+      wetted_surface_area_m2=30.0,
+      form_factor=0.15,
+  )
+  assert result == pytest.approx(400.6891743238976)
+
+
+def test_total_resistance():
+  result = calculate_total_resistance(
+      viscous_resistance_n=400.0,
+      residual_resistance_n=250.0,
+      appendage_resistance_n=35.0,
+  )
+  assert result == pytest.approx(685.0)
+
+
+def test_total_resistance_default_appendage():
+  result = calculate_total_resistance(
+      viscous_resistance_n=400.0,
+      residual_resistance_n=250.0,
+  )
+  assert result == pytest.approx(650.0)
+
+
+def test_effective_power():
+  result = calculate_effective_power_kw(
+      total_resistance_n=1000.0,
+      speed_knots=6.0,
+  )
+  assert result == pytest.approx(3.086664)
+
+
+def test_zero_speed_effective_power():
+  result = calculate_effective_power_kw(
+      total_resistance_n=1000.0,
+      speed_knots=0.0,
+  )
+  assert result == 0.0
+
+
+def test_negative_form_factor_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_viscous_resistance(6.0, 11.4, 30.0, -0.1)
+
+
+def test_negative_viscous_resistance_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_total_resistance(-1.0, 0.0)
+
+
+def test_negative_residual_resistance_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_total_resistance(0.0, -1.0)
+
+
+def test_negative_appendage_resistance_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_total_resistance(0.0, 0.0, -1.0)
+
+
+def test_negative_total_resistance_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_effective_power_kw(-1.0, 6.0)
+
+
+def test_negative_speed_for_effective_power_is_rejected():
+  with pytest.raises(ValueError):
+    calculate_effective_power_kw(1000.0, -1.0)

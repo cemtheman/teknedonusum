@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from calculations.economics import calculate_vessel_economics
 from calculations.fleet import calculate_fleet
 from calculations.vessel_physics import calc_calibrated_vessel_physics
 from config.vessels import BASE_VESSEL_SPECS
@@ -371,8 +372,14 @@ for v_key, spec in VESSEL_SPECS.items():
         spec, inputs.cruise_speed, inputs.daily_miles, inputs.sun_hours
     )
 
-    motor_multiplier = 1.20 if spec["motors"] == 2 else 1.0
-    motor_cost_tl = p["max_power"] * (400 * inputs.eur_rate) * motor_multiplier
+    economics = calculate_vessel_economics(
+        spec,
+        p,
+        inputs.eur_rate,
+        inputs.diesel_price,
+        inputs.elec_price,
+        inputs.operating_days,
+    )
 
     per_motor_peak_kw = p["max_power"] / spec["motors"]
     per_motor_cruise_kw = p["cruise_power"] / spec["motors"]
@@ -392,51 +399,24 @@ for v_key, spec in VESSEL_SPECS.items():
       peak_power_str = f"{p['max_power']:.1f} kW"
       cruise_power_str = f"{p['cruise_power']:.1f} kW"
 
-    solar_cost_tl = p["solar_area"] * (150 * inputs.eur_rate)
-    bat_cost_tl = spec["batCostEur"] * inputs.eur_rate
-    infra_share_tl = (750000 * inputs.eur_rate) / 150
-
-    hull_cost_tl = spec["totalCost"] - (
-        motor_cost_tl + solar_cost_tl + bat_cost_tl + infra_share_tl
-    )
-
-    grant_amount = min(spec["maxGrant"], spec["totalCost"] * spec["grantRate"])
-    net_capex = spec["totalCost"] - grant_amount
-
-    old_diesel_cost = (
-        spec["merged"]
-        * (p["cruise_diesel_lph"] * p["cruise_hours"] * inputs.operating_days * inputs.diesel_price)
-    )
-    old_maint_cost = spec["merged"] * 140000
-    old_total_annual = old_diesel_cost + old_maint_cost
-
-    new_elec_cost = p["net_grid_kwh"] * inputs.operating_days * inputs.elec_price
-    new_degradation = (
-        (bat_cost_tl / 3000)
-        * (p["brut_kwh"] / spec["batCapacity"])
-        * inputs.operating_days
-    )
-    new_maint_cost = old_maint_cost * 0.15
-    new_total_annual = new_elec_cost + new_degradation + new_maint_cost
-
-    net_savings = old_total_annual - new_total_annual
-
-    payback_seasons = net_capex / net_savings if net_savings > 0 else float("inf")
-    payback_months = (
-        payback_seasons * (inputs.operating_days / 30.0)
-        if net_savings > 0
-        else float("inf")
-    )
-
-    old_co2 = (
-        spec["merged"]
-        * p["cruise_diesel_lph"]
-        * p["cruise_hours"]
-        * inputs.operating_days
-        * 2.68
-    ) / 1000
-    new_co2 = (p["net_grid_kwh"] * inputs.operating_days * 0.44) / 1000
-    net_co2 = old_co2 - new_co2
+    motor_cost_tl = economics["motor_cost_tl"]
+    solar_cost_tl = economics["solar_cost_tl"]
+    bat_cost_tl = economics["bat_cost_tl"]
+    infra_share_tl = economics["infra_share_tl"]
+    hull_cost_tl = economics["hull_cost_tl"]
+    grant_amount = economics["grant_amount"]
+    net_capex = economics["net_capex"]
+    old_diesel_cost = economics["old_diesel_cost"]
+    old_maint_cost = economics["old_maint_cost"]
+    old_total_annual = economics["old_total_annual"]
+    new_elec_cost = economics["new_elec_cost"]
+    new_degradation = economics["new_degradation"]
+    new_maint_cost = economics["new_maint_cost"]
+    new_total_annual = economics["new_total_annual"]
+    net_savings = economics["net_savings"]
+    payback_seasons = economics["payback_seasons"]
+    payback_months = economics["payback_months"]
+    net_co2 = economics["net_co2"]
 
     # Metric Cards
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)

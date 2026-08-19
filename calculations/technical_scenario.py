@@ -1,8 +1,8 @@
 """Orchestration for a preliminary vessel technical scenario.
 
-Scenario-speed compliance only means that the evaluated scenario speed meets
-the configured threshold. It does not prove that the vessel can attain that
-speed and is not final sea-trial capability evidence.
+The selected speed is an operating-scenario input for power and energy
+calculations. Vessel speed-capability compliance remains unevaluated until a
+separate design or verified maximum-speed value is available.
 """
 
 from dataclasses import dataclass
@@ -106,7 +106,6 @@ def evaluate_preliminary_technical_scenario(
       constraints,
       geometry.loa_m.value,
       passenger_capacity,
-      speed_knots,
       navigation_energy.navigation_range_nm,
       motor_efficiency,
       battery_capacity_kwh,

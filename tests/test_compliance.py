@@ -14,7 +14,6 @@ from models.compliance import (
 EXPECTED_CRITERIA = [
     "loa",
     "passenger_capacity",
-    "minimum_speed",
     "minimum_navigation_range",
     "motor_efficiency",
     "battery_capacity",
@@ -27,7 +26,6 @@ def evaluate(**overrides):
       "constraints": DALYAN_COMMISSION_CONSTRAINTS,
       "loa_m": 12.0,
       "passenger_capacity": 24,
-      "achieved_speed_knots": 10.0,
       "navigation_range_nm": 15.0,
       "motor_efficiency": 0.95,
       "battery_capacity_kwh": 20.0,
@@ -43,7 +41,7 @@ def checks_by_criterion(result):
 
 def test_all_inclusive_boundaries_pass():
   result = evaluate()
-  assert len(result.checks) == 7
+  assert len(result.checks) == 6
   assert [check.criterion for check in result.checks] == EXPECTED_CRITERIA
   assert all(check.status is ComplianceStatus.PASS for check in result.checks)
   assert result.overall_status is ComplianceStatus.PASS
@@ -79,7 +77,6 @@ def test_passenger_capacity_values(capacity, expected_status):
 @pytest.mark.parametrize(
     ("overrides", "failed_criterion"),
     [
-        ({"achieved_speed_knots": 9.99}, "minimum_speed"),
         ({"navigation_range_nm": 14.99}, "minimum_navigation_range"),
         ({"motor_efficiency": 0.949}, "motor_efficiency"),
         ({"battery_capacity_kwh": 19.99}, "battery_capacity"),
@@ -101,7 +98,6 @@ def test_multiple_failures_preserve_check_order():
   result = evaluate(
       loa_m=14.01,
       passenger_capacity=25,
-      achieved_speed_knots=9.99,
   )
   assert [check.criterion for check in result.checks] == EXPECTED_CRITERIA
   assert result.overall_status is ComplianceStatus.FAIL
@@ -112,7 +108,6 @@ def test_required_value_strings_and_raw_actual_values():
   checks = checks_by_criterion(result)
   assert checks["loa"].required_value == "12.0–14.0 m"
   assert checks["passenger_capacity"].required_value == "24 / 32 / 54 yolcu"
-  assert checks["minimum_speed"].required_value == "≥ 10.0 knot"
   assert checks["minimum_navigation_range"].required_value == "≥ 15.0 NM"
   assert checks["motor_efficiency"].required_value == "≥ %95.0"
   assert checks["battery_capacity"].required_value == "≥ 20.0 kWh"
@@ -152,7 +147,6 @@ def test_result_rejects_empty_checks():
         {"loa_m": -1.0},
         {"passenger_capacity": 0},
         {"passenger_capacity": -1},
-        {"achieved_speed_knots": -1.0},
         {"navigation_range_nm": -1.0},
         {"motor_efficiency": 0.0},
         {"motor_efficiency": -0.1},

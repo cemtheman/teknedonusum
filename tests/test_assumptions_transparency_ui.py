@@ -15,7 +15,7 @@ def rows():
           description="Operasyon senaryosu.",
       ),
       AssumptionSourceRow(
-          parameter="Komisyon asgari hızı",
+          parameter="Komisyon hız kriteri",
           current_value="10 knot",
           source_type="Teknik Komisyon kriteri",
           description="Ayrı uygunluk eşiği.",

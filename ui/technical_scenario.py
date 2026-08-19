@@ -30,8 +30,6 @@ def _format_compliance_actual(value):
     return f"{_format_decimal(value.actual_value, 1)} m"
   if value.criterion == "passenger_capacity":
     return f"{int(value.actual_value)}"
-  if value.criterion == "minimum_speed":
-    return f"{_format_decimal(value.actual_value, 1)} knot"
   if value.criterion == "minimum_navigation_range":
     return f"{_format_decimal(value.actual_value, 1)} NM"
   if value.criterion == "motor_efficiency":
@@ -77,8 +75,9 @@ def render_technical_scenario(
   st.caption(
       "Bu bölüm, ön tasarım varsayımlarıyla hesaplanan teknik sonuçları "
       "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir. "
-      "Seçilen senaryo hızı, komisyonun asgari hız kriteriyle karşılaştırılır; "
-      "bu sonuç doğrulanmış tekne hız kabiliyeti değildir."
+      "Operasyon seyir hızı güç ve enerji senaryosunun girdisidir. Komisyonun "
+      "istediği tekne hız kabiliyeti, ayrı bir tasarım/azami hız değeri "
+      "bulunmadığı için henüz değerlendirilmemiştir."
   )
 
   if presentation.overall_status is ComplianceStatus.PASS:

@@ -59,7 +59,7 @@ def test_cruise_speed_affects_all_comparison_power_outputs():
         slow[vessel_id].calculated_cruise_power_kw
         < fast[vessel_id].calculated_cruise_power_kw
     )
-  assert slow["v1"].commission_compliance_status is ComplianceStatus.FAIL
+  assert slow["v1"].commission_compliance_status is ComplianceStatus.PASS
   assert fast["v1"].commission_compliance_status is ComplianceStatus.PASS
 
 

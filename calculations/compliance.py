@@ -10,7 +10,6 @@ def evaluate_commission_compliance(
     constraints: CommissionTechnicalConstraints,
     loa_m: float,
     passenger_capacity: int,
-    achieved_speed_knots: float,
     navigation_range_nm: float,
     motor_efficiency: float,
     battery_capacity_kwh: float,
@@ -22,8 +21,6 @@ def evaluate_commission_compliance(
     raise ValueError("loa_m must be positive")
   if not passenger_capacity > 0:
     raise ValueError("passenger_capacity must be positive")
-  if not achieved_speed_knots >= 0:
-    raise ValueError("achieved_speed_knots must be non-negative")
   if not navigation_range_nm >= 0:
     raise ValueError("navigation_range_nm must be non-negative")
   if not 0 < motor_efficiency <= 1:
@@ -58,16 +55,6 @@ def evaluate_commission_compliance(
           status=(
               ComplianceStatus.PASS
               if passenger_capacity in constraints.allowed_passenger_capacities
-              else ComplianceStatus.FAIL
-          ),
-      ),
-      ComplianceCheck(
-          criterion="minimum_speed",
-          actual_value=achieved_speed_knots,
-          required_value=f"≥ {constraints.minimum_required_speed_knots:.1f} knot",
-          status=(
-              ComplianceStatus.PASS
-              if achieved_speed_knots >= constraints.minimum_required_speed_knots
               else ComplianceStatus.FAIL
           ),
       ),

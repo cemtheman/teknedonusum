@@ -75,12 +75,16 @@ def test_commission_criteria_are_not_mislabeled_as_assumptions():
   )
 
   for parameter in (
-      "Komisyon asgari hızı",
+      "Komisyon hız kriteri",
       "Komisyon asgari menzili",
       "Komisyon motor verimi eşiği",
   ):
     assert rows[parameter].source_type == COMMISSION_CRITERION
     assert rows[parameter].source_type != ENGINEERING_ASSUMPTION
+
+  speed_criterion = rows["Komisyon hız kriteri"]
+  assert speed_criterion.current_value == "10 knot"
+  assert "Operasyon seyir hızından ayrı" in speed_criterion.description
 
 
 def test_engineering_values_and_wetted_surface_distinction_are_explicit():

@@ -61,7 +61,6 @@ def test_baseline_presentation_values_and_order():
   assert [value.criterion for value in presentation.compliance_values] == [
       "loa",
       "passenger_capacity",
-      "minimum_speed",
       "minimum_navigation_range",
       "motor_efficiency",
       "battery_capacity",
@@ -109,7 +108,6 @@ def test_compliance_mapping_is_exact():
   expected_labels = [
       "Tam Boy (LOA)",
       "Yolcu Kapasitesi",
-      "Seçilen Senaryo Hızı",
       "Seyir Menzili",
       "Motor Verimi",
       "Batarya Kapasitesi",

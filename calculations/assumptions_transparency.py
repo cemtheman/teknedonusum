@@ -98,10 +98,11 @@ def build_assumptions_transparency(
           "Mevcut tekne konfigürasyonundaki kalibre ön değerler.",
       ),
       AssumptionSourceRow(
-          "Komisyon asgari hızı",
+          "Komisyon hız kriteri",
           _decimal(constraints.minimum_required_speed_knots, "knot"),
           COMMISSION_CRITERION,
-          "Mühendislik varsayımı değil, ayrı uygunluk eşiği.",
+          "Operasyon seyir hızından ayrı, gerekli tekne hız kabiliyeti; henüz "
+          "değerlendirilmemiştir.",
       ),
       AssumptionSourceRow(
           "Komisyon asgari menzili",

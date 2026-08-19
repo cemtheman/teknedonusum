@@ -118,12 +118,23 @@ def test_passenger_capacity_only_fails_passenger_compliance():
   assert failed == ["passenger_capacity"]
 
 
-def test_selected_speed_below_commission_minimum_is_non_compliant():
-  result = evaluate(speed_knots=6.0)
+def test_operating_speed_is_not_a_commission_compliance_check():
+  slow = evaluate(speed_knots=6.0)
+  fast = evaluate(speed_knots=10.0)
 
-  assert result.resistance.speed_knots == 6.0
-  assert check_status(result, "minimum_speed") is ComplianceStatus.FAIL
-  assert result.compliance.overall_status is ComplianceStatus.FAIL
+  assert slow.resistance.speed_knots == 6.0
+  assert all(
+      check.criterion != "minimum_speed" for check in slow.compliance.checks
+  )
+  assert slow.compliance.overall_status is ComplianceStatus.PASS
+  assert (
+      slow.propulsion.electrical_input_power_kw
+      < fast.propulsion.electrical_input_power_kw
+  )
+  assert (
+      slow.daily_energy_balance.propulsion_energy_kwh
+      < fast.daily_energy_balance.propulsion_energy_kwh
+  )
 
 
 def test_daily_distance_changes_only_operational_energy_balance():

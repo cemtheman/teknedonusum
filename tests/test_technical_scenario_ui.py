@@ -103,23 +103,19 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   ]
 
   lines = compliance_lines(streamlit)
-  assert len(lines) == 7
+  assert len(lines) == 6
   assert all(line.startswith("✅") for line in lines)
   assert [line.split(":", 1)[0] for line in lines] == [
       "✅ Tam Boy (LOA)",
       "✅ Yolcu Kapasitesi",
-      "✅ Seçilen Senaryo Hızı",
       "✅ Seyir Menzili",
       "✅ Motor Verimi",
       "✅ Batarya Kapasitesi",
       "✅ Çatı Uzunluğu / LOA",
   ]
-  assert (
-      "Seçilen Senaryo Hızı: 10,0 knot · Kriter: ≥ 10,0 knot"
-      in lines[2]
-  )
-  assert "Motor Verimi: %95 · Kriter: ≥ %95" in lines[4]
-  assert "Çatı Uzunluğu / LOA: %80 · Kriter: ≥ %80" in lines[6]
+  assert not any("Seçilen Senaryo Hızı" in line for line in lines)
+  assert "Motor Verimi: %95 · Kriter: ≥ %95" in lines[3]
+  assert "Çatı Uzunluğu / LOA: %80 · Kriter: ≥ %80" in lines[5]
 
 
 def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
@@ -135,9 +131,9 @@ def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
   streamlit.success.assert_not_called()
   assert streamlit.metric.call_count == 10
   lines = compliance_lines(streamlit)
-  assert len(lines) == 7
-  assert all(line.startswith("✅") for line in lines[:6])
-  assert lines[6].startswith("❌ Çatı Uzunluğu / LOA: %79 · Kriter: ≥ %80")
+  assert len(lines) == 6
+  assert all(line.startswith("✅") for line in lines[:5])
+  assert lines[5].startswith("❌ Çatı Uzunluğu / LOA: %79 · Kriter: ≥ %80")
 
 
 def test_render_structure_calls_are_exact(monkeypatch):
@@ -158,8 +154,9 @@ def test_render_structure_calls_are_exact(monkeypatch):
   assert [call.args[0] for call in streamlit.caption.call_args_list] == [
       "Bu bölüm, ön tasarım varsayımlarıyla hesaplanan teknik sonuçları "
       "ve Teknik Komisyon kriterlerine göre uygunluk durumunu gösterir. "
-      "Seçilen senaryo hızı, komisyonun asgari hız kriteriyle karşılaştırılır; "
-      "bu sonuç doğrulanmış tekne hız kabiliyeti değildir.",
+      "Operasyon seyir hızı güç ve enerji senaryosunun girdisidir. Komisyonun "
+      "istediği tekne hız kabiliyeti, ayrı bir tasarım/azami hız değeri "
+      "bulunmadığı için henüz değerlendirilmemiştir.",
       "⚠️ Güç, menzil, güneş enerjisi üretimi ve enerji ihtiyacı sonuçları "
       "ön tasarım tahminleridir; doğrulanmış nihai tekne performans değerleri "
       "değildir.",

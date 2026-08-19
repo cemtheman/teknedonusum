@@ -78,11 +78,13 @@ def render_vessel_technical_comparison(rows) -> None:
   table = build_vessel_comparison_table(rows)
 
   st.divider()
-  st.subheader("📋 Tekne Tipleri Teknik Karşılaştırması")
-  st.caption(
-      "v1 ile v2/v3 şu aşamada aynı teknik hesap derinliğini kullanmaz. "
-      "Tablo ön karşılaştırma içindir; doğrulanmış tekne performansı değildir. "
-      "Tam teknik uygunluk, doğrulanmış tekne hız kabiliyeti dahil tüm "
-      "kriterler değerlendirildiğinde belirlenebilir."
-  )
-  st.dataframe(table, hide_index=True, use_container_width=True)
+  with st.expander(
+      "📋 Teknik karşılaştırma detaylarını göster",
+      expanded=False,
+  ):
+    st.caption(
+        "v1 ile v2/v3 farklı teknik hesap derinliği kullanır. Tam teknik "
+        "uygunluk, doğrulanmış hız kabiliyeti dahil tüm kriterler "
+        "değerlendirildiğinde belirlenebilir."
+    )
+    st.dataframe(table, hide_index=True, use_container_width=True)

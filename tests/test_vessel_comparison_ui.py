@@ -81,7 +81,7 @@ def test_table_numeric_formatting_is_compact_and_turkish():
   assert table.loc[0, "Tahmini menzil (NM)"] == "22,8"
 
 
-def test_renderer_displays_exactly_three_rows(monkeypatch):
+def test_renderer_displays_three_rows_in_collapsed_expander(monkeypatch):
   streamlit = MagicMock()
   monkeypatch.setattr(vessel_comparison_ui, "st", streamlit)
 
@@ -94,14 +94,14 @@ def test_renderer_displays_exactly_three_rows(monkeypatch):
       hide_index=True,
       use_container_width=True,
   )
-  streamlit.subheader.assert_called_once_with(
-      "📋 Tekne Tipleri Teknik Karşılaştırması"
+  streamlit.expander.assert_called_once_with(
+      "📋 Teknik karşılaştırma detaylarını göster",
+      expanded=False,
   )
   streamlit.caption.assert_called_once_with(
-      "v1 ile v2/v3 şu aşamada aynı teknik hesap derinliğini kullanmaz. "
-      "Tablo ön karşılaştırma içindir; doğrulanmış tekne performansı değildir. "
-      "Tam teknik uygunluk, doğrulanmış tekne hız kabiliyeti dahil tüm "
-      "kriterler değerlendirildiğinde belirlenebilir."
+      "v1 ile v2/v3 farklı teknik hesap derinliği kullanır. Tam teknik "
+      "uygunluk, doğrulanmış hız kabiliyeti dahil tüm kriterler "
+      "değerlendirildiğinde belirlenebilir."
   )
 
 

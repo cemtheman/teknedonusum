@@ -16,7 +16,7 @@ def render_vessel_details(
   st.subheader("📊 Tüm Tekne Tipleri İçin Tekil Detay Analizleri (Kalibre Edilmiş)")
 
   for v_key, spec in vessel_specs.items():
-    with st.expander(f"📌 {spec['name']}", expanded=True):
+    with st.expander(f"📌 {spec['name']}", expanded=False):
       p = calc_calibrated_vessel_physics(
           spec, inputs.cruise_speed, inputs.daily_miles, inputs.sun_hours
       )

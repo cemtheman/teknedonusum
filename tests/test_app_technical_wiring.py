@@ -4,6 +4,7 @@ from pathlib import Path
 
 APP_SOURCE = Path("app.py").read_text(encoding="utf-8")
 APP_TREE = ast.parse(APP_SOURCE)
+VESSEL_DETAIL_SOURCE = Path("ui/vessel_detail.py").read_text(encoding="utf-8")
 
 
 def calls_named(name):
@@ -29,6 +30,7 @@ def test_management_sections_imports_are_present():
       "from ui.assumptions_transparency import render_assumptions_transparency",
       "from ui.decision_summary import render_vessel_decision_summary",
       "from ui.vessel_comparison import render_vessel_technical_comparison",
+      "from ui.vessel_detail import render_vessel_details",
   }
   assert all(import_line in APP_SOURCE for import_line in required_imports)
 
@@ -38,6 +40,13 @@ def test_preliminary_technical_section_is_not_rendered():
   assert not calls_named("build_technical_scenario_presentation")
   assert not calls_named("render_technical_scenario")
   assert "⚙️ Ön Teknik Uygunluk ve Enerji Değerlendirmesi" not in APP_SOURCE
+
+
+def test_vessel_detail_section_remains_available_but_collapsed():
+  assert len(calls_named("render_vessel_details")) == 1
+  assert 'with st.expander(f"📌 {spec[\'name\']}", expanded=False)' in (
+      VESSEL_DETAIL_SOURCE
+  )
 
 
 def test_render_order_preserves_legacy_flow():

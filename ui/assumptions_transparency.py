@@ -30,4 +30,4 @@ def render_assumptions_transparency(rows) -> None:
         "Teknik Komisyon kriterleri bu varsayımlardan ayrıdır. Canlı piyasa "
         "verileri erişilemezse statik yedek değerlere dönebilir."
     )
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(table, hide_index=True, width="stretch")

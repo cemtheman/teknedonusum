@@ -87,4 +87,4 @@ def render_vessel_technical_comparison(rows) -> None:
         "uygunluk, doğrulanmış hız kabiliyeti dahil tüm kriterler "
         "değerlendirildiğinde belirlenebilir."
     )
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(table, hide_index=True, width="stretch")

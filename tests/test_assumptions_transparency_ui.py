@@ -55,7 +55,7 @@ def test_expander_and_transparency_notice_render(monkeypatch):
   streamlit.dataframe.assert_called_once_with(
       table,
       hide_index=True,
-      use_container_width=True,
+      width="stretch",
   )
 
 

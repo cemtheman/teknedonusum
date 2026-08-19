@@ -92,7 +92,7 @@ def test_renderer_displays_three_rows_in_collapsed_expander(monkeypatch):
   streamlit.dataframe.assert_called_once_with(
       rendered_table,
       hide_index=True,
-      use_container_width=True,
+      width="stretch",
   )
   streamlit.expander.assert_called_once_with(
       "📋 Teknik karşılaştırma detaylarını göster",

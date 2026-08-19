@@ -78,7 +78,7 @@ def render_vessel_decision_summary(rows, assumption_rows) -> None:
       "doğrulanmış tekne hız kabiliyeti dahil tüm kriterler "
       "değerlendirildiğinde belirlenebilir."
   )
-  st.dataframe(table, hide_index=True, use_container_width=True)
+  st.dataframe(table, hide_index=True, width="stretch")
   st.download_button(
       "📥 Karar Özetini İndir",
       data=workbook_bytes,

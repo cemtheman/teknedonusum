@@ -99,7 +99,7 @@ def test_renderer_is_compact_and_renders_three_rows(monkeypatch):
   streamlit.dataframe.assert_called_once_with(
       table,
       hide_index=True,
-      use_container_width=True,
+      width="stretch",
   )
   download = streamlit.download_button.call_args
   assert download.args[0] == "📥 Karar Özetini İndir"

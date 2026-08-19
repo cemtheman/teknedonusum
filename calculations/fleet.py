@@ -1,4 +1,5 @@
 from calculations.vessel_physics import calc_calibrated_vessel_physics
+from models.results import FleetResult
 
 
 def calculate_fleet(
@@ -42,18 +43,18 @@ def calculate_fleet(
 
       co2_old = (
           spec_item["merged"]
-          * p["cruise_diesel_lph"]
-          * p["cruise_hours"]
+          * p.cruise_diesel_lph
+          * p.cruise_hours
           * operating_days
           * 2.68
       ) / 1000
-      co2_new = (p["net_grid_kwh"] * operating_days * 0.44) / 1000
+      co2_new = (p.net_grid_kwh * operating_days * 0.44) / 1000
       single_co2_saved = co2_old - co2_new
 
       fleet_total_co2_reduction += single_co2_saved * counts[k]
-      fleet_daily_solar_kwh += p["solar_kwh"] * counts[k]
-      fleet_daily_grid_kwh += p["net_grid_kwh"] * counts[k]
-      fleet_daily_brut_kwh += (p["brut_kwh"] / 0.95) * counts[k]
+      fleet_daily_solar_kwh += p.solar_kwh * counts[k]
+      fleet_daily_grid_kwh += p.net_grid_kwh * counts[k]
+      fleet_daily_brut_kwh += (p.brut_kwh / 0.95) * counts[k]
 
   equivalent_trees = int(fleet_total_co2_reduction / 0.022)
   fleet_annual_grid_kwh = fleet_daily_grid_kwh * operating_days
@@ -64,19 +65,19 @@ def calculate_fleet(
       else 0
   )
 
-  return {
-      "total_vessels": total_vessels,
-      "total_capacity": total_capacity,
-      "grants_per_type": grants_per_type,
-      "fleet_total_cost": fleet_total_cost,
-      "fleet_total_grant": fleet_total_grant,
-      "fleet_total_capex": fleet_total_capex,
-      "fleet_total_co2_reduction": fleet_total_co2_reduction,
-      "fleet_daily_solar_kwh": fleet_daily_solar_kwh,
-      "fleet_daily_grid_kwh": fleet_daily_grid_kwh,
-      "fleet_daily_brut_kwh": fleet_daily_brut_kwh,
-      "equivalent_trees": equivalent_trees,
-      "fleet_annual_grid_kwh": fleet_annual_grid_kwh,
-      "fleet_annual_solar_kwh": fleet_annual_solar_kwh,
-      "solar_coverage_ratio": solar_coverage_ratio,
-  }
+  return FleetResult(
+      total_vessels=total_vessels,
+      total_capacity=total_capacity,
+      grants_per_type=grants_per_type,
+      fleet_total_cost=fleet_total_cost,
+      fleet_total_grant=fleet_total_grant,
+      fleet_total_capex=fleet_total_capex,
+      fleet_total_co2_reduction=fleet_total_co2_reduction,
+      fleet_daily_solar_kwh=fleet_daily_solar_kwh,
+      fleet_daily_grid_kwh=fleet_daily_grid_kwh,
+      fleet_daily_brut_kwh=fleet_daily_brut_kwh,
+      equivalent_trees=equivalent_trees,
+      fleet_annual_grid_kwh=fleet_annual_grid_kwh,
+      fleet_annual_solar_kwh=fleet_annual_solar_kwh,
+      solar_coverage_ratio=solar_coverage_ratio,
+  )

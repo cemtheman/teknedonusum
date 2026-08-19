@@ -246,20 +246,20 @@ fleet = calculate_fleet(
     inputs.operating_days,
 )
 
-total_vessels = fleet["total_vessels"]
-total_capacity = fleet["total_capacity"]
-grants_per_type = fleet["grants_per_type"]
-fleet_total_cost = fleet["fleet_total_cost"]
-fleet_total_grant = fleet["fleet_total_grant"]
-fleet_total_capex = fleet["fleet_total_capex"]
-fleet_total_co2_reduction = fleet["fleet_total_co2_reduction"]
-fleet_daily_solar_kwh = fleet["fleet_daily_solar_kwh"]
-fleet_daily_grid_kwh = fleet["fleet_daily_grid_kwh"]
-fleet_daily_brut_kwh = fleet["fleet_daily_brut_kwh"]
-equivalent_trees = fleet["equivalent_trees"]
-fleet_annual_grid_kwh = fleet["fleet_annual_grid_kwh"]
-fleet_annual_solar_kwh = fleet["fleet_annual_solar_kwh"]
-solar_coverage_ratio = fleet["solar_coverage_ratio"]
+total_vessels = fleet.total_vessels
+total_capacity = fleet.total_capacity
+grants_per_type = fleet.grants_per_type
+fleet_total_cost = fleet.fleet_total_cost
+fleet_total_grant = fleet.fleet_total_grant
+fleet_total_capex = fleet.fleet_total_capex
+fleet_total_co2_reduction = fleet.fleet_total_co2_reduction
+fleet_daily_solar_kwh = fleet.fleet_daily_solar_kwh
+fleet_daily_grid_kwh = fleet.fleet_daily_grid_kwh
+fleet_daily_brut_kwh = fleet.fleet_daily_brut_kwh
+equivalent_trees = fleet.equivalent_trees
+fleet_annual_grid_kwh = fleet.fleet_annual_grid_kwh
+fleet_annual_solar_kwh = fleet.fleet_annual_solar_kwh
+solar_coverage_ratio = fleet.solar_coverage_ratio
 
 # --- Fleet Summary Dashboard Section ---
 st.subheader("🚢 Filo Geneli Toplam Dönüşüm ve Finansman Özeti")
@@ -381,42 +381,42 @@ for v_key, spec in VESSEL_SPECS.items():
         inputs.operating_days,
     )
 
-    per_motor_peak_kw = p["max_power"] / spec["motors"]
-    per_motor_cruise_kw = p["cruise_power"] / spec["motors"]
+    per_motor_peak_kw = p.max_power / spec["motors"]
+    per_motor_cruise_kw = p.cruise_power / spec["motors"]
 
     if spec["motors"] == 2:
       motor_desc = (
           f"• IE5 Çift Sevk Sistemi (2x {per_motor_peak_kw:.1f} kW Zirve Güç)"
       )
       peak_power_str = (
-          f"2x {per_motor_peak_kw:.1f} kW ({p['max_power']:.1f} kW Toplam)"
+          f"2x {per_motor_peak_kw:.1f} kW ({p.max_power:.1f} kW Toplam)"
       )
       cruise_power_str = (
-          f"2x {per_motor_cruise_kw:.1f} kW ({p['cruise_power']:.1f} kW Toplam)"
+          f"2x {per_motor_cruise_kw:.1f} kW ({p.cruise_power:.1f} kW Toplam)"
       )
     else:
-      motor_desc = f"• IE5 Tek Sevk Sistemi ({p['max_power']:.1f} kW Zirve Güç)"
-      peak_power_str = f"{p['max_power']:.1f} kW"
-      cruise_power_str = f"{p['cruise_power']:.1f} kW"
+      motor_desc = f"• IE5 Tek Sevk Sistemi ({p.max_power:.1f} kW Zirve Güç)"
+      peak_power_str = f"{p.max_power:.1f} kW"
+      cruise_power_str = f"{p.cruise_power:.1f} kW"
 
-    motor_cost_tl = economics["motor_cost_tl"]
-    solar_cost_tl = economics["solar_cost_tl"]
-    bat_cost_tl = economics["bat_cost_tl"]
-    infra_share_tl = economics["infra_share_tl"]
-    hull_cost_tl = economics["hull_cost_tl"]
-    grant_amount = economics["grant_amount"]
-    net_capex = economics["net_capex"]
-    old_diesel_cost = economics["old_diesel_cost"]
-    old_maint_cost = economics["old_maint_cost"]
-    old_total_annual = economics["old_total_annual"]
-    new_elec_cost = economics["new_elec_cost"]
-    new_degradation = economics["new_degradation"]
-    new_maint_cost = economics["new_maint_cost"]
-    new_total_annual = economics["new_total_annual"]
-    net_savings = economics["net_savings"]
-    payback_seasons = economics["payback_seasons"]
-    payback_months = economics["payback_months"]
-    net_co2 = economics["net_co2"]
+    motor_cost_tl = economics.motor_cost_tl
+    solar_cost_tl = economics.solar_cost_tl
+    bat_cost_tl = economics.bat_cost_tl
+    infra_share_tl = economics.infra_share_tl
+    hull_cost_tl = economics.hull_cost_tl
+    grant_amount = economics.grant_amount
+    net_capex = economics.net_capex
+    old_diesel_cost = economics.old_diesel_cost
+    old_maint_cost = economics.old_maint_cost
+    old_total_annual = economics.old_total_annual
+    new_elec_cost = economics.new_elec_cost
+    new_degradation = economics.new_degradation
+    new_maint_cost = economics.new_maint_cost
+    new_total_annual = economics.new_total_annual
+    net_savings = economics.net_savings
+    payback_seasons = economics.payback_seasons
+    payback_months = economics.payback_months
+    net_co2 = economics.net_co2
 
     # Metric Cards
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
@@ -466,7 +466,7 @@ for v_key, spec in VESSEL_SPECS.items():
                   f"{spec['motors']}x Pod/Şaft sevk motoru"
                   f" ({'Çift hattı' if spec['motors']==2 else 'Tek hat'})"
               ),
-              f"{p['solar_area']:.1f} m² tavan paneli",
+              f"{p.solar_area:.1f} m² tavan paneli",
               f"{spec['batCapacity']} kWh LFP paketi",
               "Liman şarj & izleme payı",
           ],
@@ -478,7 +478,7 @@ for v_key, spec in VESSEL_SPECS.items():
       opex_df = pd.DataFrame({
           "Gider Kalemi": [
               f"Eski Ahşap Yakıt Giderleri ({inputs.cruise_speed:.1f} kt /"
-              f" {p['cruise_diesel_lph']:.2f} L/h)",
+              f" {p.cruise_diesel_lph:.2f} L/h)",
               "Eski Ahşap Sezonluk Bakım/Rektefiye",
               "ESKİ TEKNE SEZONLUK GİDERLER TOPLAMI",
               "Yeni Elektrikli Şebeke Şarj Masrafları",
@@ -502,7 +502,7 @@ for v_key, spec in VESSEL_SPECS.items():
 
     st.markdown(
         "**⚡ Hidrodinamik ve Sevk Sistemi Kalibrasyonu**"
-        f" *(Deplasman: {p['total_disp']:.2f} Ton | Motor Düzeni:"
+        f" *(Deplasman: {p.total_disp:.2f} Ton | Motor Düzeni:"
         f" {spec['motors']}x Sevk Hattı)*"
     )
     tech_col1, tech_col2, tech_col3, tech_col4 = st.columns(4)
@@ -511,12 +511,12 @@ for v_key, spec in VESSEL_SPECS.items():
     with tech_col2:
       st.info(
           f"**{inputs.cruise_speed:.1f} Knots Seyir Gücü:**\n\n{cruise_power_str} (Dizel:"
-          f" {p['cruise_diesel_lph']:.2f} L/h)"
+          f" {p.cruise_diesel_lph:.2f} L/h)"
       )
     with tech_col3:
       st.info(
           "**Günlük Solar PV Üretimi:**\n\n"
-          f"{p['solar_kwh']:.1f} kWh/gün ({inputs.sun_hours}s Güneş)"
+          f"{p.solar_kwh:.1f} kWh/gün ({inputs.sun_hours}s Güneş)"
       )
     with tech_col4:
-      st.info(f"**Net Şebeke Şarj İhtiyacı:**\n\n{p['net_grid_kwh']:.1f} kWh/gün")
+      st.info(f"**Net Şebeke Şarj İhtiyacı:**\n\n{p.net_grid_kwh:.1f} kWh/gün")

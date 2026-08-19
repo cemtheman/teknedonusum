@@ -1,3 +1,6 @@
+from models.results import VesselPhysicsResult
+
+
 def calc_calibrated_vessel_physics(spec, cruise_spd, d_miles, s_hours):
   payload_weight = spec["capacity"] * 0.080  # Kişi başı 80 kg
   battery_weight = spec["batCapacity"] * 0.010  # LFP Batarya: 10 kg/kWh
@@ -24,16 +27,16 @@ def calc_calibrated_vessel_physics(spec, cruise_spd, d_miles, s_hours):
       else max_diesel_lph * ((cruise_spd / 10.0) ** 2.85)
   )
 
-  return {
-      "total_disp": total_disp,
-      "payload_weight": payload_weight,
-      "battery_weight": battery_weight,
-      "max_power": max_power,
-      "cruise_power": cruise_power,
-      "cruise_hours": cruise_hours,
-      "brut_kwh": brut_kwh,
-      "solar_area": solar_area,
-      "solar_kwh": solar_kwh,
-      "net_grid_kwh": net_grid_kwh,
-      "cruise_diesel_lph": cruise_diesel_lph,
-  }
+  return VesselPhysicsResult(
+      total_disp=total_disp,
+      payload_weight=payload_weight,
+      battery_weight=battery_weight,
+      max_power=max_power,
+      cruise_power=cruise_power,
+      cruise_hours=cruise_hours,
+      brut_kwh=brut_kwh,
+      solar_area=solar_area,
+      solar_kwh=solar_kwh,
+      net_grid_kwh=net_grid_kwh,
+      cruise_diesel_lph=cruise_diesel_lph,
+  )

@@ -1,5 +1,7 @@
 import streamlit as st
 
+from calculations.decision_summary import build_vessel_decision_summary
+from calculations.economic_comparison import build_vessel_economic_comparison
 from calculations.fleet import calculate_fleet
 from calculations.presentation import build_technical_scenario_presentation
 from calculations.technical_scenario import evaluate_preliminary_technical_scenario
@@ -9,6 +11,7 @@ from config.geometry import PRELIMINARY_VESSEL_GEOMETRY
 from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
 from config.vessel_factory import build_vessel_specs
 from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
+from ui.decision_summary import render_vessel_decision_summary
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 from ui.technical_scenario import render_technical_scenario
@@ -80,6 +83,28 @@ def main():
 
   render_fleet_dashboard(VESSEL_SPECS, inputs, fleet)
 
+  comparison = build_vessel_technical_comparison(
+      vessel_specs=VESSEL_SPECS,
+      cruise_speed=inputs.cruise_speed,
+      daily_miles=inputs.daily_miles,
+      sun_hours=inputs.sun_hours,
+  )
+  economic_comparison = build_vessel_economic_comparison(
+      vessel_specs=VESSEL_SPECS,
+      cruise_speed=inputs.cruise_speed,
+      daily_miles=inputs.daily_miles,
+      sun_hours=inputs.sun_hours,
+      season_days=inputs.operating_days,
+      electricity_price=inputs.elec_price,
+      diesel_price=inputs.diesel_price,
+      exchange_rate=inputs.eur_rate,
+  )
+  decision_summary = build_vessel_decision_summary(
+      comparison,
+      economic_comparison,
+  )
+  render_vessel_decision_summary(decision_summary)
+
   geometry = PRELIMINARY_VESSEL_GEOMETRY["v1"]
   assumptions = V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
   scenario = evaluate_preliminary_technical_scenario(
@@ -111,12 +136,6 @@ def main():
   )
   render_technical_scenario(presentation)
 
-  comparison = build_vessel_technical_comparison(
-      vessel_specs=VESSEL_SPECS,
-      cruise_speed=inputs.cruise_speed,
-      daily_miles=inputs.daily_miles,
-      sun_hours=inputs.sun_hours,
-  )
   render_vessel_technical_comparison(comparison)
 
   render_vessel_details(VESSEL_SPECS, inputs)

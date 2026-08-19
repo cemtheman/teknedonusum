@@ -12,6 +12,7 @@ from calculations.hydrodynamics import (
     calculate_effective_power_kw,
     calculate_frictional_resistance,
     calculate_froude_number,
+    calculate_residual_resistance_coefficient,
     calculate_total_resistance,
     calculate_viscous_resistance,
 )
@@ -26,6 +27,7 @@ class ResistanceSensitivityResult:
   form_factor: float
   viscous_resistance_n: float
   residual_resistance_n: float
+  residual_resistance_coefficient: float | None
   appendage_resistance_n: float
   total_resistance_n: float
   effective_power_kw: float
@@ -56,6 +58,15 @@ def calculate_resistance_sensitivity(
       wetted_surface_area_m2,
       form_factor,
   )
+  residual_resistance_coefficient = (
+      calculate_residual_resistance_coefficient(
+          residual_resistance_n,
+          speed_knots,
+          wetted_surface_area_m2,
+      )
+      if speed_knots > 0
+      else None
+  )
   total_resistance_n = calculate_total_resistance(
       viscous_resistance_n,
       residual_resistance_n,
@@ -73,6 +84,7 @@ def calculate_resistance_sensitivity(
       form_factor=form_factor,
       viscous_resistance_n=viscous_resistance_n,
       residual_resistance_n=residual_resistance_n,
+      residual_resistance_coefficient=residual_resistance_coefficient,
       appendage_resistance_n=appendage_resistance_n,
       total_resistance_n=total_resistance_n,
       effective_power_kw=effective_power_kw,

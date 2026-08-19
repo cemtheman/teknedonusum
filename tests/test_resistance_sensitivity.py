@@ -24,6 +24,10 @@ def test_six_knot_baseline_scenario():
   assert result.froude_number == pytest.approx(0.29192856556133584)
   assert result.frictional_resistance_n == pytest.approx(348.4253689773023)
   assert result.viscous_resistance_n == pytest.approx(400.6891743238976)
+  assert result.residual_resistance_n == 500.0
+  assert result.residual_resistance_coefficient == pytest.approx(
+      0.0034986462403519525
+  )
   assert result.total_resistance_n == pytest.approx(950.6891743238975)
   assert result.effective_power_kw == pytest.approx(2.9344580495752988)
 
@@ -41,6 +45,10 @@ def test_ten_knot_baseline_scenario():
   assert result.froude_number == pytest.approx(0.4865476092688931)
   assert result.frictional_resistance_n == pytest.approx(894.8322878011685)
   assert result.viscous_resistance_n == pytest.approx(1029.0571309713437)
+  assert result.residual_resistance_n == 1500.0
+  assert result.residual_resistance_coefficient == pytest.approx(
+      0.003778537939580108
+  )
   assert result.total_resistance_n == pytest.approx(2629.0571309713437)
   assert result.effective_power_kw == pytest.approx(13.52502666685422)
 
@@ -96,6 +104,8 @@ def test_zero_speed_preserves_external_resistance_but_has_zero_power():
   assert result.froude_number == 0.0
   assert result.frictional_resistance_n == 0.0
   assert result.viscous_resistance_n == 0.0
+  assert result.residual_resistance_n == 500.0
+  assert result.residual_resistance_coefficient is None
   assert result.total_resistance_n == pytest.approx(550.0)
   assert result.effective_power_kw == 0.0
 

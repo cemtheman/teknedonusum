@@ -115,6 +115,69 @@ def calculate_viscous_resistance(
   return (1.0 + form_factor) * frictional_resistance_n
 
 
+def calculate_residual_resistance_coefficient(
+    residual_resistance_n,
+    speed_knots,
+    wetted_surface_area_m2,
+    water_density_kg_m3=WATER_DENSITY_KG_M3,
+):
+  """Represent a supplied residual-resistance force as a coefficient.
+
+  This conversion utility uses wetted surface as its reference area. It does not
+  predict C_R from Froude number and does not implement Holtrop, Delft,
+  model-test interpolation, CFD fitting, or any empirical wave/residual model.
+  """
+  if residual_resistance_n < 0:
+    raise ValueError("residual_resistance_n must be non-negative")
+  if speed_knots <= 0:
+    raise ValueError("speed_knots must be positive")
+  if wetted_surface_area_m2 <= 0:
+    raise ValueError("wetted_surface_area_m2 must be positive")
+  if water_density_kg_m3 <= 0:
+    raise ValueError("water_density_kg_m3 must be positive")
+
+  speed_m_s = knots_to_mps(speed_knots)
+  reference_force_n = (
+      0.5 * water_density_kg_m3 * speed_m_s**2 * wetted_surface_area_m2
+  )
+  return residual_resistance_n / reference_force_n
+
+
+def calculate_residual_resistance(
+    residual_resistance_coefficient,
+    speed_knots,
+    wetted_surface_area_m2,
+    water_density_kg_m3=WATER_DENSITY_KG_M3,
+):
+  """Convert a supplied residual-resistance coefficient back to force.
+
+  Wetted surface is the coefficient reference area. This representation utility
+  does not infer the coefficient from Froude number or implement Holtrop, Delft,
+  model-test interpolation, CFD fitting, or an empirical residual prediction.
+  """
+  if residual_resistance_coefficient < 0:
+    raise ValueError(
+        "residual_resistance_coefficient must be non-negative"
+    )
+  if speed_knots < 0:
+    raise ValueError("speed_knots must be non-negative")
+  if wetted_surface_area_m2 <= 0:
+    raise ValueError("wetted_surface_area_m2 must be positive")
+  if water_density_kg_m3 <= 0:
+    raise ValueError("water_density_kg_m3 must be positive")
+  if speed_knots == 0:
+    return 0.0
+
+  speed_m_s = knots_to_mps(speed_knots)
+  return (
+      residual_resistance_coefficient
+      * 0.5
+      * water_density_kg_m3
+      * speed_m_s**2
+      * wetted_surface_area_m2
+  )
+
+
 def calculate_total_resistance(
     viscous_resistance_n,
     residual_resistance_n,

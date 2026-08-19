@@ -6,6 +6,8 @@ from calculations.hydrodynamics import (
     calculate_froude_number,
     calculate_ittc_friction_coefficient,
     calculate_reynolds_number,
+    calculate_residual_resistance,
+    calculate_residual_resistance_coefficient,
     calculate_total_resistance,
     calculate_viscous_resistance,
     knots_to_mps,
@@ -117,6 +119,110 @@ def test_viscous_resistance():
       form_factor=0.15,
   )
   assert result == pytest.approx(400.6891743238976)
+
+
+@pytest.mark.parametrize(
+    ("speed_knots", "residual_resistance_n", "expected_coefficient"),
+    [
+        (6.0, 500.0, 0.0034986462403519525),
+        (10.0, 1500.0, 0.003778537939580108),
+    ],
+)
+def test_residual_resistance_coefficient_fixtures(
+    speed_knots,
+    residual_resistance_n,
+    expected_coefficient,
+):
+  result = calculate_residual_resistance_coefficient(
+      residual_resistance_n,
+      speed_knots,
+      wetted_surface_area_m2=30.0,
+  )
+
+  assert result == pytest.approx(expected_coefficient)
+
+
+def test_residual_resistance_coefficient_round_trip():
+  coefficient = calculate_residual_resistance_coefficient(
+      residual_resistance_n=500.0,
+      speed_knots=6.0,
+      wetted_surface_area_m2=30.0,
+  )
+
+  result = calculate_residual_resistance(
+      coefficient,
+      speed_knots=6.0,
+      wetted_surface_area_m2=30.0,
+  )
+
+  assert result == pytest.approx(500.0)
+
+
+def test_zero_residual_force_has_zero_coefficient_at_positive_speed():
+  result = calculate_residual_resistance_coefficient(0.0, 6.0, 30.0)
+  assert result == 0.0
+
+
+def test_residual_coefficient_rejects_zero_speed():
+  with pytest.raises(ValueError):
+    calculate_residual_resistance_coefficient(500.0, 0.0, 30.0)
+
+
+def test_residual_force_is_zero_at_zero_speed():
+  result = calculate_residual_resistance(0.0035, 0.0, 30.0)
+  assert result == 0.0
+
+
+@pytest.mark.parametrize(
+    ("residual_resistance_n", "speed_knots", "area_m2", "density"),
+    [
+        (-1.0, 6.0, 30.0, 1000.0),
+        (500.0, -1.0, 30.0, 1000.0),
+        (500.0, 6.0, 0.0, 1000.0),
+        (500.0, 6.0, -1.0, 1000.0),
+        (500.0, 6.0, 30.0, 0.0),
+        (500.0, 6.0, 30.0, -1.0),
+    ],
+)
+def test_invalid_residual_coefficient_conversion_inputs_are_rejected(
+    residual_resistance_n,
+    speed_knots,
+    area_m2,
+    density,
+):
+  with pytest.raises(ValueError):
+    calculate_residual_resistance_coefficient(
+        residual_resistance_n,
+        speed_knots,
+        area_m2,
+        density,
+    )
+
+
+@pytest.mark.parametrize(
+    ("coefficient", "speed_knots", "area_m2", "density"),
+    [
+        (-0.001, 6.0, 30.0, 1000.0),
+        (0.0035, -1.0, 30.0, 1000.0),
+        (0.0035, 6.0, 0.0, 1000.0),
+        (0.0035, 6.0, -1.0, 1000.0),
+        (0.0035, 6.0, 30.0, 0.0),
+        (0.0035, 6.0, 30.0, -1.0),
+    ],
+)
+def test_invalid_residual_force_conversion_inputs_are_rejected(
+    coefficient,
+    speed_knots,
+    area_m2,
+    density,
+):
+  with pytest.raises(ValueError):
+    calculate_residual_resistance(
+        coefficient,
+        speed_knots,
+        area_m2,
+        density,
+    )
 
 
 def test_total_resistance():

@@ -1,5 +1,6 @@
 import streamlit as st
 
+from calculations.assumptions_transparency import build_assumptions_transparency
 from calculations.decision_summary import build_vessel_decision_summary
 from calculations.economic_comparison import build_vessel_economic_comparison
 from calculations.fleet import calculate_fleet
@@ -11,6 +12,7 @@ from config.geometry import PRELIMINARY_VESSEL_GEOMETRY
 from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS
 from config.vessel_factory import build_vessel_specs
 from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
+from ui.assumptions_transparency import render_assumptions_transparency
 from ui.decision_summary import render_vessel_decision_summary
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
@@ -104,6 +106,14 @@ def main():
       economic_comparison,
   )
   render_vessel_decision_summary(decision_summary)
+
+  assumptions_transparency = build_assumptions_transparency(
+      inputs=inputs,
+      vessel_specs=VESSEL_SPECS,
+      eur_is_live=eur_is_live,
+      diesel_is_live=diesel_is_live,
+  )
+  render_assumptions_transparency(assumptions_transparency)
 
   geometry = PRELIMINARY_VESSEL_GEOMETRY["v1"]
   assumptions = V1_PRELIMINARY_SCENARIO_ASSUMPTIONS

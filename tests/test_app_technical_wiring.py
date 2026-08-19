@@ -22,6 +22,7 @@ def keyword_source(call, keyword_name):
 
 def test_technical_scenario_imports_are_present():
   required_imports = {
+      "from calculations.assumptions_transparency import build_assumptions_transparency",
       "from calculations.decision_summary import build_vessel_decision_summary",
       "from calculations.economic_comparison import build_vessel_economic_comparison",
       "from calculations.presentation import build_technical_scenario_presentation",
@@ -30,6 +31,7 @@ def test_technical_scenario_imports_are_present():
       "from config.commission_constraints import DALYAN_COMMISSION_CONSTRAINTS",
       "from config.geometry import PRELIMINARY_VESSEL_GEOMETRY",
       "from config.preliminary_scenario import V1_PRELIMINARY_SCENARIO_ASSUMPTIONS",
+      "from ui.assumptions_transparency import render_assumptions_transparency",
       "from ui.technical_scenario import render_technical_scenario",
       "from ui.decision_summary import render_vessel_decision_summary",
       "from ui.vessel_comparison import render_vessel_technical_comparison",
@@ -126,3 +128,14 @@ def test_economic_comparison_uses_current_sidebar_inputs():
   assert keyword_source(economic_call, "electricity_price") == "inputs.elec_price"
   assert keyword_source(economic_call, "diesel_price") == "inputs.diesel_price"
   assert keyword_source(economic_call, "exchange_rate") == "inputs.eur_rate"
+
+
+def test_assumptions_transparency_uses_current_values_and_live_flags():
+  transparency_call = calls_named("build_assumptions_transparency")[0]
+
+  assert len(calls_named("build_assumptions_transparency")) == 1
+  assert len(calls_named("render_assumptions_transparency")) == 1
+  assert keyword_source(transparency_call, "inputs") == "inputs"
+  assert keyword_source(transparency_call, "vessel_specs") == "VESSEL_SPECS"
+  assert keyword_source(transparency_call, "eur_is_live") == "eur_is_live"
+  assert keyword_source(transparency_call, "diesel_is_live") == "diesel_is_live"

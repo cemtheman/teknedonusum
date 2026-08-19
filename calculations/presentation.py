@@ -14,7 +14,7 @@ COMPLIANCE_LABELS = {
     "minimum_navigation_range": "Seyir Menzili",
     "motor_efficiency": "Motor Verimi",
     "battery_capacity": "Batarya Kapasitesi",
-    "roof_length_fraction": "Çatı Uzunluğu",
+    "roof_length_fraction": "Çatı Uzunluğu / LOA",
 }
 
 
@@ -55,7 +55,7 @@ def build_technical_scenario_presentation(
       ),
       TechnicalDisplayValue(
           key="net_external_energy",
-          label="Günlük Harici Enerji İhtiyacı",
+          label="Güneş Sonrası Net Enerji İhtiyacı",
           value=scenario.daily_energy_balance.net_external_energy_required_kwh,
           unit="kWh/day",
           category=TechnicalValueCategory.PRELIMINARY_ESTIMATE,

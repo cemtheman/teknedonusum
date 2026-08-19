@@ -113,7 +113,7 @@ def test_compliance_mapping_is_exact():
       "Seyir Menzili",
       "Motor Verimi",
       "Batarya Kapasitesi",
-      "Çatı Uzunluğu",
+      "Çatı Uzunluğu / LOA",
   ]
 
   assert [value.label for value in presentation.compliance_values] == expected_labels

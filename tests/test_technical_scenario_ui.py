@@ -78,14 +78,14 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
       "Elektriksel Giriş Gücü",
       "Yalnız Batarya ile Seyir Menzili",
       "Günlük Güneş Enerjisi Üretimi",
-      "Günlük Harici Enerji İhtiyacı",
+      "Güneş Sonrası Net Enerji İhtiyacı",
   ]
   assert [call.args[1] for call in streamlit.metric.call_args_list[:5]] == [
-      "25.9 kW",
-      "23.7 kW",
-      "22.8 NM",
-      "25.2 kWh/gün",
-      "63.1 kWh/gün",
+      "25,9 kW",
+      "23,7 kW",
+      "22,8 NM",
+      "25,2 kWh/gün",
+      "63,1 kWh/gün",
   ]
   assert [call.args[0] for call in streamlit.metric.call_args_list[5:]] == [
       "Efektif Güç",
@@ -95,11 +95,11 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
       "Fazla Güneş Enerjisi",
   ]
   assert [call.args[1] for call in streamlit.metric.call_args_list[5:]] == [
-      "13.53 kW",
-      "22.54 kW",
-      "2.52 kWh/NM",
-      "%28.5",
-      "0.00 kWh/gün",
+      "13,53 kW",
+      "22,54 kW",
+      "2,52 kWh/NM",
+      "%28,5",
+      "0,00 kWh/gün",
   ]
 
   lines = compliance_lines(streamlit)
@@ -112,11 +112,11 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
       "✅ Seyir Menzili",
       "✅ Motor Verimi",
       "✅ Batarya Kapasitesi",
-      "✅ Çatı Uzunluğu",
+      "✅ Çatı Uzunluğu / LOA",
   ]
-  assert "Asgari Hız: 10.0 knot" in lines[2]
-  assert "Motor Verimi: %95.0 — Gereken: ≥ %95.0" in lines[4]
-  assert "Çatı Uzunluğu: LOA'nın %80.0'ı" in lines[6]
+  assert "Asgari Hız: 10,0 knot · Kriter: ≥ 10,0 knot" in lines[2]
+  assert "Motor Verimi: %95 · Kriter: ≥ %95" in lines[4]
+  assert "Çatı Uzunluğu / LOA: %80 · Kriter: ≥ %80" in lines[6]
 
 
 def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
@@ -134,7 +134,7 @@ def test_fail_scenario_uses_error_and_marks_failed_row(monkeypatch):
   lines = compliance_lines(streamlit)
   assert len(lines) == 7
   assert all(line.startswith("✅") for line in lines[:6])
-  assert lines[6].startswith("❌ Çatı Uzunluğu: LOA'nın %79.0'ı")
+  assert lines[6].startswith("❌ Çatı Uzunluğu / LOA: %79 · Kriter: ≥ %80")
 
 
 def test_render_structure_calls_are_exact(monkeypatch):
@@ -144,7 +144,7 @@ def test_render_structure_calls_are_exact(monkeypatch):
 
   streamlit.divider.assert_called_once_with()
   streamlit.subheader.assert_called_once_with(
-      "⚙️ Ön Teknik Uygunluk ve Enerji Analizi"
+      "⚙️ Ön Teknik Uygunluk ve Enerji Değerlendirmesi"
   )
   assert streamlit.columns.call_args_list[0].args == (5,)
   assert streamlit.columns.call_args_list[1].args == (2,)

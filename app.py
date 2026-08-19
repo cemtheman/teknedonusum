@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from calculations.fleet import calculate_fleet
 from calculations.vessel_physics import calc_calibrated_vessel_physics
 from config.vessels import BASE_VESSEL_SPECS
 from models.inputs import SimulationInputs
@@ -235,60 +236,29 @@ counts = {
     "v4_32": inputs.count_v4_32,
 }
 
-total_vessels = sum(counts.values())
-total_capacity = sum(
-    counts[k] * VESSEL_SPECS[k]["capacity"] for k in VESSEL_SPECS
+fleet = calculate_fleet(
+    VESSEL_SPECS,
+    counts,
+    inputs.cruise_speed,
+    inputs.daily_miles,
+    inputs.sun_hours,
+    inputs.operating_days,
 )
 
-grants_per_type = {
-    k: min(
-        VESSEL_SPECS[k]["maxGrant"],
-        VESSEL_SPECS[k]["totalCost"] * VESSEL_SPECS[k]["grantRate"],
-    )
-    for k in VESSEL_SPECS
-}
-
-fleet_total_cost = sum(
-    counts[k] * VESSEL_SPECS[k]["totalCost"] for k in VESSEL_SPECS
-)
-fleet_total_grant = sum(counts[k] * grants_per_type[k] for k in VESSEL_SPECS)
-fleet_total_capex = fleet_total_cost - fleet_total_grant
-
-# --- Fleet Total CO2 Reduction, Tree Equivalent & Energy Balance Calculation ---
-fleet_total_co2_reduction = 0.0
-fleet_daily_solar_kwh = 0.0
-fleet_daily_grid_kwh = 0.0
-fleet_daily_brut_kwh = 0.0
-
-for k, spec_item in VESSEL_SPECS.items():
-  if counts[k] > 0:
-    p = calc_calibrated_vessel_physics(
-        spec_item, inputs.cruise_speed, inputs.daily_miles, inputs.sun_hours
-    )
-
-    co2_old = (
-        spec_item["merged"]
-        * p["cruise_diesel_lph"]
-        * p["cruise_hours"]
-        * inputs.operating_days
-        * 2.68
-    ) / 1000
-    co2_new = (p["net_grid_kwh"] * inputs.operating_days * 0.44) / 1000
-    single_co2_saved = co2_old - co2_new
-
-    fleet_total_co2_reduction += single_co2_saved * counts[k]
-    fleet_daily_solar_kwh += p["solar_kwh"] * counts[k]
-    fleet_daily_grid_kwh += p["net_grid_kwh"] * counts[k]
-    fleet_daily_brut_kwh += (p["brut_kwh"] / 0.95) * counts[k]
-
-equivalent_trees = int(fleet_total_co2_reduction / 0.022)
-fleet_annual_grid_kwh = fleet_daily_grid_kwh * inputs.operating_days
-fleet_annual_solar_kwh = fleet_daily_solar_kwh * inputs.operating_days
-solar_coverage_ratio = (
-    (fleet_daily_solar_kwh / fleet_daily_brut_kwh) * 100
-    if fleet_daily_brut_kwh > 0
-    else 0
-)
+total_vessels = fleet["total_vessels"]
+total_capacity = fleet["total_capacity"]
+grants_per_type = fleet["grants_per_type"]
+fleet_total_cost = fleet["fleet_total_cost"]
+fleet_total_grant = fleet["fleet_total_grant"]
+fleet_total_capex = fleet["fleet_total_capex"]
+fleet_total_co2_reduction = fleet["fleet_total_co2_reduction"]
+fleet_daily_solar_kwh = fleet["fleet_daily_solar_kwh"]
+fleet_daily_grid_kwh = fleet["fleet_daily_grid_kwh"]
+fleet_daily_brut_kwh = fleet["fleet_daily_brut_kwh"]
+equivalent_trees = fleet["equivalent_trees"]
+fleet_annual_grid_kwh = fleet["fleet_annual_grid_kwh"]
+fleet_annual_solar_kwh = fleet["fleet_annual_solar_kwh"]
+solar_coverage_ratio = fleet["solar_coverage_ratio"]
 
 # --- Fleet Summary Dashboard Section ---
 st.subheader("🚢 Filo Geneli Toplam Dönüşüm ve Finansman Özeti")

@@ -21,9 +21,9 @@ def test_table_contains_only_reference_decision_columns():
       "Motor + batarya maliyeti",
   ]
   assert list(table["Tekne"]) == [
-      "V1 — 12 m conventional displacement monohull",
+      "V1 — 12 m monohull",
       "V2 — 13.5 m narrow catamaran",
-      "V3 — 14 m higher-capacity catamaran",
+      "V3 — 14 m narrow catamaran",
   ]
   assert list(table["Yolcu kapasitesi"]) == [24, 32, 54]
   assert list(table["Toplam kurulu mekanik güç"]) == [

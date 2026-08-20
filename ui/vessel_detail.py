@@ -1,10 +1,13 @@
 import pandas as pd
 import streamlit as st
 
-from calculations.economics import calculate_vessel_economics
-from calculations.vessel_physics import calc_calibrated_vessel_physics
+from calculations.vessel_detail_analysis import build_vessel_detail_analysis
 from models.inputs import SimulationInputs
 from ui.formatting import format_integer_tr
+
+
+def _format_decimal_tr(value):
+  return f"{value:.1f}".replace(".", ",")
 
 
 def render_vessel_details(
@@ -12,113 +15,67 @@ def render_vessel_details(
     inputs: SimulationInputs,
 ):
   st.divider()
-
-  # --- All Vessel Types Detailed Breakdown Section (Alt Alta) ---
-  st.subheader("📊 Tüm Tekne Tipleri İçin Tekil Detay Analizleri (Kalibre Edilmiş)")
+  st.subheader("📊 Tüm Tekne Tipleri İçin Tekil Detay Analizleri")
+  st.caption(
+      "Teknik değerler Elektrikli Tahrik Ön Boyutlandırması ile aynı v0.2 "
+      "hesap zincirinden gelir. Ekonomik değerler anahtar teslim piyasa bedeli "
+      "ve açık işletme varsayımlarını kullanır."
+  )
 
   for v_key, spec in vessel_specs.items():
     with st.expander(f"📌 {spec['name']}", expanded=False):
-      p = calc_calibrated_vessel_physics(
-          spec, inputs.cruise_speed, inputs.daily_miles, inputs.sun_hours
-      )
-
-      economics = calculate_vessel_economics(
-          spec,
-          p,
-          inputs.eur_rate,
-          inputs.diesel_price,
-          inputs.elec_price,
-          inputs.operating_days,
-      )
-
-      per_motor_peak_kw = p.max_power / spec["motors"]
-      per_motor_cruise_kw = p.cruise_power / spec["motors"]
-
-      if spec["motors"] == 2:
-        motor_desc = (
-            f"• IE5 Çift Sevk Sistemi (2x {per_motor_peak_kw:.1f} kW Zirve Güç)"
+      try:
+        detail = build_vessel_detail_analysis(v_key, spec, inputs)
+      except (TypeError, ValueError):
+        st.warning(
+            "Bu tekne için detay analizi hesaplanamadı. v0.2 teknik zinciri "
+            "6–10 knot hizmet hızı aralığında çalışır."
         )
-        peak_power_str = (
-            f"2x {per_motor_peak_kw:.1f} kW ({p.max_power:.1f} kW Toplam)"
-        )
-        cruise_power_str = (
-            f"2x {per_motor_cruise_kw:.1f} kW ({p.cruise_power:.1f} kW Toplam)"
-        )
-      else:
-        motor_desc = f"• IE5 Tek Sevk Sistemi ({p.max_power:.1f} kW Zirve Güç)"
-        peak_power_str = f"{p.max_power:.1f} kW"
-        cruise_power_str = f"{p.cruise_power:.1f} kW"
+        continue
 
-      motor_cost_tl = economics.motor_cost_tl
-      solar_cost_tl = economics.solar_cost_tl
-      bat_cost_tl = economics.bat_cost_tl
-      infra_share_tl = economics.infra_share_tl
-      hull_cost_tl = economics.hull_cost_tl
-      grant_amount = economics.grant_amount
-      net_capex = economics.net_capex
-      old_diesel_cost = economics.old_diesel_cost
-      old_maint_cost = economics.old_maint_cost
-      old_total_annual = economics.old_total_annual
-      new_elec_cost = economics.new_elec_cost
-      new_degradation = economics.new_degradation
-      new_maint_cost = economics.new_maint_cost
-      new_total_annual = economics.new_total_annual
-      net_savings = economics.net_savings
-      payback_seasons = economics.payback_seasons
-      payback_months = economics.payback_months
-      net_co2 = economics.net_co2
+      sizing = detail.sizing
 
-      # Metric Cards
       kpi1, kpi2, kpi3, kpi4 = st.columns(4)
       with kpi1:
-        st.metric("Net Özkaynak CAPEX", f"₺{format_integer_tr(net_capex)}")
+        st.metric("Net Özkaynak CAPEX", f"₺{format_integer_tr(detail.net_capex_tl)}")
       with kpi2:
-        st.metric("Sezonluk Net Tasarruf", f"₺{format_integer_tr(net_savings)}")
+        st.metric(
+            "Sezonluk Net Tasarruf",
+            f"₺{format_integer_tr(detail.net_savings_tl)}",
+        )
       with kpi3:
         st.metric(
             "Özkaynak Amortisman (ROI)",
-            f"{payback_seasons:.1f} Sezon ({int(payback_months)} Ay)",
+            f"{detail.payback_seasons:.1f} Sezon ({int(detail.payback_months)} Ay)",
         )
       with kpi4:
-        st.metric("Sezonluk CO2 Salınım Azaltımı", f"{net_co2:.1f} Ton")
+        st.metric(
+            "Sezonluk CO2 Salınım Azaltımı",
+            f"{detail.net_co2_tonnes:.1f} Ton",
+        )
 
       col_left, col_right = st.columns([6, 6])
 
       with col_left:
-        st.markdown("**Yatırım Masrafları (CAPEX) ve Hibe Detayı**")
+        st.markdown("**Yatırım ve Hibe Özeti**")
         capex_df = pd.DataFrame({
-            "Maliyet Kalemi": [
-                "Brüt Toplam Maliyet",
+            "Kalem": [
+                "Anahtar Teslim Piyasa Bedeli",
                 "Alınan Devlet Hibesi",
                 "Net Özkaynak (CAPEX)",
-                "• Tekne Gövde & Genel Donatım Maliyeti",
-                motor_desc,
-                "• Hardtop Solar PV Tavan",
-                "• Lityum Batarya Paketi",
-                "• Altyapı Payı (1/150)",
             ],
             "Tutar (TL)": [
-                f"₺{format_integer_tr(spec['totalCost'])} (€{format_integer_tr(spec['totalCostEur'])})",
-                f"-₺{format_integer_tr(grant_amount)}",
-                f"₺{format_integer_tr(net_capex)}",
-                f"₺{format_integer_tr(hull_cost_tl)}",
-                f"₺{format_integer_tr(motor_cost_tl)}",
-                f"₺{format_integer_tr(solar_cost_tl)}",
-                f"₺{format_integer_tr(bat_cost_tl)}",
-                f"₺{format_integer_tr(infra_share_tl)}",
+                (
+                    f"₺{format_integer_tr(spec['totalCost'])} "
+                    f"(€{format_integer_tr(spec['totalCostEur'])})"
+                ),
+                f"-₺{format_integer_tr(detail.grant_amount_tl)}",
+                f"₺{format_integer_tr(detail.net_capex_tl)}",
             ],
             "Açıklama": [
-                "Birim ihale maliyeti",
+                "Gövde, tahrik sistemi, batarya ve güneş paneli dahil piyasa bedeli",
                 spec["priority"],
-                "Yatırımcı Net Sermayesi",
-                "Gövde & iç donatım maliyeti",
-                (
-                    f"{spec['motors']}x Pod/Şaft sevk motoru"
-                    f" ({'Çift hattı' if spec['motors']==2 else 'Tek hat'})"
-                ),
-                f"{p.solar_area:.1f} m² tavan paneli",
-                f"{spec['batCapacity']} kWh LFP paketi",
-                "Liman şarj & izleme payı",
+                "Anahtar teslim bedelden hibe düşüldükten sonraki yatırımcı sermayesi",
             ],
         })
         st.table(capex_df)
@@ -127,9 +84,11 @@ def render_vessel_details(
         st.markdown("**Sezonluk İşletme Giderleri (OPEX) ve Tasarruf Dökümü**")
         opex_df = pd.DataFrame({
             "Gider Kalemi": [
-                f"Eski Ahşap Yakıt Giderleri ({inputs.cruise_speed:.1f} kt /"
-                f" {p.cruise_diesel_lph:.2f} L/h)",
-                "Eski Ahşap Sezonluk Bakım/Rektefiye",
+                (
+                    f"Eski Tekne Yakıt Gideri ({inputs.cruise_speed:.1f} kt / "
+                    f"{detail.old_diesel_lph:.2f} L/h)"
+                ),
+                "Eski Tekne Sezonluk Bakım/Rektefiye",
                 "ESKİ TEKNE SEZONLUK GİDERLER TOPLAMI",
                 "Yeni Elektrikli Şebeke Şarj Masrafları",
                 "Yeni Batarya Yıpranma Karşılığı",
@@ -138,35 +97,48 @@ def render_vessel_details(
                 "SEZONLUK NET FİNANSAL TASARRUF",
             ],
             "Tutar (TL)": [
-                f"₺{format_integer_tr(old_diesel_cost)}",
-                f"₺{format_integer_tr(old_maint_cost)}",
-                f"₺{format_integer_tr(old_total_annual)}",
-                f"₺{format_integer_tr(new_elec_cost)}",
-                f"₺{format_integer_tr(new_degradation)}",
-                f"₺{format_integer_tr(new_maint_cost)}",
-                f"₺{format_integer_tr(new_total_annual)}",
-                f"₺{format_integer_tr(net_savings)}",
+                f"₺{format_integer_tr(detail.old_diesel_cost_tl)}",
+                f"₺{format_integer_tr(detail.old_maintenance_cost_tl)}",
+                f"₺{format_integer_tr(detail.old_total_annual_tl)}",
+                f"₺{format_integer_tr(detail.new_electricity_cost_tl)}",
+                f"₺{format_integer_tr(detail.new_battery_degradation_tl)}",
+                f"₺{format_integer_tr(detail.new_maintenance_cost_tl)}",
+                f"₺{format_integer_tr(detail.new_total_annual_tl)}",
+                f"₺{format_integer_tr(detail.net_savings_tl)}",
             ],
         })
         st.table(opex_df)
 
-      st.markdown(
-          "**⚡ Hidrodinamik ve Sevk Sistemi Kalibrasyonu**"
-          f" *(Deplasman: {p.total_disp:.2f} Ton | Motor Düzeni:"
-          f" {spec['motors']}x Sevk Hattı)*"
-      )
+      st.markdown("**⚡ Teknik ve Enerji Özeti — v0.2**")
       tech_col1, tech_col2, tech_col3, tech_col4 = st.columns(4)
       with tech_col1:
-        st.info(f"**10 Knots Zirve Güç:**\n\n{peak_power_str}")
+        st.info(
+            "**Toplam Kurulu Motor Gücü:**\n\n"
+            f"{_format_decimal_tr(sizing.reference_installed_mechanical_power_kw)} kW"
+        )
       with tech_col2:
         st.info(
-            f"**{inputs.cruise_speed:.1f} Knots Seyir Gücü:**\n\n{cruise_power_str} (Dizel:"
-            f" {p.cruise_diesel_lph:.2f} L/h)"
+            f"**{inputs.cruise_speed:.1f} Knot Seyir Elektrik Gücü:**\n\n"
+            f"{_format_decimal_tr(sizing.reference_electrical_input_power_kw)} kW"
         )
       with tech_col3:
         st.info(
-            "**Günlük Solar PV Üretimi:**\n\n"
-            f"{p.solar_kwh:.1f} kWh/gün ({inputs.sun_hours}s Güneş)"
+            "**Günlük Tahrik Enerjisi / Gerekli Batarya:**\n\n"
+            f"{_format_decimal_tr(sizing.reference_daily_propulsion_energy_kwh)} "
+            "kWh/gün · "
+            f"{_format_decimal_tr(sizing.reference_nominal_battery_capacity_kwh)} kWh"
         )
       with tech_col4:
-        st.info(f"**Net Şebeke Şarj İhtiyacı:**\n\n{p.net_grid_kwh:.1f} kWh/gün")
+        st.info(
+            "**Güneş Katkısı / Net Şebeke Şarjı:**\n\n"
+            f"{_format_decimal_tr(detail.daily_solar_kwh)} / "
+            f"{_format_decimal_tr(detail.daily_grid_kwh)} kWh/gün"
+        )
+
+      st.caption(
+          f"Teknik profil: {detail.technical_profile_id.upper()} · "
+          f"Günlük rota: {_format_decimal_tr(inputs.daily_miles)} NM · "
+          f"Tahmini seyir süresi: {_format_decimal_tr(sizing.operating_hours_per_day)} saat/gün. "
+          "Tip 4A teknik olarak Tip 1, Tip 4B teknik olarak Tip 2 profiliyle "
+          "boyutlandırılır; hibe ve ekonomik kimlikleri ayrı tutulur."
+      )

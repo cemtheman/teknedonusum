@@ -1,22 +1,17 @@
 """Orchestrate the standalone v0.2 normative vessel-sizing chain."""
 
 from calculations.battery_capacity_envelope import (
-    calculate_nominal_battery_capacity_envelope,
+    calculate_route_based_battery_capacity_envelope,
 )
-from calculations.electrical_power_envelope import (
-    convert_to_electrical_input_power_envelope,
-)
-from calculations.operational_energy_envelope import (
-    calculate_daily_propulsion_energy_envelope,
-)
+from calculations.cruise_power import calculate_cruise_power_envelope
 from calculations.power_envelope import (
     interpolate_installed_mechanical_power_envelope,
 )
 from calculations.propulsion_cost_envelope import (
     calculate_propulsion_system_cost_envelope,
 )
-from config.normative_operational_profiles import (
-    NORMATIVE_OPERATIONAL_ENERGY_ASSUMPTION,
+from calculations.route_energy import (
+    calculate_route_propulsion_energy_envelope,
 )
 from config.normative_power_envelopes import NORMATIVE_POWER_ENVELOPES
 from models.normative_sizing import NormativeSizingResult
@@ -25,8 +20,9 @@ from models.normative_sizing import NormativeSizingResult
 def calculate_normative_sizing(
     vessel_id: str,
     selected_speed_knots: float,
+    daily_distance_nm: float = 35.0,
 ) -> NormativeSizingResult:
-  """Run Commit 51–55 APIs without changing the legacy production path."""
+  """Run installed-power sizing with route-based cruise energy and battery."""
   if vessel_id not in NORMATIVE_POWER_ENVELOPES:
     raise ValueError("vessel_id must be one of v1, v2, or v3")
 
@@ -35,32 +31,32 @@ def calculate_normative_sizing(
       profile,
       selected_speed_knots,
   )
-  electrical = convert_to_electrical_input_power_envelope(mechanical)
-  energy = calculate_daily_propulsion_energy_envelope(
+  cruise_power = calculate_cruise_power_envelope(
       vessel_id,
-      electrical,
-      NORMATIVE_OPERATIONAL_ENERGY_ASSUMPTION,
+      selected_speed_knots,
   )
-  battery = calculate_nominal_battery_capacity_envelope(energy)
+  route_energy = calculate_route_propulsion_energy_envelope(
+      cruise_power,
+      daily_distance_nm,
+  )
+  battery = calculate_route_based_battery_capacity_envelope(route_energy)
   cost = calculate_propulsion_system_cost_envelope(
       vessel_id,
       mechanical,
       battery,
   )
 
-  downstream = (electrical, energy, battery, cost)
+  downstream = (cruise_power, route_energy, battery, cost)
   if any(result.speed_knots != selected_speed_knots for result in downstream):
     raise RuntimeError("downstream sizing speeds must remain consistent")
-  if any(
-      result.vessel_id != vessel_id
-      for result in (energy, battery, cost)
-  ):
+  if any(result.vessel_id != vessel_id for result in downstream):
     raise RuntimeError("downstream sizing vessel IDs must remain consistent")
 
   return NormativeSizingResult(
       vessel_id=vessel_id,
       vessel_type=profile.vessel_type,
       selected_speed_knots=selected_speed_knots,
+      daily_distance_nm=daily_distance_nm,
       profile_version=profile.profile_version,
       assumption_status=profile.assumption_status,
       power_envelope_source_basis=profile.provenance,
@@ -79,20 +75,37 @@ def calculate_normative_sizing(
       max_installed_mechanical_power_kw=(
           mechanical.max_installed_mechanical_power_kw
       ),
-      motor_efficiency=electrical.motor_efficiency,
-      min_electrical_input_power_kw=electrical.min_electrical_input_power_kw,
+      min_cruise_mechanical_power_kw=(
+          cruise_power.min_cruise_mechanical_power_kw
+      ),
+      reference_cruise_mechanical_power_kw=(
+          cruise_power.reference_cruise_mechanical_power_kw
+      ),
+      max_cruise_mechanical_power_kw=(
+          cruise_power.max_cruise_mechanical_power_kw
+      ),
+      motor_efficiency=cruise_power.motor_efficiency,
+      min_electrical_input_power_kw=(
+          cruise_power.min_cruise_electrical_power_kw
+      ),
       reference_electrical_input_power_kw=(
-          electrical.reference_electrical_input_power_kw
+          cruise_power.reference_cruise_electrical_power_kw
       ),
-      max_electrical_input_power_kw=electrical.max_electrical_input_power_kw,
-      operating_hours_per_day=energy.operating_hours_per_day,
-      duty_cycle=energy.duty_cycle,
-      effective_powered_hours_per_day=energy.effective_powered_hours_per_day,
-      min_daily_propulsion_energy_kwh=energy.min_daily_electrical_energy_kwh,
+      max_electrical_input_power_kw=(
+          cruise_power.max_cruise_electrical_power_kw
+      ),
+      operating_hours_per_day=route_energy.cruise_hours_per_day,
+      duty_cycle=1.0,
+      effective_powered_hours_per_day=route_energy.cruise_hours_per_day,
+      min_daily_propulsion_energy_kwh=(
+          route_energy.min_daily_propulsion_energy_kwh
+      ),
       reference_daily_propulsion_energy_kwh=(
-          energy.reference_daily_electrical_energy_kwh
+          route_energy.reference_daily_propulsion_energy_kwh
       ),
-      max_daily_propulsion_energy_kwh=energy.max_daily_electrical_energy_kwh,
+      max_daily_propulsion_energy_kwh=(
+          route_energy.max_daily_propulsion_energy_kwh
+      ),
       usable_energy_fraction=battery.usable_soc_fraction,
       reserve_fraction=battery.reserve_fraction,
       effective_usable_energy_fraction=(

@@ -43,11 +43,19 @@ def build_vessel_selection_map(vessel_specs):
   return labels
 
 
-def build_normative_ui_summary(vessel_id, selected_speed_knots):
+def build_normative_ui_summary(
+    vessel_id,
+    selected_speed_knots,
+    daily_distance_nm=35.0,
+):
   """Build the decision summary through the public normative APIs."""
   if not SPEED_MIN_KNOTS <= selected_speed_knots <= SPEED_MAX_KNOTS:
     raise ValueError("Hizmet hızı normatif 6–10 knot aralığında olmalıdır.")
-  sizing = calculate_normative_sizing(vessel_id, selected_speed_knots)
+  sizing = calculate_normative_sizing(
+      vessel_id,
+      selected_speed_knots,
+      daily_distance_nm,
+  )
   return build_normative_decision_summary(sizing)
 
 
@@ -98,7 +106,11 @@ def build_primary_display_values(summary):
   }
 
 
-def render_normative_sizing_section(vessel_specs, selected_speed_knots):
+def render_normative_sizing_section(
+    vessel_specs,
+    selected_speed_knots,
+    daily_distance_nm=35.0,
+):
   """Render a separate v0.2 section while preserving the legacy UI path."""
   st.divider()
   st.subheader("⚡ Elektrikli Tahrik Ön Boyutlandırması")
@@ -119,7 +131,11 @@ def render_normative_sizing_section(vessel_specs, selected_speed_knots):
   )
   vessel_id = selection_map.get(selected_label)
   try:
-    summary = build_normative_ui_summary(vessel_id, selected_speed_knots)
+    summary = build_normative_ui_summary(
+        vessel_id,
+        selected_speed_knots,
+        daily_distance_nm,
+    )
   except (TypeError, ValueError):
     st.error(
         "Normatif ön boyutlandırma hesaplanamadı. Hizmet hızı 6–10 knot "

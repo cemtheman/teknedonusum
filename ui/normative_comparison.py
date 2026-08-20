@@ -50,7 +50,10 @@ def build_normative_comparison_table(comparison):
   ])
 
 
-def render_normative_comparison_section(selected_speed_knots):
+def render_normative_comparison_section(
+    selected_speed_knots,
+    daily_distance_nm=35.0,
+):
   """Render comparison and downloads from one immutable result."""
   st.divider()
   st.subheader("⚖️ Normatif Tekne Karşılaştırması")
@@ -59,7 +62,10 @@ def render_normative_comparison_section(selected_speed_knots):
       "karşılaştırılır; sıralama veya tekne önerisi üretilmez."
   )
   try:
-    comparison = build_normative_vessel_comparison(selected_speed_knots)
+    comparison = build_normative_vessel_comparison(
+        selected_speed_knots,
+        daily_distance_nm,
+    )
   except (TypeError, ValueError):
     st.error(
         "Normatif tekne karşılaştırması hazırlanamadı. Hizmet hızı 6–10 knot "

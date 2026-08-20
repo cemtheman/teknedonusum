@@ -109,8 +109,12 @@ def main():
   render_normative_sizing_section(
       VESSEL_SPECS,
       inputs.cruise_speed,
+      inputs.daily_miles,
   )
-  render_normative_comparison_section(inputs.cruise_speed)
+  render_normative_comparison_section(
+      inputs.cruise_speed,
+      inputs.daily_miles,
+  )
   render_vessel_decision_summary(
       decision_summary,
       assumptions_transparency,

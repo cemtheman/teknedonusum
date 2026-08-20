@@ -93,11 +93,16 @@ def _comparison_row(
 
 def build_normative_vessel_comparison(
     selected_speed_knots: float,
+    daily_distance_nm: float = 35.0,
 ) -> NormativeVesselComparisonResult:
   """Build export-ready rows without adding calculations or ranking."""
   summaries = tuple(
       build_normative_decision_summary(
-          calculate_normative_sizing(vessel_id, selected_speed_knots)
+          calculate_normative_sizing(
+              vessel_id,
+              selected_speed_knots,
+              daily_distance_nm,
+          )
       )
       for vessel_id in EXPECTED_NORMATIVE_VESSEL_IDS
   )

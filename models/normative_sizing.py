@@ -9,6 +9,7 @@ class NormativeSizingResult:
   vessel_id: str
   vessel_type: str
   selected_speed_knots: float
+  daily_distance_nm: float
   profile_version: str
   assumption_status: str
   power_envelope_source_basis: str
@@ -17,6 +18,9 @@ class NormativeSizingResult:
   min_installed_mechanical_power_kw: float
   reference_installed_mechanical_power_kw: float
   max_installed_mechanical_power_kw: float
+  min_cruise_mechanical_power_kw: float
+  reference_cruise_mechanical_power_kw: float
+  max_cruise_mechanical_power_kw: float
   motor_efficiency: float
   min_electrical_input_power_kw: float
   reference_electrical_input_power_kw: float
@@ -61,6 +65,7 @@ class NormativeSizingResult:
 
     scalar_values = (
         self.selected_speed_knots,
+        self.daily_distance_nm,
         self.motor_efficiency,
         self.operating_hours_per_day,
         self.duty_cycle,
@@ -79,6 +84,11 @@ class NormativeSizingResult:
         self.min_installed_mechanical_power_kw,
         self.reference_installed_mechanical_power_kw,
         self.max_installed_mechanical_power_kw,
+    )
+    cruise_mechanical = (
+        self.min_cruise_mechanical_power_kw,
+        self.reference_cruise_mechanical_power_kw,
+        self.max_cruise_mechanical_power_kw,
     )
     electrical = (
         self.min_electrical_input_power_kw,
@@ -100,7 +110,14 @@ class NormativeSizingResult:
         self.reference_propulsion_system_cost,
         self.max_propulsion_system_cost,
     )
-    groups = (mechanical, electrical, energy, battery, cost)
+    groups = (
+        mechanical,
+        cruise_mechanical,
+        electrical,
+        energy,
+        battery,
+        cost,
+    )
     if any(
         not isfinite(value) or value <= 0
         for group in groups
@@ -110,9 +127,14 @@ class NormativeSizingResult:
     if any(not group[0] <= group[1] <= group[2] for group in groups):
       raise ValueError("all sizing envelopes must be ordered")
     if any(
-        electrical_value < mechanical_value
-        for electrical_value, mechanical_value in zip(electrical, mechanical)
+        cruise_value > installed_value
+        for cruise_value, installed_value in zip(
+            cruise_mechanical,
+            mechanical,
+        )
     ):
-      raise ValueError("electrical input power must not be below mechanical power")
+      raise ValueError(
+          "cruise mechanical power must not exceed installed mechanical power"
+      )
     if any(capacity < daily for capacity, daily in zip(battery, energy)):
       raise ValueError("nominal battery capacity must not be below daily energy")

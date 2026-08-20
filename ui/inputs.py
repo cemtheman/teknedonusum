@@ -35,21 +35,21 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
     st.subheader("🚢 Filo Dönüşüm Hedefleri")
     st.caption("Kooperatif Üyesi Hedefleri (%55 & %70 Hibe)")
     count_v1 = st.number_input(
-        "Tip 1 (12m Monohull - 24 Kişi) Adet",
+        "Tip 1 (12 m Tek Gövdeli - 24 Kişi) Adet",
         min_value=0,
         max_value=200,
         value=50,
         step=1,
     )
     count_v2 = st.number_input(
-        "Tip 2 (13.5m Katamaran - 32 Kişi) Adet",
+        "Tip 2 (13,5 m Katamaran - 32 Kişi) Adet",
         min_value=0,
         max_value=200,
         value=50,
         step=1,
     )
     count_v3 = st.number_input(
-        "Tip 3 (14m Katamaran - 54 Kişi) Adet",
+        "Tip 3 (14 m Katamaran - 54 Kişi) Adet",
         min_value=0,
         max_value=200,
         value=40,
@@ -58,14 +58,14 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
     st.caption("Kooperatif Dışı (Bireysel) Hedefler (%40 Hibe)")
     count_v4_24 = st.number_input(
-        "Tip 4A (12m Monohull - 24 Kişi) Adet",
+        "Tip 4A (12 m Tek Gövdeli - 24 Kişi) Adet",
         min_value=0,
         max_value=200,
         value=30,
         step=1,
     )
     count_v4_32 = st.number_input(
-        "Tip 4B (13.5m Katamaran - 32 Kişi) Adet",
+        "Tip 4B (13,5 m Katamaran - 32 Kişi) Adet",
         min_value=0,
         max_value=200,
         value=20,
@@ -74,26 +74,28 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
     st.divider()
 
-    st.subheader("💶 Tekne Birim Maliyetleri (EUR)")
+    st.subheader("💶 Anahtar Teslim Piyasa Bedelleri (EUR)")
     st.caption(
-        "Tip 4A maliyeti Tip1 ile, Tip 4B maliyeti Tip2 ile aynıdır."
+        "Bedeller gövde, elektrikli tahrik sistemi, batarya ve güneş "
+        "panellerini kapsayan piyasa referanslarıdır. %8 ÖTV ve %20 KDV hariçtir. "
+        "Tip 4A bedeli Tip 1 ile, Tip 4B bedeli Tip 2 ile aynıdır."
     )
     cost_eur_v1 = _render_cost_input(
-        "Tip 1 & Tip 4A (12m Monohull - 24 Kişi) Maliyeti (€)",
+        "Tip 1 & Tip 4A anahtar teslim bedeli (€)",
         108100,
     )
     cost_eur_v2 = _render_cost_input(
-        "Tip 2 & Tip 4B (13.5m Katamaran - 32 Kişi) Maliyeti (€)",
+        "Tip 2 & Tip 4B anahtar teslim bedeli (€)",
         144140,
     )
     cost_eur_v3 = _render_cost_input(
-        "Tip 3 (14m Katamaran - 54 Kişi) Maliyeti (€)",
+        "Tip 3 anahtar teslim bedeli (€)",
         180180,
     )
 
     st.divider()
 
-    st.subheader("🌐 Canlı Piyasa & Kurlar")
+    st.subheader("🌐 Canlı Piyasa ve Kurlar")
     st.caption("TCMB ve Aytemiz servislerinden otomatik güncellenir.")
 
     eur_rate = st.number_input(
@@ -137,7 +139,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
         step=0.5,
     )
     daily_miles = st.number_input(
-        "Günlük Rota Mesafesi (Mil)",
+        "Günlük Rota Mesafesi (NM)",
         min_value=15.0,
         max_value=60.0,
         value=35.0,

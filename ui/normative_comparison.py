@@ -1,12 +1,8 @@
-"""Streamlit presentation for same-speed normative vessel comparison."""
+"""Compact same-speed comparison of the three active vessel types."""
 
 import pandas as pd
 import streamlit as st
 
-from calculations.normative_comparison_export import (
-    build_normative_comparison_csv,
-    build_normative_comparison_xlsx,
-)
 from calculations.normative_vessel_comparison import (
     build_normative_vessel_comparison,
 )
@@ -14,36 +10,37 @@ from models.normative_vessel_comparison import NormativeVesselComparisonResult
 from ui.formatting import format_integer_tr
 
 
+VESSEL_LABELS = {
+    "v1": "Tip 1 — 12 m Tek Gövdeli",
+    "v2": "Tip 2 — 13,5 m Katamaran",
+    "v3": "Tip 3 — 14 m Katamaran",
+}
+
+
 def _format_decimal_tr(value):
   return f"{value:.1f}".replace(".", ",")
 
 
-def _speed_filename_token(selected_speed_knots):
-  return f"{selected_speed_knots:g}".replace(".", "_")
-
-
-def build_normative_comparison_table(comparison):
-  """Format only the contract's reference values for on-screen display."""
+def build_normative_comparison_table(comparison, vessel_specs):
   if not isinstance(comparison, NormativeVesselComparisonResult):
     raise TypeError("comparison must be a NormativeVesselComparisonResult")
+
   return pd.DataFrame([
       {
-          "Tekne": f"{row.vessel_id.upper()} — {row.vessel_type}",
+          "Tekne tipi": VESSEL_LABELS[row.vessel_id],
           "Yolcu kapasitesi": row.passenger_capacity,
-          "Toplam kurulu mekanik güç": (
-              f"{_format_decimal_tr(row.reference_installed_mechanical_power_kw)} "
-              "kW"
+          "Toplam kurulu motor gücü": (
+              f"{_format_decimal_tr(row.reference_installed_mechanical_power_kw)} kW"
           ),
-          "Günlük enerji": (
+          "Günlük tahrik enerjisi": (
               f"{_format_decimal_tr(row.reference_daily_propulsion_energy_kwh)} "
               "kWh/gün"
           ),
-          "Nominal batarya": (
-              f"{_format_decimal_tr(row.reference_nominal_battery_capacity_kwh)} "
-              "kWh"
+          "Gerekli nominal batarya": (
+              f"{_format_decimal_tr(row.reference_nominal_battery_capacity_kwh)} kWh"
           ),
-          "Motor + batarya maliyeti": (
-              f"€{format_integer_tr(row.reference_propulsion_system_cost)}"
+          "Anahtar teslim piyasa bedeli": (
+              f"€{format_integer_tr(vessel_specs[row.vessel_id]['totalCostEur'])}"
           ),
       }
       for row in comparison.rows
@@ -51,16 +48,17 @@ def build_normative_comparison_table(comparison):
 
 
 def render_normative_comparison_section(
+    vessel_specs,
     selected_speed_knots,
     daily_distance_nm=35.0,
 ):
-  """Render comparison and downloads from one immutable result."""
   st.divider()
-  st.subheader("⚖️ Normatif Tekne Karşılaştırması")
+  st.subheader("⚖️ Tekne Tiplerinin Karşılaştırılması")
   st.caption(
-      "V1/V2/V3 aynı seçilmiş hizmet hızında ve aynı normatif semantik altında "
-      "karşılaştırılır; sıralama veya tekne önerisi üretilmez."
+      "Üç tekne tipi aynı hizmet hızı ve günlük rota koşullarında "
+      "karşılaştırılmıştır. Piyasa bedelleri %8 ÖTV ve %20 KDV hariçtir."
   )
+
   try:
     comparison = build_normative_vessel_comparison(
         selected_speed_knots,
@@ -68,35 +66,14 @@ def render_normative_comparison_section(
     )
   except (TypeError, ValueError):
     st.error(
-        "Normatif tekne karşılaştırması hazırlanamadı. Hizmet hızı 6–10 knot "
+        "Tekne karşılaştırması hazırlanamadı. Hizmet hızı 6–10 knot "
         "aralığında olmalıdır."
     )
     return None
 
-  st.write(
-      f"Ortak hizmet hızı: {_format_decimal_tr(selected_speed_knots)} kn"
-  )
   st.dataframe(
-      build_normative_comparison_table(comparison),
+      build_normative_comparison_table(comparison, vessel_specs),
       hide_index=True,
       width="stretch",
-  )
-
-  speed_token = _speed_filename_token(selected_speed_knots)
-  st.download_button(
-      "📥 Normatif karşılaştırmayı XLSX indir",
-      data=build_normative_comparison_xlsx(comparison),
-      file_name=(
-          f"sessiz_akim_normatif_karsilastirma_{speed_token}_kn.xlsx"
-      ),
-      mime=(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      ),
-  )
-  st.download_button(
-      "📥 Normatif karşılaştırmayı CSV indir",
-      data=build_normative_comparison_csv(comparison),
-      file_name=f"sessiz_akim_normatif_karsilastirma_{speed_token}_kn.csv",
-      mime="text/csv",
   )
   return comparison

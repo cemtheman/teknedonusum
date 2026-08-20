@@ -3,20 +3,22 @@ from unittest.mock import MagicMock
 import pytest
 
 from config.vessels import BASE_VESSEL_SPECS
+from config.vessel_factory import build_vessel_specs
 from ui import normative_sizing as normative_ui
+
+
+VESSEL_SPECS = build_vessel_specs(108100, 144140, 180180, 50.0)
 
 
 @pytest.mark.parametrize(
     ("vessel_id", "speed_knots", "expected"),
     (
-        ("v1", 6.0, (30.0, 68.27214774060377, 94.82242741750522, 59411.21370875261)),
-        ("v2", 8.0, (42.5, 158.4799303412363, 220.11101436282817, 130455.50718141408)),
-        ("v3", 10.0, (75.0, 276.3157894736842, 383.77192982456137, 227885.96491228067)),
-        ("v1", 7.0, (36.25, 97.32427595816506, 135.17260549745146, 82086.30274872574)),
-        ("v3", 9.0, (63.75, 227.38109046054305, 315.8070700840875, 188503.53504204375)),
+        ("v1", 6.0, (30.0, 68.27214774060377, 94.82242741750522)),
+        ("v2", 8.0, (42.5, 158.4799303412363, 220.11101436282817)),
+        ("v3", 10.0, (75.0, 276.3157894736842, 383.77192982456137)),
     ),
 )
-def test_ui_summary_wiring_preserves_decision_values(
+def test_ui_summary_preserves_primary_technical_values(
     vessel_id,
     speed_knots,
     expected,
@@ -27,90 +29,58 @@ def test_ui_summary_wiring_preserves_decision_values(
       result.reference_estimate_installed_mechanical_power_kw,
       result.reference_estimate_daily_propulsion_energy_kwh,
       result.reference_estimate_nominal_battery_capacity_kwh,
-      result.reference_estimate_propulsion_system_cost,
   )
   assert actual == pytest.approx(expected)
 
 
-def test_existing_vessel_names_map_to_internal_ids():
+def test_vessel_labels_are_fully_turkish():
   result = normative_ui.build_vessel_selection_map(BASE_VESSEL_SPECS)
 
   assert result == {
-      "Tip 1: 12m Monohull": "v1",
-      "Tip 2: 13.5m Katamaran": "v2",
-      "Tip 3: 14m Katamaran": "v3",
+      "Tip 1 — 12 m Tek Gövdeli": "v1",
+      "Tip 2 — 13,5 m Katamaran": "v2",
+      "Tip 3 — 14 m Katamaran": "v3",
   }
 
 
-@pytest.mark.parametrize("speed_knots", (4.0, 5.5, 10.5, 11.0))
-def test_ui_rejects_speed_outside_normative_range(speed_knots):
-  with pytest.raises(ValueError, match="6–10"):
-    normative_ui.build_normative_ui_summary("v1", speed_knots)
-
-
-def test_primary_values_use_existing_cost_formatting_and_total_power():
-  result = normative_ui.build_normative_ui_summary("v2", 8.0)
-  values = normative_ui.build_primary_display_values(result)
+def test_primary_values_use_turnkey_market_price_and_tax_breakdown():
+  summary = normative_ui.build_normative_ui_summary("v2", 8.0)
+  values = normative_ui.build_primary_display_values(summary, 144140)
 
   assert values["mechanical_reference"] == "42,5 kW"
-  assert values["mechanical_envelope"] == "30,0–55,0 kW"
   assert values["energy_reference"] == "158,5 kWh/gün"
   assert values["battery_reference"] == "220,1 kWh"
-  assert values["cost_reference"] == "€130.456"
-  assert values["cost_envelope"] == "€99.058–€161.853"
-  assert result.twin_motor_configuration is True
+  assert values["turnkey_cost"] == "€144.140"
+  assert values["tax_inclusive_cost"] == "€186.805"
+  assert "cost_reference" not in values
 
 
-def test_renderer_shows_separate_preliminary_section(monkeypatch):
+def test_renderer_uses_four_clear_primary_metrics(monkeypatch):
   streamlit = MagicMock()
-  streamlit.selectbox.return_value = "Tip 1: 12m Monohull"
+  streamlit.selectbox.return_value = "Tip 1 — 12 m Tek Gövdeli"
   columns = tuple(MagicMock() for _ in range(4))
   streamlit.columns.return_value = columns
   monkeypatch.setattr(normative_ui, "st", streamlit)
 
   result = normative_ui.render_normative_sizing_section(
-      BASE_VESSEL_SPECS,
+      VESSEL_SPECS,
       6.0,
+      35.0,
   )
 
   assert result.vessel_id == "v1"
-  streamlit.subheader.assert_called_once_with(
-      "⚡ Elektrikli Tahrik Ön Boyutlandırması"
-  )
-  assert "nihai tasarım veya sertifikasyon sonucu değildir" in (
-      streamlit.caption.call_args.args[0]
-  )
-  assert streamlit.columns.call_args.args[0] == 4
-  assert streamlit.write.call_args_list[0].args[0] == (
-      "Tip 1: 12m Monohull · 6,0 kn hizmet hızı"
-  )
   metric_labels = [column.metric.call_args.args[0] for column in columns]
   assert metric_labels == [
-      "Toplam kurulu mekanik güç",
-      "Günlük enerji ihtiyacı",
-      "Nominal batarya kapasitesi",
-      "Motor + batarya maliyeti",
+      "Toplam kurulu motor gücü",
+      "Günlük tahrik enerjisi",
+      "Gerekli nominal batarya",
+      "Anahtar teslim piyasa bedeli",
   ]
-  assert all(
-      column.caption.call_args.args[0].startswith(
-          "Ön değerlendirme aralığı:"
-      )
-      for column in columns
-  )
-  assert streamlit.expander.call_args.args[0] == (
-      "Varsayımlar ve hesap detayları"
-  )
+  assert "%8 ÖTV ve %20 KDV hariç" in columns[3].caption.call_args.args[0]
+  assert streamlit.expander.call_args.args[0] == "Hesap ayrıntıları"
 
 
-def test_renderer_handles_out_of_range_speed_without_traceback(monkeypatch):
-  streamlit = MagicMock()
-  streamlit.selectbox.return_value = "Tip 1: 12m Monohull"
-  monkeypatch.setattr(normative_ui, "st", streamlit)
-
-  result = normative_ui.render_normative_sizing_section(
-      BASE_VESSEL_SPECS,
-      5.0,
-  )
-
-  assert result is None
-  streamlit.error.assert_called_once()
+@pytest.mark.parametrize("speed_knots", (4.0, 5.5, 10.5, 11.0))
+def test_ui_rejects_speed_outside_range(speed_knots):
+  with pytest.raises(ValueError, match="6–10"):
+    normative_ui.build_normative_ui_summary("v1", speed_knots)

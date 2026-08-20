@@ -52,8 +52,10 @@ def test_primary_values_use_existing_cost_formatting_and_total_power():
   result = normative_ui.build_normative_ui_summary("v2", 8.0)
   values = normative_ui.build_primary_display_values(result)
 
-  assert values["mechanical_reference"] == "42.5 kW"
-  assert values["mechanical_envelope"] == "30.0–55.0 kW"
+  assert values["mechanical_reference"] == "42,5 kW"
+  assert values["mechanical_envelope"] == "30,0–55,0 kW"
+  assert values["energy_reference"] == "268,4 kWh/gün"
+  assert values["battery_reference"] == "372,8 kWh"
   assert values["cost_reference"] == "€206.804"
   assert values["cost_envelope"] == "€145.979–€267.628"
   assert result.twin_motor_configuration is True
@@ -78,8 +80,24 @@ def test_renderer_shows_separate_preliminary_section(monkeypatch):
       streamlit.caption.call_args.args[0]
   )
   assert streamlit.columns.call_args.args[0] == 4
+  assert streamlit.write.call_args_list[0].args[0] == (
+      "Tip 1: 12m Monohull · 6,0 kn hizmet hızı"
+  )
+  metric_labels = [column.metric.call_args.args[0] for column in columns]
+  assert metric_labels == [
+      "Toplam kurulu mekanik güç",
+      "Günlük enerji ihtiyacı",
+      "Nominal batarya kapasitesi",
+      "Motor + batarya maliyeti",
+  ]
+  assert all(
+      column.caption.call_args.args[0].startswith(
+          "Ön değerlendirme aralığı:"
+      )
+      for column in columns
+  )
   assert streamlit.expander.call_args.args[0] == (
-      "Varsayımlar ve metodoloji detayları"
+      "Varsayımlar ve hesap detayları"
   )
 
 

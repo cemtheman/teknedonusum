@@ -51,34 +51,42 @@ def build_normative_ui_summary(vessel_id, selected_speed_knots):
   return build_normative_decision_summary(sizing)
 
 
+def _format_decimal_tr(value):
+  return f"{value:.1f}".replace(".", ",")
+
+
 def build_primary_display_values(summary):
   """Format decision values without changing their underlying raw numbers."""
   if not isinstance(summary, NormativeDecisionSummary):
     raise TypeError("summary must be a NormativeDecisionSummary")
+  mechanical_reference = summary.reference_estimate_installed_mechanical_power_kw
+  mechanical_min = summary.min_envelope_installed_mechanical_power_kw
+  mechanical_max = summary.max_envelope_installed_mechanical_power_kw
+  energy_reference = summary.reference_estimate_daily_propulsion_energy_kwh
+  energy_min = summary.min_envelope_daily_propulsion_energy_kwh
+  energy_max = summary.max_envelope_daily_propulsion_energy_kwh
+  battery_reference = summary.reference_estimate_nominal_battery_capacity_kwh
+  battery_min = summary.min_envelope_nominal_battery_capacity_kwh
+  battery_max = summary.max_envelope_nominal_battery_capacity_kwh
   return {
       "vessel": summary.vessel_type,
-      "speed": f"{summary.selected_speed_knots:.1f} knot",
-      "mechanical_reference": (
-          f"{summary.reference_estimate_installed_mechanical_power_kw:.1f} kW"
-      ),
+      "speed": f"{_format_decimal_tr(summary.selected_speed_knots)} kn",
+      "mechanical_reference": f"{_format_decimal_tr(mechanical_reference)} kW",
       "mechanical_envelope": (
-          f"{summary.min_envelope_installed_mechanical_power_kw:.1f}–"
-          f"{summary.max_envelope_installed_mechanical_power_kw:.1f} kW"
+          f"{_format_decimal_tr(mechanical_min)}–"
+          f"{_format_decimal_tr(mechanical_max)} kW"
       ),
       "energy_reference": (
-          f"{summary.reference_estimate_daily_propulsion_energy_kwh:.1f} "
-          "kWh/gün"
+          f"{_format_decimal_tr(energy_reference)} kWh/gün"
       ),
       "energy_envelope": (
-          f"{summary.min_envelope_daily_propulsion_energy_kwh:.1f}–"
-          f"{summary.max_envelope_daily_propulsion_energy_kwh:.1f} kWh/gün"
+          f"{_format_decimal_tr(energy_min)}–"
+          f"{_format_decimal_tr(energy_max)} kWh/gün"
       ),
-      "battery_reference": (
-          f"{summary.reference_estimate_nominal_battery_capacity_kwh:.1f} kWh"
-      ),
+      "battery_reference": f"{_format_decimal_tr(battery_reference)} kWh",
       "battery_envelope": (
-          f"{summary.min_envelope_nominal_battery_capacity_kwh:.1f}–"
-          f"{summary.max_envelope_nominal_battery_capacity_kwh:.1f} kWh"
+          f"{_format_decimal_tr(battery_min)}–"
+          f"{_format_decimal_tr(battery_max)} kWh"
       ),
       "cost_reference": (
           f"€{format_integer_tr(summary.reference_estimate_propulsion_system_cost)}"
@@ -120,34 +128,42 @@ def render_normative_sizing_section(vessel_specs, selected_speed_knots):
     return None
 
   values = build_primary_display_values(summary)
-  st.write(f"Seçilen tekne: {values['vessel']} · Hizmet hızı: {values['speed']}")
+  st.write(f"{selected_label} · {values['speed']} hizmet hızı")
   columns = st.columns(4)
   columns[0].metric(
       "Toplam kurulu mekanik güç",
       values["mechanical_reference"],
   )
-  columns[0].caption(f"Ön zarf: {values['mechanical_envelope']}")
+  columns[0].caption(
+      f"Ön değerlendirme aralığı: {values['mechanical_envelope']}"
+  )
   columns[1].metric(
-      "Günlük tahrik enerjisi",
+      "Günlük enerji ihtiyacı",
       values["energy_reference"],
   )
-  columns[1].caption(f"Ön zarf: {values['energy_envelope']}")
+  columns[1].caption(
+      f"Ön değerlendirme aralığı: {values['energy_envelope']}"
+  )
   columns[2].metric(
       "Nominal batarya kapasitesi",
       values["battery_reference"],
   )
-  columns[2].caption(f"Ön zarf: {values['battery_envelope']}")
+  columns[2].caption(
+      f"Ön değerlendirme aralığı: {values['battery_envelope']}"
+  )
   columns[3].metric(
       "Motor + batarya maliyeti",
       values["cost_reference"],
   )
-  columns[3].caption(f"Ön zarf: {values['cost_envelope']}")
+  columns[3].caption(
+      f"Ön değerlendirme aralığı: {values['cost_envelope']}"
+  )
 
   assumptions = summary.assumptions
-  with st.expander("Varsayımlar ve metodoloji detayları", expanded=False):
+  with st.expander("Varsayımlar ve hesap detayları", expanded=False):
     st.write(
-        f"Reference electrical input: "
-        f"{summary.reference_electrical_input_power_kw:.1f} kW"
+        "Referans elektrik giriş gücü: "
+        f"{_format_decimal_tr(summary.reference_electrical_input_power_kw)} kW"
     )
     st.write(
         f"Motor verimi: %{assumptions.motor_efficiency * 100:.0f} · "

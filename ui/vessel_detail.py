@@ -4,6 +4,7 @@ import streamlit as st
 from calculations.economics import calculate_vessel_economics
 from calculations.vessel_physics import calc_calibrated_vessel_physics
 from models.inputs import SimulationInputs
+from ui.formatting import format_integer_tr
 
 
 def render_vessel_details(
@@ -70,9 +71,9 @@ def render_vessel_details(
       # Metric Cards
       kpi1, kpi2, kpi3, kpi4 = st.columns(4)
       with kpi1:
-        st.metric("Net Özkaynak CAPEX", f"₺{int(net_capex):,}")
+        st.metric("Net Özkaynak CAPEX", f"₺{format_integer_tr(net_capex)}")
       with kpi2:
-        st.metric("Sezonluk Net Tasarruf", f"₺{int(net_savings):,}")
+        st.metric("Sezonluk Net Tasarruf", f"₺{format_integer_tr(net_savings)}")
       with kpi3:
         st.metric(
             "Özkaynak Amortisman (ROI)",
@@ -97,14 +98,14 @@ def render_vessel_details(
                 "• Altyapı Payı (1/150)",
             ],
             "Tutar (TL)": [
-                f"₺{spec['totalCost']:,} (€{spec['totalCostEur']:,})",
-                f"-₺{int(grant_amount):,}",
-                f"₺{int(net_capex):,}",
-                f"₺{int(hull_cost_tl):,}",
-                f"₺{int(motor_cost_tl):,}",
-                f"₺{int(solar_cost_tl):,}",
-                f"₺{int(bat_cost_tl):,}",
-                f"₺{int(infra_share_tl):,}",
+                f"₺{format_integer_tr(spec['totalCost'])} (€{format_integer_tr(spec['totalCostEur'])})",
+                f"-₺{format_integer_tr(grant_amount)}",
+                f"₺{format_integer_tr(net_capex)}",
+                f"₺{format_integer_tr(hull_cost_tl)}",
+                f"₺{format_integer_tr(motor_cost_tl)}",
+                f"₺{format_integer_tr(solar_cost_tl)}",
+                f"₺{format_integer_tr(bat_cost_tl)}",
+                f"₺{format_integer_tr(infra_share_tl)}",
             ],
             "Açıklama": [
                 "Birim ihale maliyeti",
@@ -137,14 +138,14 @@ def render_vessel_details(
                 "SEZONLUK NET FİNANSAL TASARRUF",
             ],
             "Tutar (TL)": [
-                f"₺{int(old_diesel_cost):,}",
-                f"₺{int(old_maint_cost):,}",
-                f"₺{int(old_total_annual):,}",
-                f"₺{int(new_elec_cost):,}",
-                f"₺{int(new_degradation):,}",
-                f"₺{int(new_maint_cost):,}",
-                f"₺{int(new_total_annual):,}",
-                f"₺{int(net_savings):,}",
+                f"₺{format_integer_tr(old_diesel_cost)}",
+                f"₺{format_integer_tr(old_maint_cost)}",
+                f"₺{format_integer_tr(old_total_annual)}",
+                f"₺{format_integer_tr(new_elec_cost)}",
+                f"₺{format_integer_tr(new_degradation)}",
+                f"₺{format_integer_tr(new_maint_cost)}",
+                f"₺{format_integer_tr(new_total_annual)}",
+                f"₺{format_integer_tr(net_savings)}",
             ],
         })
         st.table(opex_df)

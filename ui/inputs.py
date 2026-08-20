@@ -1,6 +1,31 @@
+import re
+
 import streamlit as st
 
 from models.inputs import SimulationInputs
+from ui.formatting import format_integer_tr
+
+
+def _render_cost_input(label, value):
+  displayed_value = st.text_input(label, value=format_integer_tr(value))
+  if not isinstance(displayed_value, str):
+    st.error("Maliyet metin olarak girilmelidir.")
+    st.stop()
+    return value
+
+  normalized_value = displayed_value.strip()
+  if not re.fullmatch(r"(?:\d+|\d{1,3}(?:\.\d{3})+)", normalized_value):
+    st.error("Maliyet yalnızca tam sayı ve binlik ayraç olarak nokta içermelidir.")
+    st.stop()
+    return value
+
+  parsed_value = int(normalized_value.replace(".", ""))
+
+  if not 10000 <= parsed_value <= 1000000:
+    st.error("Maliyet 10.000 € ile 1.000.000 € arasında olmalıdır.")
+    st.stop()
+    return value
+  return parsed_value
 
 
 def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
@@ -53,26 +78,17 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
     st.caption(
         "Tip 4A maliyeti Tip1 ile, Tip 4B maliyeti Tip2 ile aynıdır."
     )
-    cost_eur_v1 = st.number_input(
+    cost_eur_v1 = _render_cost_input(
         "Tip 1 & Tip 4A (12m Monohull - 24 Kişi) Maliyeti (€)",
-        min_value=10000,
-        max_value=1000000,
-        value=108100,
-        step=1000,
+        108100,
     )
-    cost_eur_v2 = st.number_input(
+    cost_eur_v2 = _render_cost_input(
         "Tip 2 & Tip 4B (13.5m Katamaran - 32 Kişi) Maliyeti (€)",
-        min_value=10000,
-        max_value=1000000,
-        value=144140,
-        step=1000,
+        144140,
     )
-    cost_eur_v3 = st.number_input(
+    cost_eur_v3 = _render_cost_input(
         "Tip 3 (14m Katamaran - 54 Kişi) Maliyeti (€)",
-        min_value=10000,
-        max_value=1000000,
-        value=180180,
-        step=1000,
+        180180,
     )
 
     st.divider()

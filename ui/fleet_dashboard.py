@@ -3,6 +3,7 @@ import streamlit as st
 
 from models.inputs import SimulationInputs
 from models.results import FleetResult
+from ui.formatting import format_integer_tr
 
 
 def render_fleet_dashboard(
@@ -18,9 +19,9 @@ def render_fleet_dashboard(
   with f_kpi2:
     st.metric("Toplam Filo Yolcu Kapasitesi", f"{fleet.total_capacity:,} Kişi")
   with f_kpi3:
-    st.metric("İhtiyaç Duyulan Toplam Hibe", f"₺{int(fleet.fleet_total_grant):,}")
+    st.metric("İhtiyaç Duyulan Toplam Hibe", f"₺{format_integer_tr(fleet.fleet_total_grant)}")
   with f_kpi4:
-    st.metric("Toplam Net Özkaynak Yatırımı", f"₺{int(fleet.fleet_total_capex):,}")
+    st.metric("Toplam Net Özkaynak Yatırımı", f"₺{format_integer_tr(fleet.fleet_total_capex)}")
 
   # Fleet Breakdown Table
   fleet_summary_df = pd.DataFrame({
@@ -50,44 +51,44 @@ def render_fleet_dashboard(
           f"{fleet.total_capacity:,} Kişi",
       ],
       "Birim Maliyet (EUR)": [
-          f"€{vessel_specs['v1']['totalCostEur']:,}",
-          f"€{vessel_specs['v2']['totalCostEur']:,}",
-          f"€{vessel_specs['v3']['totalCostEur']:,}",
-          f"€{vessel_specs['v4_24']['totalCostEur']:,}",
-          f"€{vessel_specs['v4_32']['totalCostEur']:,}",
+          f"€{format_integer_tr(vessel_specs['v1']['totalCostEur'])}",
+          f"€{format_integer_tr(vessel_specs['v2']['totalCostEur'])}",
+          f"€{format_integer_tr(vessel_specs['v3']['totalCostEur'])}",
+          f"€{format_integer_tr(vessel_specs['v4_24']['totalCostEur'])}",
+          f"€{format_integer_tr(vessel_specs['v4_32']['totalCostEur'])}",
           "-",
       ],
       "Birim Maliyet (TL)": [
-          f"₺{vessel_specs['v1']['totalCost']:,}",
-          f"₺{vessel_specs['v2']['totalCost']:,}",
-          f"₺{vessel_specs['v3']['totalCost']:,}",
-          f"₺{vessel_specs['v4_24']['totalCost']:,}",
-          f"₺{vessel_specs['v4_32']['totalCost']:,}",
+          f"₺{format_integer_tr(vessel_specs['v1']['totalCost'])}",
+          f"₺{format_integer_tr(vessel_specs['v2']['totalCost'])}",
+          f"₺{format_integer_tr(vessel_specs['v3']['totalCost'])}",
+          f"₺{format_integer_tr(vessel_specs['v4_24']['totalCost'])}",
+          f"₺{format_integer_tr(vessel_specs['v4_32']['totalCost'])}",
           "-",
       ],
       "Brüt Yatırım (TL)": [
-          f"₺{inputs.count_v1 * vessel_specs['v1']['totalCost']:,}",
-          f"₺{inputs.count_v2 * vessel_specs['v2']['totalCost']:,}",
-          f"₺{inputs.count_v3 * vessel_specs['v3']['totalCost']:,}",
-          f"₺{inputs.count_v4_24 * vessel_specs['v4_24']['totalCost']:,}",
-          f"₺{inputs.count_v4_32 * vessel_specs['v4_32']['totalCost']:,}",
-          f"₺{fleet.fleet_total_cost:,}",
+          f"₺{format_integer_tr(inputs.count_v1 * vessel_specs['v1']['totalCost'])}",
+          f"₺{format_integer_tr(inputs.count_v2 * vessel_specs['v2']['totalCost'])}",
+          f"₺{format_integer_tr(inputs.count_v3 * vessel_specs['v3']['totalCost'])}",
+          f"₺{format_integer_tr(inputs.count_v4_24 * vessel_specs['v4_24']['totalCost'])}",
+          f"₺{format_integer_tr(inputs.count_v4_32 * vessel_specs['v4_32']['totalCost'])}",
+          f"₺{format_integer_tr(fleet.fleet_total_cost)}",
       ],
       "Toplam Hibe Miktarı": [
-          f"₺{int(inputs.count_v1 * fleet.grants_per_type['v1']):,}",
-          f"₺{int(inputs.count_v2 * fleet.grants_per_type['v2']):,}",
-          f"₺{int(inputs.count_v3 * fleet.grants_per_type['v3']):,}",
-          f"₺{int(inputs.count_v4_24 * fleet.grants_per_type['v4_24']):,}",
-          f"₺{int(inputs.count_v4_32 * fleet.grants_per_type['v4_32']):,}",
-          f"₺{int(fleet.fleet_total_grant):,}",
+          f"₺{format_integer_tr(inputs.count_v1 * fleet.grants_per_type['v1'])}",
+          f"₺{format_integer_tr(inputs.count_v2 * fleet.grants_per_type['v2'])}",
+          f"₺{format_integer_tr(inputs.count_v3 * fleet.grants_per_type['v3'])}",
+          f"₺{format_integer_tr(inputs.count_v4_24 * fleet.grants_per_type['v4_24'])}",
+          f"₺{format_integer_tr(inputs.count_v4_32 * fleet.grants_per_type['v4_32'])}",
+          f"₺{format_integer_tr(fleet.fleet_total_grant)}",
       ],
       "Net Özkaynak İhtiyacı": [
-          f"₺{int(inputs.count_v1 * (vessel_specs['v1']['totalCost'] - fleet.grants_per_type['v1'])):,}",
-          f"₺{int(inputs.count_v2 * (vessel_specs['v2']['totalCost'] - fleet.grants_per_type['v2'])):,}",
-          f"₺{int(inputs.count_v3 * (vessel_specs['v3']['totalCost'] - fleet.grants_per_type['v3'])):,}",
-          f"₺{int(inputs.count_v4_24 * (vessel_specs['v4_24']['totalCost'] - fleet.grants_per_type['v4_24'])):,}",
-          f"₺{int(inputs.count_v4_32 * (vessel_specs['v4_32']['totalCost'] - fleet.grants_per_type['v4_32'])):,}",
-          f"₺{int(fleet.fleet_total_capex):,}",
+          f"₺{format_integer_tr(inputs.count_v1 * (vessel_specs['v1']['totalCost'] - fleet.grants_per_type['v1']))}",
+          f"₺{format_integer_tr(inputs.count_v2 * (vessel_specs['v2']['totalCost'] - fleet.grants_per_type['v2']))}",
+          f"₺{format_integer_tr(inputs.count_v3 * (vessel_specs['v3']['totalCost'] - fleet.grants_per_type['v3']))}",
+          f"₺{format_integer_tr(inputs.count_v4_24 * (vessel_specs['v4_24']['totalCost'] - fleet.grants_per_type['v4_24']))}",
+          f"₺{format_integer_tr(inputs.count_v4_32 * (vessel_specs['v4_32']['totalCost'] - fleet.grants_per_type['v4_32']))}",
+          f"₺{format_integer_tr(fleet.fleet_total_capex)}",
       ],
   })
   st.table(fleet_summary_df)

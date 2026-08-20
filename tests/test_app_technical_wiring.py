@@ -49,7 +49,7 @@ def test_vessel_detail_section_remains_available_but_collapsed():
   )
 
 
-def test_render_order_preserves_legacy_flow():
+def test_render_order_makes_normative_primary_and_legacy_secondary():
   fleet_position = APP_SOURCE.index("render_fleet_dashboard(")
   decision_position = APP_SOURCE.index("render_vessel_decision_summary(")
   normative_position = APP_SOURCE.index("render_normative_sizing_section(")
@@ -58,8 +58,8 @@ def test_render_order_preserves_legacy_flow():
 
   assert (
       fleet_position
-      < decision_position
       < normative_position
+      < decision_position
       < assumptions_position
       < details_position
   )
@@ -75,6 +75,17 @@ def test_normative_section_reuses_current_speed_and_preserves_legacy_summary():
   assert "📊 Tekne Alternatifleri Karar Özeti" in Path(
       "ui/decision_summary.py"
   ).read_text(encoding="utf-8")
+
+
+def test_legacy_summary_is_labeled_deprecated_and_collapsed():
+  source = Path("ui/decision_summary.py").read_text(encoding="utf-8")
+
+  assert "Eski model / karşılaştırma amaçlı v0.1 sonuçları" in source
+  assert "expanded=False" in source
+  assert "aynı fizik zincirini kullanmaz" in source
+  assert "doğrudan karşılaştırılmamalıdır" in source
+  assert "bütün tekne yatırım senaryosunu kapsar" in source
+  assert "primary v0.2 teknik karar çıktısı" in source
 
 
 def test_comparison_uses_current_sidebar_operational_inputs():

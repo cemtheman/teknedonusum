@@ -105,13 +105,13 @@ def main():
       eur_is_live=eur_is_live,
       diesel_is_live=diesel_is_live,
   )
-  render_vessel_decision_summary(
-      decision_summary,
-      assumptions_transparency,
-  )
   render_normative_sizing_section(
       VESSEL_SPECS,
       inputs.cruise_speed,
+  )
+  render_vessel_decision_summary(
+      decision_summary,
+      assumptions_transparency,
   )
   render_assumptions_transparency(assumptions_transparency)
 

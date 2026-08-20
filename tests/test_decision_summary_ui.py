@@ -87,6 +87,17 @@ def test_renderer_is_compact_and_renders_three_rows(monkeypatch):
 
   decision_summary_ui.render_vessel_decision_summary(rows(), assumption_rows())
 
+  streamlit.expander.assert_called_once_with(
+      "Eski model / karşılaştırma amaçlı v0.1 sonuçları",
+      expanded=False,
+  )
+  streamlit.warning.assert_called_once_with(
+      "Bu bölüm v0.1 legacy karşılaştırma modelidir; V1/V2/V3 "
+      "aynı fizik zincirini kullanmaz. Güç ve batarya değerleri yeni "
+      "normative ön boyutlandırmayla doğrudan karşılaştırılmamalıdır. "
+      "Ekonomik maliyet bütün tekne yatırım senaryosunu kapsar; primary "
+      "v0.2 teknik karar çıktısı yukarıdaki normative bölümdür."
+  )
   table = streamlit.dataframe.call_args.args[0]
   assert len(table) == 3
   streamlit.subheader.assert_called_once_with("📊 Tekne Alternatifleri Karar Özeti")

@@ -71,19 +71,30 @@ def render_vessel_decision_summary(rows, assumption_rows) -> None:
   workbook_bytes = build_decision_summary_xlsx(rows, assumption_rows)
 
   st.divider()
-  st.subheader("📊 Tekne Alternatifleri Karar Özeti")
-  st.caption(
-      "Sonuçlar ön karar-destek tahminleridir; v1 ile v2/v3 şu aşamada "
-      "farklı teknik hesap derinliği kullanır. Tam teknik uygunluk, "
-      "doğrulanmış tekne hız kabiliyeti dahil tüm kriterler "
-      "değerlendirildiğinde belirlenebilir."
-  )
-  st.dataframe(table, hide_index=True, width="stretch")
-  st.download_button(
-      "📥 Karar Özetini İndir",
-      data=workbook_bytes,
-      file_name="sessiz_akim_karar_ozeti.xlsx",
-      mime=(
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      ),
-  )
+  with st.expander(
+      "Eski model / karşılaştırma amaçlı v0.1 sonuçları",
+      expanded=False,
+  ):
+    st.warning(
+        "Bu bölüm v0.1 legacy karşılaştırma modelidir; V1/V2/V3 "
+        "aynı fizik zincirini kullanmaz. Güç ve batarya değerleri yeni "
+        "normative ön boyutlandırmayla doğrudan karşılaştırılmamalıdır. "
+        "Ekonomik maliyet bütün tekne yatırım senaryosunu kapsar; primary "
+        "v0.2 teknik karar çıktısı yukarıdaki normative bölümdür."
+    )
+    st.subheader("📊 Tekne Alternatifleri Karar Özeti")
+    st.caption(
+        "Sonuçlar ön karar-destek tahminleridir; v1 ile v2/v3 şu aşamada "
+        "farklı teknik hesap derinliği kullanır. Tam teknik uygunluk, "
+        "doğrulanmış tekne hız kabiliyeti dahil tüm kriterler "
+        "değerlendirildiğinde belirlenebilir."
+    )
+    st.dataframe(table, hide_index=True, width="stretch")
+    st.download_button(
+        "📥 Karar Özetini İndir",
+        data=workbook_bytes,
+        file_name="sessiz_akim_karar_ozeti.xlsx",
+        mime=(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        ),
+    )

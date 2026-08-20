@@ -29,6 +29,7 @@ def test_management_sections_imports_are_present():
       "from calculations.vessel_comparison import build_vessel_technical_comparison",
       "from ui.assumptions_transparency import render_assumptions_transparency",
       "from ui.decision_summary import render_vessel_decision_summary",
+      "from ui.normative_sizing import render_normative_sizing_section",
       "from ui.vessel_detail import render_vessel_details",
   }
   assert all(import_line in APP_SOURCE for import_line in required_imports)
@@ -51,15 +52,29 @@ def test_vessel_detail_section_remains_available_but_collapsed():
 def test_render_order_preserves_legacy_flow():
   fleet_position = APP_SOURCE.index("render_fleet_dashboard(")
   decision_position = APP_SOURCE.index("render_vessel_decision_summary(")
+  normative_position = APP_SOURCE.index("render_normative_sizing_section(")
   assumptions_position = APP_SOURCE.index("render_assumptions_transparency(")
   details_position = APP_SOURCE.index("render_vessel_details(")
 
   assert (
       fleet_position
       < decision_position
+      < normative_position
       < assumptions_position
       < details_position
   )
+
+
+def test_normative_section_reuses_current_speed_and_preserves_legacy_summary():
+  normative_call = calls_named("render_normative_sizing_section")[0]
+
+  assert len(calls_named("render_vessel_decision_summary")) == 1
+  assert len(calls_named("render_normative_sizing_section")) == 1
+  assert ast.unparse(normative_call.args[0]) == "VESSEL_SPECS"
+  assert ast.unparse(normative_call.args[1]) == "inputs.cruise_speed"
+  assert "📊 Tekne Alternatifleri Karar Özeti" in Path(
+      "ui/decision_summary.py"
+  ).read_text(encoding="utf-8")
 
 
 def test_comparison_uses_current_sidebar_operational_inputs():

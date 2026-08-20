@@ -63,9 +63,9 @@ def test_sizing_values_are_copied_exactly(vessel_id, speed_knots):
 @pytest.mark.parametrize(
     ("vessel_id", "speed_knots", "expected"),
     (
-        ("v1", 6.0, (30.0, 189.47368421052633, 263.1578947368421, 143578.94736842104)),
-        ("v2", 8.0, (42.5, 268.42105263157896, 372.8070175438596, 206803.5087719298)),
-        ("v3", 10.0, (75.0, 473.6842105263158, 657.8947368421052, 364947.3684210526)),
+        ("v1", 6.0, (30.0, 68.27214774060377, 94.82242741750522, 59411.21370875261)),
+        ("v2", 8.0, (42.5, 158.4799303412363, 220.11101436282817, 130455.50718141408)),
+        ("v3", 10.0, (75.0, 276.3157894736842, 383.77192982456137, 227885.96491228067)),
     ),
 )
 def test_commit_56_reference_regression(vessel_id, speed_knots, expected):
@@ -85,9 +85,9 @@ def test_assumption_snapshot_status_limitations_and_twin_flag():
   assumptions = result.assumptions
 
   assert assumptions.motor_efficiency == 0.95
-  assert assumptions.operating_hours_per_day == 8.0
-  assert assumptions.duty_cycle == 0.75
-  assert assumptions.effective_powered_hours_per_day == 6.0
+  assert assumptions.operating_hours_per_day == pytest.approx(35.0 / 8.0)
+  assert assumptions.duty_cycle == 1.0
+  assert assumptions.effective_powered_hours_per_day == pytest.approx(35.0 / 8.0)
   assert assumptions.usable_energy_fraction == 0.90
   assert assumptions.reserve_fraction == 0.20
   assert assumptions.effective_usable_energy_fraction == pytest.approx(0.72)

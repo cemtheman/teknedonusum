@@ -32,19 +32,19 @@ def test_table_contains_only_reference_decision_columns():
       "52,5 kW",
   ]
   assert list(table["Günlük enerji"]) == [
-      "268,4 kWh/gün",
-      "268,4 kWh/gün",
-      "331,6 kWh/gün",
+      "132,3 kWh/gün",
+      "158,5 kWh/gün",
+      "182,9 kWh/gün",
   ]
   assert list(table["Nominal batarya"]) == [
-      "372,8 kWh",
-      "372,8 kWh",
-      "460,5 kWh",
+      "183,8 kWh",
+      "220,1 kWh",
+      "254,0 kWh",
   ]
   assert list(table["Motor + batarya maliyeti"]) == [
-      "€203.404",
-      "€206.804",
-      "€255.463",
+      "€108.884",
+      "€130.456",
+      "€152.187",
   ]
 
 
@@ -76,7 +76,7 @@ def test_renderer_uses_selected_speed_and_existing_exporters(monkeypatch):
   result = comparison_ui.render_normative_comparison_section(7.0)
 
   assert result is comparison
-  build_comparison.assert_called_once_with(7.0)
+  build_comparison.assert_called_once_with(7.0, 35.0)
   build_xlsx.assert_called_once_with(comparison)
   build_csv.assert_called_once_with(comparison)
   streamlit.subheader.assert_called_once_with(

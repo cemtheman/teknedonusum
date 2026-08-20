@@ -9,11 +9,11 @@ from ui import normative_sizing as normative_ui
 @pytest.mark.parametrize(
     ("vessel_id", "speed_knots", "expected"),
     (
-        ("v1", 6.0, (30.0, 189.47368421052633, 263.1578947368421, 143578.94736842104)),
-        ("v2", 8.0, (42.5, 268.42105263157896, 372.8070175438596, 206803.5087719298)),
-        ("v3", 10.0, (75.0, 473.6842105263158, 657.8947368421052, 364947.3684210526)),
-        ("v1", 7.0, (36.25, 228.94736842105266, 317.9824561403509, 173491.22807017545)),
-        ("v3", 9.0, (63.75, 402.63157894736844, 559.2105263157895, 310205.2631578947)),
+        ("v1", 6.0, (30.0, 68.27214774060377, 94.82242741750522, 59411.21370875261)),
+        ("v2", 8.0, (42.5, 158.4799303412363, 220.11101436282817, 130455.50718141408)),
+        ("v3", 10.0, (75.0, 276.3157894736842, 383.77192982456137, 227885.96491228067)),
+        ("v1", 7.0, (36.25, 97.32427595816506, 135.17260549745146, 82086.30274872574)),
+        ("v3", 9.0, (63.75, 227.38109046054305, 315.8070700840875, 188503.53504204375)),
     ),
 )
 def test_ui_summary_wiring_preserves_decision_values(
@@ -54,10 +54,10 @@ def test_primary_values_use_existing_cost_formatting_and_total_power():
 
   assert values["mechanical_reference"] == "42,5 kW"
   assert values["mechanical_envelope"] == "30,0–55,0 kW"
-  assert values["energy_reference"] == "268,4 kWh/gün"
-  assert values["battery_reference"] == "372,8 kWh"
-  assert values["cost_reference"] == "€206.804"
-  assert values["cost_envelope"] == "€145.979–€267.628"
+  assert values["energy_reference"] == "158,5 kWh/gün"
+  assert values["battery_reference"] == "220,1 kWh"
+  assert values["cost_reference"] == "€130.456"
+  assert values["cost_envelope"] == "€99.058–€161.853"
   assert result.twin_motor_configuration is True
 
 

@@ -78,17 +78,17 @@ def test_out_of_range_speed_is_rejected(speed_knots):
         (
             "v1",
             6.0,
-            (30.0, 30 / .95, 30 / .95 * 6, 30 / .95 * 6 / .72, 143578.94736842104),
+            (30.0, 11.703796755532077, 68.27214774060377, 94.82242741750522, 59411.21370875261),
         ),
         (
             "v2",
             8.0,
-            (42.5, 42.5 / .95, 42.5 / .95 * 6, 42.5 / .95 * 6 / .72, 206803.5087719298),
+            (42.5, 36.22398407799687, 158.4799303412363, 220.11101436282817, 130455.50718141408),
         ),
         (
             "v3",
             10.0,
-            (75.0, 75 / .95, 75 / .95 * 6, 75 / .95 * 6 / .72, 364947.3684210526),
+            (75.0, 78.94736842105263, 276.3157894736842, 383.77192982456137, 227885.96491228067),
         ),
     ),
 )
@@ -112,8 +112,11 @@ def test_commit_51_to_55_reference_regressions(
 def test_relationships_and_assumption_traceability():
   result = calculate_normative_sizing("v2", 8.0)
 
-  assert result.reference_electrical_input_power_kw >= (
+  assert result.reference_cruise_mechanical_power_kw <= (
       result.reference_installed_mechanical_power_kw
+  )
+  assert result.reference_electrical_input_power_kw == pytest.approx(
+      result.reference_cruise_mechanical_power_kw / result.motor_efficiency
   )
   assert result.reference_daily_propulsion_energy_kwh == pytest.approx(
       result.reference_electrical_input_power_kw
@@ -123,8 +126,8 @@ def test_relationships_and_assumption_traceability():
       result.reference_daily_propulsion_energy_kwh
   )
   assert result.motor_efficiency == 0.95
-  assert result.operating_hours_per_day == 8.0
-  assert result.duty_cycle == 0.75
+  assert result.operating_hours_per_day == pytest.approx(35.0 / 8.0)
+  assert result.duty_cycle == 1.0
   assert result.usable_energy_fraction == 0.90
   assert result.reserve_fraction == 0.20
   assert result.motor_count == 2

@@ -93,8 +93,10 @@ def test_common_assumptions_currency_and_vessel_cost_multiplier():
   assert all(row.currency == result.currency for row in result.rows)
   assert all(row.assumptions == result.assumptions for row in result.rows)
   assert result.assumptions.motor_efficiency == 0.95
-  assert result.assumptions.operating_hours_per_day == 8.0
-  assert result.assumptions.duty_cycle == 0.75
+  assert result.assumptions.operating_hours_per_day == pytest.approx(
+      35.0 / 8.0
+  )
+  assert result.assumptions.duty_cycle == 1.0
   assert result.assumptions.usable_energy_fraction == 0.90
   assert result.assumptions.reserve_fraction == 0.20
   assert result.assumptions.effective_usable_energy_fraction == pytest.approx(

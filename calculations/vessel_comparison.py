@@ -7,6 +7,7 @@ hydrodynamic, resistance, catamaran, propulsion, or energy prediction formula.
 
 from dataclasses import dataclass
 
+from calculations.energy import calculate_navigation_energy
 from calculations.technical_scenario import (
     evaluate_preliminary_technical_scenario,
 )
@@ -44,8 +45,9 @@ def build_vessel_technical_comparison(
 
   v1 uses the preliminary technical scenario. v2 and v3 use the calibrated
   legacy vessel-physics model; no catamaran resistance theory is inferred.
-  Their range and full commission status remain unavailable because the
-  calibrated result does not establish those quantities.
+  Their battery-only range uses the existing navigation-energy model and the
+  calibrated cruise-power estimate. Solar contribution is excluded. Full
+  commission status remains unavailable.
   """
   vessel_ids = ("v1", "v2", "v3")
   missing_vessel_ids = [key for key in vessel_ids if key not in vessel_specs]
@@ -118,6 +120,14 @@ def build_vessel_technical_comparison(
         d_miles=daily_miles,
         s_hours=sun_hours,
     )
+    navigation_energy = calculate_navigation_energy(
+        speed_knots=cruise_speed,
+        battery_capacity_kwh=spec["batCapacity"],
+        propulsion_electrical_power_kw=physics.cruise_power,
+        hotel_load_kw=0.0,
+        usable_energy_fraction=assumptions.usable_energy_fraction,
+        operational_reserve_fraction=assumptions.operational_reserve_fraction,
+    )
     rows.append(
         VesselTechnicalComparisonRow(
             vessel_id=vessel_id,
@@ -130,7 +140,7 @@ def build_vessel_technical_comparison(
             daily_propulsion_energy_kwh=physics.brut_kwh,
             solar_energy_contribution_kwh=physics.solar_kwh,
             net_grid_energy_requirement_kwh=physics.net_grid_kwh,
-            estimated_navigation_range_nm=None,
+            estimated_navigation_range_nm=navigation_energy.navigation_range_nm,
             commission_compliance_status=None,
             estimate_basis="calibrated_preliminary",
         )

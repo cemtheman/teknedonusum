@@ -87,18 +87,35 @@ def test_sun_hours_affects_solar_and_net_grid_outputs():
         sunny[vessel_id].net_grid_energy_requirement_kwh
         <= no_sun[vessel_id].net_grid_energy_requirement_kwh
     )
+    assert sunny[vessel_id].estimated_navigation_range_nm == pytest.approx(
+        no_sun[vessel_id].estimated_navigation_range_nm
+    )
 
 
-def test_only_v1_exposes_range_but_full_compliance_remains_unavailable():
+def test_all_vessels_expose_battery_only_range_but_compliance_remains_unavailable():
   rows = rows_by_id(comparison(cruise_speed=10.0))
 
   assert rows["v1"].estimated_navigation_range_nm == pytest.approx(
       22.831668369348257
   )
-  assert rows["v1"].commission_compliance_status is None
-  for vessel_id in ("v2", "v3"):
-    assert rows[vessel_id].estimated_navigation_range_nm is None
+  assert rows["v2"].estimated_navigation_range_nm == pytest.approx(
+      22.528516941789867
+  )
+  assert rows["v3"].estimated_navigation_range_nm == pytest.approx(
+      29.80857925719718
+  )
+  for vessel_id in ("v1", "v2", "v3"):
     assert rows[vessel_id].commission_compliance_status is None
+
+
+def test_range_is_available_when_net_grid_requirement_is_zero():
+  rows = rows_by_id(comparison(cruise_speed=6.0, sun_hours=8.0))
+
+  assert rows["v1"].estimated_navigation_range_nm is not None
+  for vessel_id in ("v2", "v3"):
+    assert rows[vessel_id].net_grid_energy_requirement_kwh == 0.0
+    assert rows[vessel_id].estimated_navigation_range_nm is not None
+    assert rows[vessel_id].estimated_navigation_range_nm > 0.0
 
 
 def test_commission_thresholds_are_unchanged():

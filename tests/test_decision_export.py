@@ -87,12 +87,12 @@ def test_current_values_flow_into_export_as_numeric_cells():
   )
 
 
-def test_unavailable_values_remain_explicit():
+def test_ranges_are_numeric_and_unavailable_compliance_remains_explicit():
   workbook, _, _ = current_export()
   sheet = workbook["Karar Özeti"]
 
-  assert sheet["H3"].value == "Mevcut değil"
-  assert sheet["H4"].value == "Mevcut değil"
+  assert sheet["H3"].value == pytest.approx(57.96325818904583)
+  assert sheet["H4"].value == pytest.approx(76.69401320104313)
   assert sheet["I2"].value == "Henüz değerlendirilmedi"
   assert sheet["I3"].value == "Henüz değerlendirilmedi"
   assert sheet["I4"].value == "Henüz değerlendirilmedi"

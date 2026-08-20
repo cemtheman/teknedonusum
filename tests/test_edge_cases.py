@@ -60,8 +60,7 @@ def test_operating_boundaries_build_comparisons_without_runtime_errors(
 
   assert len(decision) == 3
   assert all(row.commission_compliance_status is None for row in decision)
-  assert decision[1].estimated_navigation_range_nm is None
-  assert decision[2].estimated_navigation_range_nm is None
+  assert all(row.estimated_navigation_range_nm is not None for row in decision)
   if miles == 0:
     assert all(row.daily_propulsion_energy_kwh == 0.0 for row in decision)
     assert all(row.net_grid_energy_requirement_kwh == 0.0 for row in decision)

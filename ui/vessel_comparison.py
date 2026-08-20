@@ -1,7 +1,6 @@
 """Streamlit presentation for the preliminary vessel technical comparison."""
 
 import pandas as pd
-import streamlit as st
 
 from calculations.vessel_comparison import VesselTechnicalComparisonRow
 from models.compliance import ComplianceStatus
@@ -71,20 +70,3 @@ def build_vessel_comparison_table(rows):
       }
       for row in rows
   ])
-
-
-def render_vessel_technical_comparison(rows) -> None:
-  """Render the existing comparison model without recalculating its values."""
-  table = build_vessel_comparison_table(rows)
-
-  st.divider()
-  with st.expander(
-      "📋 Teknik karşılaştırma detaylarını göster",
-      expanded=False,
-  ):
-    st.caption(
-        "v1 ile v2/v3 farklı teknik hesap derinliği kullanır. Tam teknik "
-        "uygunluk, doğrulanmış hız kabiliyeti dahil tüm kriterler "
-        "değerlendirildiğinde belirlenebilir."
-    )
-    st.dataframe(table, hide_index=True, width="stretch")

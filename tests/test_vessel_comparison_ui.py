@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 import pytest
 
 from calculations.vessel_comparison import VesselTechnicalComparisonRow
@@ -79,30 +77,6 @@ def test_table_numeric_formatting_is_compact_and_turkish():
   assert table.loc[0, "Güneş katkısı (kWh/gün)"] == "25,2"
   assert table.loc[0, "Net şebeke ihtiyacı (kWh/gün)"] == "63,1"
   assert table.loc[0, "Tahmini menzil (NM)"] == "22,8"
-
-
-def test_renderer_displays_three_rows_in_collapsed_expander(monkeypatch):
-  streamlit = MagicMock()
-  monkeypatch.setattr(vessel_comparison_ui, "st", streamlit)
-
-  vessel_comparison_ui.render_vessel_technical_comparison(comparison_rows())
-
-  rendered_table = streamlit.dataframe.call_args.args[0]
-  assert len(rendered_table) == 3
-  streamlit.dataframe.assert_called_once_with(
-      rendered_table,
-      hide_index=True,
-      width="stretch",
-  )
-  streamlit.expander.assert_called_once_with(
-      "📋 Teknik karşılaştırma detaylarını göster",
-      expanded=False,
-  )
-  streamlit.caption.assert_called_once_with(
-      "v1 ile v2/v3 farklı teknik hesap derinliği kullanır. Tam teknik "
-      "uygunluk, doğrulanmış hız kabiliyeti dahil tüm kriterler "
-      "değerlendirildiğinde belirlenebilir."
-  )
 
 
 def test_table_rejects_wrong_row_type():

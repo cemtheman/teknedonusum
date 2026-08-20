@@ -29,7 +29,6 @@ def test_management_sections_imports_are_present():
       "from calculations.vessel_comparison import build_vessel_technical_comparison",
       "from ui.assumptions_transparency import render_assumptions_transparency",
       "from ui.decision_summary import render_vessel_decision_summary",
-      "from ui.vessel_comparison import render_vessel_technical_comparison",
       "from ui.vessel_detail import render_vessel_details",
   }
   assert all(import_line in APP_SOURCE for import_line in required_imports)
@@ -53,14 +52,12 @@ def test_render_order_preserves_legacy_flow():
   fleet_position = APP_SOURCE.index("render_fleet_dashboard(")
   decision_position = APP_SOURCE.index("render_vessel_decision_summary(")
   assumptions_position = APP_SOURCE.index("render_assumptions_transparency(")
-  comparison_position = APP_SOURCE.index("render_vessel_technical_comparison(")
   details_position = APP_SOURCE.index("render_vessel_details(")
 
   assert (
       fleet_position
       < decision_position
       < assumptions_position
-      < comparison_position
       < details_position
   )
 
@@ -69,7 +66,8 @@ def test_comparison_uses_current_sidebar_operational_inputs():
   comparison_call = calls_named("build_vessel_technical_comparison")[0]
 
   assert len(calls_named("build_vessel_technical_comparison")) == 1
-  assert len(calls_named("render_vessel_technical_comparison")) == 1
+  assert not calls_named("render_vessel_technical_comparison")
+  assert "Teknik karşılaştırma detaylarını göster" not in APP_SOURCE
   assert keyword_source(comparison_call, "vessel_specs") == "VESSEL_SPECS"
   assert keyword_source(comparison_call, "cruise_speed") == "inputs.cruise_speed"
   assert keyword_source(comparison_call, "daily_miles") == "inputs.daily_miles"

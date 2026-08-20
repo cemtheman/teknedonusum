@@ -11,7 +11,6 @@ from ui.assumptions_transparency import render_assumptions_transparency
 from ui.decision_summary import render_vessel_decision_summary
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
-from ui.vessel_comparison import render_vessel_technical_comparison
 from ui.vessel_detail import render_vessel_details
 
 
@@ -110,8 +109,6 @@ def main():
       assumptions_transparency,
   )
   render_assumptions_transparency(assumptions_transparency)
-
-  render_vessel_technical_comparison(comparison)
 
   render_vessel_details(VESSEL_SPECS, inputs)
 

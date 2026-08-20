@@ -97,6 +97,9 @@ def test_common_assumptions_currency_and_vessel_cost_multiplier():
   assert result.assumptions.duty_cycle == 0.75
   assert result.assumptions.usable_energy_fraction == 0.90
   assert result.assumptions.reserve_fraction == 0.20
+  assert result.assumptions.effective_usable_energy_fraction == pytest.approx(
+      0.72
+  )
   assert tuple(row.motor_system_multiplier for row in result.rows) == (
       1.0,
       1.2,

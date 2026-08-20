@@ -15,6 +15,7 @@ class NormativeComparisonAssumptionSnapshot:
   effective_powered_hours_per_day: float
   usable_energy_fraction: float
   reserve_fraction: float
+  effective_usable_energy_fraction: float
   motor_unit_cost_per_total_installed_kw: float
   battery_unit_cost_per_nominal_kwh: float
 
@@ -23,6 +24,7 @@ class NormativeComparisonAssumptionSnapshot:
         self.motor_efficiency,
         self.duty_cycle,
         self.usable_energy_fraction,
+        self.effective_usable_energy_fraction,
     )
     if any(not isfinite(value) or not 0 < value <= 1 for value in fractions):
       raise ValueError("common assumption fractions must be within zero and one")
@@ -52,6 +54,7 @@ class NormativeVesselComparisonRow:
   intended_use: str
   preliminary_only: bool
   externally_validated: bool
+  limitation_ids: tuple[str, ...]
   twin_motor_configuration: bool
   motor_system_multiplier: float
   min_installed_mechanical_power_kw: float
@@ -91,6 +94,8 @@ class NormativeVesselComparisonRow:
       raise ValueError("comparison rows must remain preliminary")
     if self.externally_validated is not False:
       raise ValueError("comparison rows are not externally validated")
+    if not self.limitation_ids or any(not item for item in self.limitation_ids):
+      raise ValueError("limitation_ids must contain explicit entries")
 
     groups = (
         (
@@ -148,3 +153,5 @@ class NormativeVesselComparisonResult:
       raise ValueError("all rows must use the comparison currency")
     if any(row.assumptions != self.assumptions for row in self.rows):
       raise ValueError("all rows must use common normative assumptions")
+    if any(row.limitation_ids != self.rows[0].limitation_ids for row in self.rows):
+      raise ValueError("all rows must use common normative limitations")

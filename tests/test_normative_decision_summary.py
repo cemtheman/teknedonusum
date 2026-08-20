@@ -90,6 +90,7 @@ def test_assumption_snapshot_status_limitations_and_twin_flag():
   assert assumptions.effective_powered_hours_per_day == 6.0
   assert assumptions.usable_energy_fraction == 0.90
   assert assumptions.reserve_fraction == 0.20
+  assert assumptions.effective_usable_energy_fraction == pytest.approx(0.72)
   assert assumptions.motor_unit_cost_per_total_installed_kw == 400.0
   assert assumptions.battery_unit_cost_per_nominal_kwh == 500.0
   assert assumptions.motor_system_multiplier == 1.20

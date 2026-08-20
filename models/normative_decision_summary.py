@@ -12,6 +12,7 @@ class NormativeDecisionAssumptionSnapshot:
   effective_powered_hours_per_day: float
   usable_energy_fraction: float
   reserve_fraction: float
+  effective_usable_energy_fraction: float
   motor_unit_cost_per_total_installed_kw: float
   battery_unit_cost_per_nominal_kwh: float
   motor_system_multiplier: float

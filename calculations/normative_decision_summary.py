@@ -21,6 +21,9 @@ def build_normative_decision_summary(
       effective_powered_hours_per_day=sizing.effective_powered_hours_per_day,
       usable_energy_fraction=sizing.usable_energy_fraction,
       reserve_fraction=sizing.reserve_fraction,
+      effective_usable_energy_fraction=(
+          sizing.effective_usable_energy_fraction
+      ),
       motor_unit_cost_per_total_installed_kw=(
           sizing.motor_unit_cost_per_total_installed_kw
       ),

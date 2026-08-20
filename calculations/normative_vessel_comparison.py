@@ -25,6 +25,9 @@ def _common_assumptions(
       effective_powered_hours_per_day=source.effective_powered_hours_per_day,
       usable_energy_fraction=source.usable_energy_fraction,
       reserve_fraction=source.reserve_fraction,
+      effective_usable_energy_fraction=(
+          source.effective_usable_energy_fraction
+      ),
       motor_unit_cost_per_total_installed_kw=(
           source.motor_unit_cost_per_total_installed_kw
       ),
@@ -48,6 +51,7 @@ def _comparison_row(
       intended_use=summary.intended_use,
       preliminary_only=summary.preliminary_only,
       externally_validated=summary.externally_validated,
+      limitation_ids=summary.limitation_ids,
       twin_motor_configuration=summary.twin_motor_configuration,
       motor_system_multiplier=summary.assumptions.motor_system_multiplier,
       min_installed_mechanical_power_kw=(

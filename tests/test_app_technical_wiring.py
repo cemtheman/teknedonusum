@@ -29,6 +29,7 @@ def test_management_sections_imports_are_present():
       "from calculations.vessel_comparison import build_vessel_technical_comparison",
       "from ui.assumptions_transparency import render_assumptions_transparency",
       "from ui.decision_summary import render_vessel_decision_summary",
+      "from ui.normative_comparison import render_normative_comparison_section",
       "from ui.normative_sizing import render_normative_sizing_section",
       "from ui.vessel_detail import render_vessel_details",
   }
@@ -52,6 +53,7 @@ def test_vessel_detail_section_remains_available_but_collapsed():
 def test_render_order_makes_normative_primary_and_legacy_secondary():
   fleet_position = APP_SOURCE.index("render_fleet_dashboard(")
   decision_position = APP_SOURCE.index("render_vessel_decision_summary(")
+  comparison_position = APP_SOURCE.index("render_normative_comparison_section(")
   normative_position = APP_SOURCE.index("render_normative_sizing_section(")
   assumptions_position = APP_SOURCE.index("render_assumptions_transparency(")
   details_position = APP_SOURCE.index("render_vessel_details(")
@@ -59,6 +61,7 @@ def test_render_order_makes_normative_primary_and_legacy_secondary():
   assert (
       fleet_position
       < normative_position
+      < comparison_position
       < decision_position
       < assumptions_position
       < details_position
@@ -70,8 +73,11 @@ def test_normative_section_reuses_current_speed_and_preserves_legacy_summary():
 
   assert len(calls_named("render_vessel_decision_summary")) == 1
   assert len(calls_named("render_normative_sizing_section")) == 1
+  assert len(calls_named("render_normative_comparison_section")) == 1
   assert ast.unparse(normative_call.args[0]) == "VESSEL_SPECS"
   assert ast.unparse(normative_call.args[1]) == "inputs.cruise_speed"
+  comparison_call = calls_named("render_normative_comparison_section")[0]
+  assert ast.unparse(comparison_call.args[0]) == "inputs.cruise_speed"
   assert "📊 Tekne Alternatifleri Karar Özeti" in Path(
       "ui/decision_summary.py"
   ).read_text(encoding="utf-8")

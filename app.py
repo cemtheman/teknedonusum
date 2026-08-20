@@ -11,6 +11,7 @@ from ui.assumptions_transparency import render_assumptions_transparency
 from ui.decision_summary import render_vessel_decision_summary
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
+from ui.normative_comparison import render_normative_comparison_section
 from ui.normative_sizing import render_normative_sizing_section
 from ui.vessel_detail import render_vessel_details
 
@@ -109,6 +110,7 @@ def main():
       VESSEL_SPECS,
       inputs.cruise_speed,
   )
+  render_normative_comparison_section(inputs.cruise_speed)
   render_vessel_decision_summary(
       decision_summary,
       assumptions_transparency,

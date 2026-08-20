@@ -64,7 +64,8 @@ def test_primary_values_use_existing_cost_formatting_and_total_power():
 def test_renderer_shows_separate_preliminary_section(monkeypatch):
   streamlit = MagicMock()
   streamlit.selectbox.return_value = "Tip 1: 12m Monohull"
-  streamlit.columns.return_value = tuple(MagicMock() for _ in range(4))
+  columns = tuple(MagicMock() for _ in range(4))
+  streamlit.columns.return_value = columns
   monkeypatch.setattr(normative_ui, "st", streamlit)
 
   result = normative_ui.render_normative_sizing_section(

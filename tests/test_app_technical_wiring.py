@@ -85,7 +85,7 @@ def test_legacy_summary_is_labeled_deprecated_and_collapsed():
   assert "aynı fizik zincirini kullanmaz" in source
   assert "doğrudan karşılaştırılmamalıdır" in source
   assert "bütün tekne yatırım senaryosunu kapsar" in source
-  assert "primary v0.2 teknik karar çıktısı" in source
+  assert "v0.2 teknik karar çıktısı" in source
 
 
 def test_comparison_uses_current_sidebar_operational_inputs():

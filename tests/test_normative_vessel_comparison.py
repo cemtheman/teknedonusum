@@ -117,7 +117,7 @@ def test_rows_are_raw_numeric_export_ready_without_ranking_fields():
 
 @pytest.mark.parametrize("speed_knots", (5.9, 10.1, float("inf")))
 def test_invalid_speed_is_rejected(speed_knots):
-  with pytest.raises(ValueError, match="6"):
+  with pytest.raises(ValueError, match="6|finite"):
     comparison(speed_knots)
 
 

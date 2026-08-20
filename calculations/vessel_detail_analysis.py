@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from math import isfinite
 
 from calculations.normative_sizing import calculate_normative_sizing
+from config.solar_assumptions import SOLAR_MODULE_POWER_DENSITY_KWP_PER_M2
 from models.normative_sizing import NormativeSizingResult
 
 
@@ -49,9 +50,29 @@ def _technical_profile_id(vessel_key):
 
 
 def _diesel_baseline_lph(spec, cruise_speed_knots):
-  """Keep the old-vessel fuel comparator isolated from the v0.2 power chain."""
   exponent = 3.3 if spec["hull"] == "monohull" else 2.85
   return 30.0 * ((cruise_speed_knots / 10.0) ** exponent)
+
+
+def _daily_solar_kwh(spec, inputs):
+  solar_area_m2 = spec["loa"] * spec["beam"] * 0.80
+  specific_yield = getattr(
+      inputs,
+      "average_daily_specific_yield_kwh_per_kwp",
+      None,
+  )
+
+  if specific_yield is not None:
+    installed_solar_kwp = (
+        solar_area_m2 * SOLAR_MODULE_POWER_DENSITY_KWP_PER_M2
+    )
+    return solar_area_m2, installed_solar_kwp * specific_yield
+
+  sun_hours = getattr(inputs, "sun_hours", None)
+  if sun_hours is None:
+    raise ValueError("solar resource is missing")
+
+  return solar_area_m2, solar_area_m2 * 0.15 * sun_hours
 
 
 def build_vessel_detail_analysis(
@@ -61,7 +82,6 @@ def build_vessel_detail_analysis(
     *,
     sizing_calculator=calculate_normative_sizing,
 ):
-  """Build detail-card values without calling the legacy vessel-physics model."""
   profile_id = _technical_profile_id(vessel_key)
   sizing = sizing_calculator(
       profile_id,
@@ -69,8 +89,7 @@ def build_vessel_detail_analysis(
       inputs.daily_miles,
   )
 
-  solar_area_m2 = spec["loa"] * spec["beam"] * 0.80
-  daily_solar_kwh = solar_area_m2 * 0.15 * inputs.sun_hours
+  solar_area_m2, daily_solar_kwh = _daily_solar_kwh(spec, inputs)
   daily_grid_kwh = max(
       0.0,
       sizing.reference_daily_propulsion_energy_kwh - daily_solar_kwh,
@@ -95,8 +114,6 @@ def build_vessel_detail_analysis(
       daily_grid_kwh * inputs.operating_days * inputs.elec_price
   )
 
-  # Lifecycle reserve only. This legacy replacement-cost assumption is not
-  # presented as a second vessel/component purchase price in the UI.
   replacement_battery_cost_tl = spec["batCostEur"] * inputs.eur_rate
   equivalent_full_cycles = (
       sizing.reference_daily_propulsion_energy_kwh

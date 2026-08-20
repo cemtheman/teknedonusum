@@ -13,8 +13,8 @@ from calculations.economic_comparison import build_vessel_economic_comparison
 from calculations.fleet import calculate_fleet
 from calculations.vessel_comparison import build_vessel_technical_comparison
 from config.vessel_factory import build_vessel_specs
-from models.inputs import SimulationInputs
 from services import market_data
+from tests.helpers import make_simulation_inputs
 
 
 def vessel_specs():
@@ -22,17 +22,12 @@ def vessel_specs():
 
 
 def inputs(speed=4.0, miles=0.0, sun=0.0, days=30):
-  return SimulationInputs(
+  return make_simulation_inputs(
       count_v1=0,
       count_v2=0,
       count_v3=0,
       count_v4_24=0,
       count_v4_32=0,
-      cost_eur_v1=108100,
-      cost_eur_v2=144140,
-      cost_eur_v3=180180,
-      eur_rate=55.5,
-      diesel_price=81.81,
       elec_price=3.0,
       operating_days=days,
       sun_hours=sun,

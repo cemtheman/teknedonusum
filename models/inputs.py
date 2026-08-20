@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 
 
 @dataclass
@@ -15,6 +16,16 @@ class SimulationInputs:
   diesel_price: float
   elec_price: float
   operating_days: int
-  sun_hours: float
   daily_miles: float
   cruise_speed: float
+  location_name: str
+  latitude: float
+  longitude: float
+  season_start: date
+  season_end: date
+  season_days: int
+  average_daily_specific_yield_kwh_per_kwp: float
+  season_specific_yield_kwh_per_kwp: float
+  solar_resource_source: str
+  # Transitional compatibility only; primary UI no longer exposes it.
+  sun_hours: float | None = None

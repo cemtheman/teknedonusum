@@ -56,8 +56,11 @@ def main():
       counts,
       inputs.cruise_speed,
       inputs.daily_miles,
-      inputs.sun_hours,
+      None,
       inputs.operating_days,
+      average_daily_specific_yield_kwh_per_kwp=(
+          inputs.average_daily_specific_yield_kwh_per_kwp
+      ),
   )
 
   render_fleet_dashboard(vessel_specs, inputs, fleet)

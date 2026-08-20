@@ -11,7 +11,6 @@ def render_fleet_dashboard(
     inputs: SimulationInputs,
     fleet: FleetResult,
 ):
-  # --- Fleet Summary Dashboard Section ---
   st.subheader("🚢 Filo Geneli Toplam Dönüşüm ve Finansman Özeti")
   f_kpi1, f_kpi2, f_kpi3, f_kpi4 = st.columns(4)
   with f_kpi1:
@@ -19,11 +18,16 @@ def render_fleet_dashboard(
   with f_kpi2:
     st.metric("Toplam Filo Yolcu Kapasitesi", f"{fleet.total_capacity:,} Kişi")
   with f_kpi3:
-    st.metric("İhtiyaç Duyulan Toplam Hibe", f"₺{format_integer_tr(fleet.fleet_total_grant)}")
+    st.metric(
+        "İhtiyaç Duyulan Toplam Hibe",
+        f"₺{format_integer_tr(fleet.fleet_total_grant)}",
+    )
   with f_kpi4:
-    st.metric("Toplam Net Özkaynak Yatırımı", f"₺{format_integer_tr(fleet.fleet_total_capex)}")
+    st.metric(
+        "Toplam Net Özkaynak Yatırımı",
+        f"₺{format_integer_tr(fleet.fleet_total_capex)}",
+    )
 
-  # Fleet Breakdown Table
   fleet_summary_df = pd.DataFrame({
       "Tekne Tipi & Kategori": [
           "Tip 1: 12m Monohull (Kooperatif %55)",
@@ -41,7 +45,9 @@ def render_fleet_dashboard(
           inputs.count_v4_32,
           fleet.total_vessels,
       ],
-      "Birim Kapasite": ["24 Kişi", "32 Kişi", "54 Kişi", "24 Kişi", "32 Kişi", "-"],
+      "Birim Kapasite": [
+          "24 Kişi", "32 Kişi", "54 Kişi", "24 Kişi", "32 Kişi", "-"
+      ],
       "Toplam Kapasite": [
           f"{inputs.count_v1 * 24} Kişi",
           f"{inputs.count_v2 * 32} Kişi",
@@ -93,7 +99,6 @@ def render_fleet_dashboard(
   })
   st.table(fleet_summary_df)
 
-  # CO2 Reduction & Tree Equivalent Banner
   co2_html = f"""
 <div style="background-color: #ECFDF5; border: 1.5px solid #10B981; border-radius: 8px; padding: 14px 20px; text-align: center; margin-top: 10px; margin-bottom: 12px;">
     <p style="font-size: 1.25rem; font-weight: 700; color: #065F46; margin: 0;">🌱 Filo Dönüşümü İle Yıllık Toplam CO₂ Salınım Azaltımı: {fleet.fleet_total_co2_reduction:,.1f} Ton / Yıl</p>
@@ -102,11 +107,11 @@ def render_fleet_dashboard(
 """
   st.markdown(co2_html, unsafe_allow_html=True)
 
-  # Solar & Grid Electricity Balance Banner
   solar_html = f"""
 <div style="background-color: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 8px; padding: 14px 20px; text-align: center; margin-bottom: 20px;">
-    <p style="font-size: 1.25rem; font-weight: 700; color: #1E40AF; margin: 0;">⚡ Filo Elektrik ve Şebeke Şarj İhtiyacı Dengesi ({inputs.sun_hours} Saat/Gün Güneşlenme)</p>
-    <p style="font-size: 1.05rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">☀️ Günlük Güneş Üretimi: <b>{fleet.fleet_daily_solar_kwh:,.1f} kWh</b> (%{fleet.solar_coverage_ratio:.1f} Karşılama) | 🔌 Liman Şebeke Şarj İhtiyacı: <b>{fleet.fleet_daily_grid_kwh:,.1f} kWh/gün</b> (Sezonluk: <b>{fleet.fleet_annual_grid_kwh:,.0f} kWh/sezon</b>)</p>
+    <p style="font-size: 1.25rem; font-weight: 700; color: #1E40AF; margin: 0;">⚡ Filo Elektrik ve Şebeke Şarj İhtiyacı Dengesi</p>
+    <p style="font-size: 0.95rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">📍 {inputs.location_name} · {inputs.season_start:%d.%m.%Y}–{inputs.season_end:%d.%m.%Y} · PVGIS ort. {inputs.average_daily_specific_yield_kwh_per_kwp:.2f} kWh/kWp-gün</p>
+    <p style="font-size: 1.05rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">☀️ Günlük Güneş Üretimi: <b>{fleet.fleet_daily_solar_kwh:,.1f} kWh</b> (%{fleet.solar_coverage_ratio:.1f} Karşılama) | 🔌 Liman Şebeke Şarj İhtiyacı: <b>{fleet.fleet_daily_grid_kwh:,.1f} kWh/gün</b> (Operasyon günleri toplamı: <b>{fleet.fleet_annual_grid_kwh:,.0f} kWh</b>)</p>
 </div>
 """
   st.markdown(solar_html, unsafe_allow_html=True)

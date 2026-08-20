@@ -2,10 +2,10 @@
 
 from dataclasses import dataclass
 from math import isfinite
-from types import SimpleNamespace
 
 from calculations.normative_sizing import calculate_normative_sizing
 from calculations.vessel_detail_analysis import TECHNICAL_PROFILE_BY_VESSEL
+from config.solar_assumptions import SOLAR_MODULE_POWER_DENSITY_KWP_PER_M2
 
 
 @dataclass(frozen=True)
@@ -21,9 +21,32 @@ class FleetEnergyBalance:
 
 
 def _diesel_baseline_lph(spec, cruise_speed_knots):
-  """Keep the old-vessel fuel comparator isolated from the v0.2 power chain."""
   exponent = 3.3 if spec["hull"] == "monohull" else 2.85
   return 30.0 * ((cruise_speed_knots / 10.0) ** exponent)
+
+
+def _daily_solar_kwh(
+    spec,
+    *,
+    average_daily_specific_yield_kwh_per_kwp=None,
+    sun_hours=None,
+):
+  solar_area_m2 = spec["loa"] * spec["beam"] * 0.80
+
+  if average_daily_specific_yield_kwh_per_kwp is not None:
+    installed_solar_kwp = (
+        solar_area_m2 * SOLAR_MODULE_POWER_DENSITY_KWP_PER_M2
+    )
+    return installed_solar_kwp * float(
+        average_daily_specific_yield_kwh_per_kwp
+    )
+
+  if sun_hours is None:
+    raise ValueError(
+        "average_daily_specific_yield_kwh_per_kwp or legacy sun_hours is required"
+    )
+
+  return solar_area_m2 * 0.15 * float(sun_hours)
 
 
 def build_fleet_energy_balance(
@@ -34,9 +57,9 @@ def build_fleet_energy_balance(
     sun_hours,
     operating_days,
     *,
+    average_daily_specific_yield_kwh_per_kwp=None,
     sizing_calculator=calculate_normative_sizing,
 ):
-  """Aggregate fleet energy from the same v0.2 route-based sizing used by UI."""
   daily_propulsion_kwh = 0.0
   daily_solar_kwh = 0.0
   daily_grid_kwh = 0.0
@@ -59,8 +82,13 @@ def build_fleet_energy_balance(
     )
 
     propulsion_kwh = sizing.reference_daily_propulsion_energy_kwh
-    solar_area_m2 = spec["loa"] * spec["beam"] * 0.80
-    solar_kwh = solar_area_m2 * 0.15 * sun_hours
+    solar_kwh = _daily_solar_kwh(
+        spec,
+        average_daily_specific_yield_kwh_per_kwp=(
+            average_daily_specific_yield_kwh_per_kwp
+        ),
+        sun_hours=sun_hours,
+    )
     grid_kwh = max(0.0, propulsion_kwh - solar_kwh)
 
     cruise_hours = sizing.operating_hours_per_day
@@ -101,16 +129,18 @@ def build_fleet_energy_balance(
       equivalent_trees=equivalent_trees,
   )
 
-  finite_values = (
-      result.daily_propulsion_kwh,
-      result.daily_solar_kwh,
-      result.daily_grid_kwh,
-      result.annual_grid_kwh,
-      result.annual_solar_kwh,
-      result.solar_coverage_ratio,
-      result.total_co2_reduction_tonnes,
-  )
-  if any(not isfinite(value) for value in finite_values):
+  if any(
+      not isfinite(value)
+      for value in (
+          result.daily_propulsion_kwh,
+          result.daily_solar_kwh,
+          result.daily_grid_kwh,
+          result.annual_grid_kwh,
+          result.annual_solar_kwh,
+          result.solar_coverage_ratio,
+          result.total_co2_reduction_tonnes,
+      )
+  ):
     raise ValueError("fleet energy balance produced non-finite values")
 
   return result

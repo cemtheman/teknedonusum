@@ -9,6 +9,8 @@ def calculate_fleet(
     daily_miles,
     sun_hours,
     operating_days,
+    *,
+    average_daily_specific_yield_kwh_per_kwp=None,
 ):
   total_vessels = sum(counts.values())
   total_capacity = sum(
@@ -36,6 +38,9 @@ def calculate_fleet(
       daily_miles,
       sun_hours,
       operating_days,
+      average_daily_specific_yield_kwh_per_kwp=(
+          average_daily_specific_yield_kwh_per_kwp
+      ),
   )
 
   return FleetResult(
@@ -48,8 +53,6 @@ def calculate_fleet(
       fleet_total_co2_reduction=energy.total_co2_reduction_tonnes,
       fleet_daily_solar_kwh=energy.daily_solar_kwh,
       fleet_daily_grid_kwh=energy.daily_grid_kwh,
-      # Retain the result-field name for compatibility; its v0.2 semantic is
-      # total route-based daily propulsion electrical energy before solar.
       fleet_daily_brut_kwh=energy.daily_propulsion_kwh,
       equivalent_trees=energy.equivalent_trees,
       fleet_annual_grid_kwh=energy.annual_grid_kwh,

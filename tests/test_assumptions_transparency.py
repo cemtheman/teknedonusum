@@ -11,26 +11,13 @@ from calculations.assumptions_transparency import (
     build_assumptions_transparency,
 )
 from config.vessel_factory import build_vessel_specs
-from models.inputs import SimulationInputs
+from tests.helpers import make_simulation_inputs
 
 
 def inputs():
-  return SimulationInputs(
-      count_v1=50,
-      count_v2=50,
-      count_v3=40,
-      count_v4_24=30,
-      count_v4_32=20,
-      cost_eur_v1=108100,
-      cost_eur_v2=144140,
-      cost_eur_v3=180180,
-      eur_rate=55.5,
-      diesel_price=81.81,
-      elec_price=3.5,
+  return make_simulation_inputs(
       operating_days=180,
       sun_hours=8.0,
-      daily_miles=35.0,
-      cruise_speed=6.0,
   )
 
 

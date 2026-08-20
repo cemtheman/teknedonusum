@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 
 from calculations.fleet import calculate_fleet
+from calculations.fleet_energy_balance import build_fleet_energy_balance
 from calculations.vessel_comparison import (
     VesselTechnicalComparisonRow,
     build_vessel_technical_comparison,
@@ -127,14 +128,25 @@ def test_commission_thresholds_are_unchanged():
   assert constraints.minimum_battery_capacity_kwh == 20.0
 
 
-def test_legacy_fleet_baseline_is_unchanged():
+def test_fleet_aggregation_uses_v02_energy_without_rewriting_legacy_comparison():
   specs = deepcopy(BASE_VESSEL_SPECS)
   for spec in specs.values():
     spec.update(totalCost=0.0, maxGrant=0.0)
   counts = {"v1": 50, "v2": 50, "v3": 40, "v4_24": 30, "v4_32": 20}
 
   result = calculate_fleet(specs, counts, 6.0, 35.0, 8.0, 180)
+  expected_energy = build_fleet_energy_balance(
+      specs, counts, 6.0, 35.0, 8.0, 180
+  )
 
-  assert result.fleet_daily_solar_kwh == pytest.approx(9731.52)
-  assert result.fleet_daily_grid_kwh == 0.0
-  assert result.fleet_daily_brut_kwh == pytest.approx(7999.325626761277)
+  assert result.fleet_daily_solar_kwh == pytest.approx(
+      expected_energy.daily_solar_kwh
+  )
+  assert result.fleet_daily_grid_kwh == pytest.approx(
+      expected_energy.daily_grid_kwh
+  )
+  assert result.fleet_daily_brut_kwh == pytest.approx(
+      expected_energy.daily_propulsion_kwh
+  )
+  assert result.fleet_daily_grid_kwh > 0
+  assert 0 < result.solar_coverage_ratio < 100

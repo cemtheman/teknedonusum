@@ -1,4 +1,4 @@
-from calculations.vessel_physics import calc_calibrated_vessel_physics
+from calculations.fleet_energy_balance import build_fleet_energy_balance
 from models.results import FleetResult
 
 
@@ -29,40 +29,13 @@ def calculate_fleet(
   fleet_total_grant = sum(counts[k] * grants_per_type[k] for k in vessel_specs)
   fleet_total_capex = fleet_total_cost - fleet_total_grant
 
-  # --- Fleet Total CO2 Reduction, Tree Equivalent & Energy Balance Calculation ---
-  fleet_total_co2_reduction = 0.0
-  fleet_daily_solar_kwh = 0.0
-  fleet_daily_grid_kwh = 0.0
-  fleet_daily_brut_kwh = 0.0
-
-  for k, spec_item in vessel_specs.items():
-    if counts[k] > 0:
-      p = calc_calibrated_vessel_physics(
-          spec_item, cruise_speed, daily_miles, sun_hours
-      )
-
-      co2_old = (
-          spec_item["merged"]
-          * p.cruise_diesel_lph
-          * p.cruise_hours
-          * operating_days
-          * 2.68
-      ) / 1000
-      co2_new = (p.net_grid_kwh * operating_days * 0.44) / 1000
-      single_co2_saved = co2_old - co2_new
-
-      fleet_total_co2_reduction += single_co2_saved * counts[k]
-      fleet_daily_solar_kwh += p.solar_kwh * counts[k]
-      fleet_daily_grid_kwh += p.net_grid_kwh * counts[k]
-      fleet_daily_brut_kwh += (p.brut_kwh / 0.95) * counts[k]
-
-  equivalent_trees = int(fleet_total_co2_reduction / 0.022)
-  fleet_annual_grid_kwh = fleet_daily_grid_kwh * operating_days
-  fleet_annual_solar_kwh = fleet_daily_solar_kwh * operating_days
-  solar_coverage_ratio = (
-      (fleet_daily_solar_kwh / fleet_daily_brut_kwh) * 100
-      if fleet_daily_brut_kwh > 0
-      else 0
+  energy = build_fleet_energy_balance(
+      vessel_specs,
+      counts,
+      cruise_speed,
+      daily_miles,
+      sun_hours,
+      operating_days,
   )
 
   return FleetResult(
@@ -72,12 +45,14 @@ def calculate_fleet(
       fleet_total_cost=fleet_total_cost,
       fleet_total_grant=fleet_total_grant,
       fleet_total_capex=fleet_total_capex,
-      fleet_total_co2_reduction=fleet_total_co2_reduction,
-      fleet_daily_solar_kwh=fleet_daily_solar_kwh,
-      fleet_daily_grid_kwh=fleet_daily_grid_kwh,
-      fleet_daily_brut_kwh=fleet_daily_brut_kwh,
-      equivalent_trees=equivalent_trees,
-      fleet_annual_grid_kwh=fleet_annual_grid_kwh,
-      fleet_annual_solar_kwh=fleet_annual_solar_kwh,
-      solar_coverage_ratio=solar_coverage_ratio,
+      fleet_total_co2_reduction=energy.total_co2_reduction_tonnes,
+      fleet_daily_solar_kwh=energy.daily_solar_kwh,
+      fleet_daily_grid_kwh=energy.daily_grid_kwh,
+      # Retain the result-field name for compatibility; its v0.2 semantic is
+      # total route-based daily propulsion electrical energy before solar.
+      fleet_daily_brut_kwh=energy.daily_propulsion_kwh,
+      equivalent_trees=energy.equivalent_trees,
+      fleet_annual_grid_kwh=energy.annual_grid_kwh,
+      fleet_annual_solar_kwh=energy.annual_solar_kwh,
+      solar_coverage_ratio=energy.solar_coverage_ratio,
   )

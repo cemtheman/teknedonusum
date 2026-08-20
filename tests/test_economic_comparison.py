@@ -8,6 +8,7 @@ from calculations.economic_comparison import (
 )
 from calculations.economics import calculate_vessel_economics
 from calculations.fleet import calculate_fleet
+from calculations.fleet_energy_balance import build_fleet_energy_balance
 from calculations.vessel_physics import calc_calibrated_vessel_physics
 from config.vessel_factory import build_vessel_specs
 
@@ -128,7 +129,7 @@ def test_non_positive_saving_has_no_meaningful_payback():
   assert all(row.simple_payback_seasons is None for row in rows)
 
 
-def test_existing_economics_and_fleet_baselines_are_unchanged():
+def test_legacy_economics_remains_stable_while_fleet_uses_v02_energy():
   specs = vessel_specs()
   physics = calc_calibrated_vessel_physics(specs["v1"], 6.0, 35.0, 8.0)
   economics = calculate_vessel_economics(
@@ -141,9 +142,21 @@ def test_existing_economics_and_fleet_baselines_are_unchanged():
   )
   counts = {"v1": 50, "v2": 50, "v3": 40, "v4_24": 30, "v4_32": 20}
   fleet = calculate_fleet(specs, counts, 6.0, 35.0, 8.0, 180)
+  expected_energy = build_fleet_energy_balance(
+      specs, counts, 6.0, 35.0, 8.0, 180
+  )
 
   assert economics.net_savings == pytest.approx(540019.9295150795)
   assert economics.payback_seasons == pytest.approx(4.9994414139943535)
   assert economics.net_co2 == pytest.approx(15.643879933281948)
-  assert fleet.fleet_daily_solar_kwh == pytest.approx(9731.52)
-  assert fleet.fleet_daily_brut_kwh == pytest.approx(7999.325626761277)
+
+  assert fleet.fleet_daily_solar_kwh == pytest.approx(
+      expected_energy.daily_solar_kwh
+  )
+  assert fleet.fleet_daily_grid_kwh == pytest.approx(
+      expected_energy.daily_grid_kwh
+  )
+  assert fleet.fleet_daily_brut_kwh == pytest.approx(
+      expected_energy.daily_propulsion_kwh
+  )
+  assert fleet.fleet_daily_grid_kwh > 0

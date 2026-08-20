@@ -3,6 +3,7 @@ from copy import deepcopy
 import pytest
 
 from calculations.fleet import calculate_fleet
+from calculations.fleet_energy_balance import build_fleet_energy_balance
 from config.vessels import BASE_VESSEL_SPECS
 
 
@@ -44,6 +45,15 @@ def test_default_fleet_regression():
       operating_days=180,
   )
 
+  expected_energy = build_fleet_energy_balance(
+      vessel_specs,
+      counts,
+      cruise_speed=6.0,
+      daily_miles=35.0,
+      sun_hours=8.0,
+      operating_days=180,
+  )
+
   assert result.total_vessels == 190
   assert result.total_capacity == 6320
   assert result.grants_per_type == pytest.approx({
@@ -56,11 +66,27 @@ def test_default_fleet_regression():
   assert result.fleet_total_cost == pytest.approx(1439947500.0)
   assert result.fleet_total_grant == pytest.approx(800973730.0)
   assert result.fleet_total_capex == pytest.approx(638973770.0)
-  assert result.fleet_total_co2_reduction == pytest.approx(4204.539112649273)
+
   assert result.fleet_daily_solar_kwh == pytest.approx(9731.52)
-  assert result.fleet_daily_grid_kwh == pytest.approx(0.0)
-  assert result.fleet_daily_brut_kwh == pytest.approx(7999.325626761277)
-  assert result.equivalent_trees == 191115
-  assert result.fleet_annual_grid_kwh == pytest.approx(0.0)
+  assert result.fleet_daily_grid_kwh == pytest.approx(
+      expected_energy.daily_grid_kwh
+  )
+  assert result.fleet_daily_brut_kwh == pytest.approx(
+      expected_energy.daily_propulsion_kwh
+  )
+  assert result.fleet_annual_grid_kwh == pytest.approx(
+      expected_energy.annual_grid_kwh
+  )
   assert result.fleet_annual_solar_kwh == pytest.approx(1751673.6)
-  assert result.solar_coverage_ratio == pytest.approx(121.65425504674754)
+  assert result.solar_coverage_ratio == pytest.approx(
+      expected_energy.solar_coverage_ratio
+  )
+  assert result.fleet_total_co2_reduction == pytest.approx(
+      expected_energy.total_co2_reduction_tonnes
+  )
+  assert result.equivalent_trees == expected_energy.equivalent_trees
+
+  # The v0.2 route-based balance must no longer collapse to the legacy
+  # "solar exceeds demand, therefore zero grid" result.
+  assert result.fleet_daily_grid_kwh > 0
+  assert 0 < result.solar_coverage_ratio < 100

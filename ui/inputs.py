@@ -17,6 +17,7 @@ from models.inputs import SimulationInputs
 from services.location_geocoding import geocode_location
 from services.solar_resource import build_season_solar_resource
 from ui.formatting import format_integer_tr
+from ui.branding import render_sidebar_brand
 
 
 def _render_cost_input(label, value):
@@ -43,6 +44,8 @@ def _render_cost_input(label, value):
 
 def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
   with st.sidebar:
+    render_sidebar_brand()
+    st.divider()
     st.header("⚙️ Simülasyon Girdileri")
 
     st.subheader("🚢 Filo Dönüşüm Hedefleri")

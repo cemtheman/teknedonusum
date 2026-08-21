@@ -11,32 +11,27 @@ from services.solar_hourly import (
     build_typical_hourly_profile,
     fetch_pvgis_hourly_specific_pv,
 )
+from ui.branding import (
+    FAVICON_PATH,
+    render_brand_footer,
+    render_brand_header,
+)
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 from ui.normative_comparison import render_normative_comparison_section
+from ui.scenario_overview import render_scenario_overview
 from ui.vessel_detail import render_vessel_details
 
 
 def main():
   st.set_page_config(
       page_title="Sessiz Akım",
-      page_icon="⚓",
+      page_icon=str(FAVICON_PATH),
       layout="wide",
       initial_sidebar_state="expanded",
   )
 
-  st.markdown(
-      '<p style="font-size: 1.8rem; font-weight: 700; color: #1E3A8A;'
-      ' margin-bottom: 4px;">⚓ Sessiz Akım — Köyceğiz & Dalyan Elektrikli Filo '
-      "Simülasyon Portalı</p>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      '<p style="font-size: 0.88rem; color: #4B5563; margin-bottom: 20px;">'
-      "Yönetmelik ve Kurul Kararlarıyla Uyumlu İnteraktif Fizibilite ve Hibe "
-      "Simülatörü</p>",
-      unsafe_allow_html=True,
-  )
+  render_brand_header()
 
   live_eur, eur_is_live = fetch_tcmb_eur()
   live_diesel, diesel_is_live = fetch_aytemiz_diesel()
@@ -88,6 +83,8 @@ def main():
       typical_hourly_specific_pv=typical_hourly_specific_pv,
   )
 
+  render_scenario_overview(inputs)
+
   render_fleet_dashboard(vessel_specs, inputs, fleet)
 
   render_normative_comparison_section(
@@ -101,6 +98,8 @@ def main():
       inputs,
       typical_hourly_specific_pv=typical_hourly_specific_pv,
   )
+
+  render_brand_footer()
 
 if __name__ == "__main__":
   main()

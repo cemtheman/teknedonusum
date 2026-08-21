@@ -1,10 +1,11 @@
-"""Fleet-level v0.2 propulsion-energy, solar, grid, and CO2 aggregation."""
+"""Fleet-level v0.2 propulsion-energy, solar, shore, and CO2 aggregation."""
 
 from dataclasses import dataclass
 from math import isfinite
 
 from calculations.normative_sizing import calculate_normative_sizing
 from calculations.vessel_detail_analysis import TECHNICAL_PROFILE_BY_VESSEL
+from calculations.vessel_hourly_energy import build_vessel_hourly_energy_balance
 from config.solar_assumptions import SOLAR_MODULE_POWER_DENSITY_KWP_PER_M2
 
 
@@ -49,6 +50,95 @@ def _daily_solar_kwh(
   return solar_area_m2 * 0.15 * float(sun_hours)
 
 
+def _build_hourly_fleet_energy_balance(
+    vessel_specs,
+    counts,
+    cruise_speed,
+    daily_miles,
+    operating_days,
+    season_start,
+    season_end,
+    typical_hourly_specific_pv,
+):
+  season_propulsion_kwh = 0.0
+  season_solar_kwh = 0.0
+  season_shore_kwh = 0.0
+  total_co2_reduction_tonnes = 0.0
+
+  season_days = (season_end - season_start).days + 1
+  if season_days <= 0:
+    raise ValueError("season date range must contain at least one day")
+  if operating_days != season_days:
+    raise ValueError(
+        "hourly seasonal model requires operating_days to equal season duration"
+    )
+
+  for vessel_key, spec in vessel_specs.items():
+    count = counts.get(vessel_key, 0)
+    if count <= 0:
+      continue
+
+    try:
+      technical_profile_id = TECHNICAL_PROFILE_BY_VESSEL[vessel_key]
+    except KeyError as exc:
+      raise ValueError(f"unsupported vessel key: {vessel_key}") from exc
+
+    energy = build_vessel_hourly_energy_balance(
+        vessel_id=technical_profile_id,
+        spec=spec,
+        cruise_speed=cruise_speed,
+        daily_miles=daily_miles,
+        season_start=season_start,
+        season_end=season_end,
+        typical_hourly_specific_pv=typical_hourly_specific_pv,
+    )
+
+    sizing = calculate_normative_sizing(
+        technical_profile_id,
+        cruise_speed,
+        daily_miles,
+    )
+    old_diesel_lph = _diesel_baseline_lph(spec, cruise_speed)
+    old_co2_tonnes = (
+        spec["merged"]
+        * old_diesel_lph
+        * sizing.operating_hours_per_day
+        * season_days
+        * 2.68
+    ) / 1000.0
+    new_co2_tonnes = (energy.shore_energy_kwh * 0.44) / 1000.0
+
+    season_propulsion_kwh += energy.season_propulsion_kwh * count
+    season_solar_kwh += energy.season_solar_generation_kwh * count
+    season_shore_kwh += energy.shore_energy_kwh * count
+    total_co2_reduction_tonnes += (
+        old_co2_tonnes - new_co2_tonnes
+    ) * count
+
+  daily_propulsion_kwh = season_propulsion_kwh / season_days
+  daily_solar_kwh = season_solar_kwh / season_days
+  daily_grid_kwh = season_shore_kwh / season_days
+
+  solar_coverage_ratio = (
+      min(100.0, (season_solar_kwh / season_propulsion_kwh) * 100.0)
+      if season_propulsion_kwh > 0
+      else 0.0
+  )
+
+  equivalent_trees = int(total_co2_reduction_tonnes / 0.022)
+
+  return FleetEnergyBalance(
+      daily_propulsion_kwh=daily_propulsion_kwh,
+      daily_solar_kwh=daily_solar_kwh,
+      daily_grid_kwh=daily_grid_kwh,
+      annual_grid_kwh=season_shore_kwh,
+      annual_solar_kwh=season_solar_kwh,
+      solar_coverage_ratio=solar_coverage_ratio,
+      total_co2_reduction_tonnes=total_co2_reduction_tonnes,
+      equivalent_trees=equivalent_trees,
+  )
+
+
 def build_fleet_energy_balance(
     vessel_specs,
     counts,
@@ -59,7 +149,26 @@ def build_fleet_energy_balance(
     *,
     average_daily_specific_yield_kwh_per_kwp=None,
     sizing_calculator=calculate_normative_sizing,
+    season_start=None,
+    season_end=None,
+    typical_hourly_specific_pv=None,
 ):
+  if (
+      season_start is not None
+      and season_end is not None
+      and typical_hourly_specific_pv is not None
+  ):
+    return _build_hourly_fleet_energy_balance(
+        vessel_specs,
+        counts,
+        cruise_speed,
+        daily_miles,
+        operating_days,
+        season_start,
+        season_end,
+        typical_hourly_specific_pv,
+    )
+
   daily_propulsion_kwh = 0.0
   daily_solar_kwh = 0.0
   daily_grid_kwh = 0.0

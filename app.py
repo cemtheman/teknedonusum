@@ -1,8 +1,16 @@
 import streamlit as st
 
 from calculations.fleet import calculate_fleet
+from config.operational_profile import (
+    PVGIS_HOURLY_END_YEAR,
+    PVGIS_HOURLY_START_YEAR,
+)
 from config.vessel_factory import build_vessel_specs
 from services.market_data import fetch_aytemiz_diesel, fetch_tcmb_eur
+from services.solar_hourly import (
+    build_typical_hourly_profile,
+    fetch_pvgis_hourly_specific_pv,
+)
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 from ui.normative_comparison import render_normative_comparison_section
@@ -51,6 +59,21 @@ def main():
       "v4_32": inputs.count_v4_32,
   }
 
+  try:
+    hourly_points = fetch_pvgis_hourly_specific_pv(
+        inputs.latitude,
+        inputs.longitude,
+        PVGIS_HOURLY_START_YEAR,
+        PVGIS_HOURLY_END_YEAR,
+    )
+    typical_hourly_specific_pv = build_typical_hourly_profile(hourly_points)
+  except Exception as exc:
+    st.error(
+        "PVGIS saatlik solar profili alınamadı; sezonluk batarya/şebeke "
+        f"dengesi hesaplanamıyor. Ayrıntı: {exc}"
+    )
+    st.stop()
+
   fleet = calculate_fleet(
       vessel_specs,
       counts,
@@ -61,6 +84,9 @@ def main():
       average_daily_specific_yield_kwh_per_kwp=(
           inputs.average_daily_specific_yield_kwh_per_kwp
       ),
+      season_start=inputs.season_start,
+      season_end=inputs.season_end,
+      typical_hourly_specific_pv=typical_hourly_specific_pv,
   )
 
   render_fleet_dashboard(vessel_specs, inputs, fleet)

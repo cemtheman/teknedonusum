@@ -11,6 +11,9 @@ def calculate_fleet(
     operating_days,
     *,
     average_daily_specific_yield_kwh_per_kwp=None,
+    season_start=None,
+    season_end=None,
+    typical_hourly_specific_pv=None,
 ):
   total_vessels = sum(counts.values())
   total_capacity = sum(
@@ -41,6 +44,9 @@ def calculate_fleet(
       average_daily_specific_yield_kwh_per_kwp=(
           average_daily_specific_yield_kwh_per_kwp
       ),
+      season_start=season_start,
+      season_end=season_end,
+      typical_hourly_specific_pv=typical_hourly_specific_pv,
   )
 
   return FleetResult(

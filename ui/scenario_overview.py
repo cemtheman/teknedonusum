@@ -34,7 +34,12 @@ def render_scenario_overview(inputs: SimulationInputs):
         "lat": [float(inputs.latitude)],
         "lon": [float(inputs.longitude)],
     })
-    st.map(map_data, zoom=12, use_container_width=True)
+    st.map(
+        map_data,
+        zoom=12,
+        width="stretch",
+        height=250,
+    )
     st.caption(
         f"Koordinatlar: {inputs.latitude:.4f}, {inputs.longitude:.4f} · "
         f"Solar kaynak: {inputs.solar_resource_source}"

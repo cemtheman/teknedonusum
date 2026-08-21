@@ -298,7 +298,12 @@ def _summary_table_html(inputs: SimulationInputs):
   total_non = int(summary["Kooperatif Dışı"].sum())
   total = int(summary["Toplam"].sum())
 
-  colors = ["#0F766E", "#22C55E", "#F59E0B"]
+  row_styles = [
+      {"color": "#0F766E", "bg": "#ECFDF5", "icon": "🚤"},
+      {"color": "#22C55E", "bg": "#F0FDF4", "icon": "⛴️"},
+      {"color": "#F59E0B", "bg": "#FFFBEB", "icon": "🛳️"},
+  ]
+
   html = [
       '<div style="border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;background:#FFFFFF;">',
       '<table style="width:100%;border-collapse:collapse;font-size:0.79rem;">',
@@ -312,13 +317,20 @@ def _summary_table_html(inputs: SimulationInputs):
   ]
 
   for index, row in summary.iterrows():
+    style = row_styles[index]
     html.extend([
         '<tr style="border-top:1px solid #E2E8F0;">',
         (
-            '<td style="text-align:left;padding:13px 10px;font-weight:700;'
-            'color:#0F172A;">'
-            f'<span style="color:{colors[index]};margin-right:7px;">●</span>'
-            f'{row["Tekne Türü"]}</td>'
+            '<td style="text-align:left;padding:12px 10px;color:#0F172A;">'
+            '<div style="display:flex;align-items:center;gap:9px;">'
+            f'<span style="width:34px;height:34px;border-radius:9px;'
+            f'background:{style["bg"]};color:{style["color"]};'
+            'display:inline-flex;align-items:center;justify-content:center;'
+            'font-size:1.15rem;flex:0 0 34px;">'
+            f'{style["icon"]}</span>'
+            '<span style="font-weight:750;line-height:1.25;">'
+            f'{row["Tekne Türü"]}</span>'
+            '</div></td>'
         ),
         (
             '<td style="padding:13px 7px;text-align:center;color:#15803D;'

@@ -79,3 +79,11 @@ def test_summary_table_html_is_renderable_not_markdown_code():
   source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
   assert 'return "".join(html)' in source
   assert '<table style=' in source
+
+
+def test_vessel_type_summary_restores_visual_boat_icons():
+  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+  assert '"icon": "🚤"' in source
+  assert '"icon": "⛴️"' in source
+  assert '"icon": "🛳️"' in source
+  assert 'width:34px;height:34px;border-radius:9px' in source

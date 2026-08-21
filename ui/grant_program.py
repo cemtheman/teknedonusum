@@ -43,28 +43,33 @@ def render_grant_program(vessel_specs, inputs, fleet):
 
   st.subheader("🎯 İlk Yıl Hibe Programı")
   st.caption(
-      "Dört kaynak tek bir ilk-yıl hibe havuzu olarak değerlendirilir. "
+      "Dört kaynak ilk-yıl için birleşik bir hibe havuzu olarak değerlendirilir. "
       "Tahsis GEKA öncelik sırasını izler; aynı öncelikte daha düşük tekne-başı "
       "hibe ihtiyacı önce finanse edilir."
   )
 
-  c1, c2, c3, c4 = st.columns(4)
+  c1, c2, c3, c4, c5 = st.columns(5)
   with c1:
     st.metric(
-        "Toplam Yıllık Hibe Bütçesi",
+        "Yıllık Hibe Bütçesi",
         f"₺{format_integer_tr(result.total_annual_budget_tl)}",
     )
   with c2:
     st.metric(
-        "Toplam Hibe İhtiyacı Karşılama",
-        f"%{result.coverage_ratio * 100:.1f}",
+        "Bütçe / Hibe İhtiyacı",
+        f"%{result.budget_coverage_ratio * 100:.1f}",
     )
   with c3:
+    st.metric(
+        "Fiili Tahsis / İhtiyaç",
+        f"%{result.allocated_coverage_ratio * 100:.1f}",
+    )
+  with c4:
     st.metric(
         "İlk Yıl Finanse Edilebilir",
         f"{result.funded_vessels} tekne",
     )
-  with c4:
+  with c5:
     st.metric(
         "Tahsis Sonrası Kalan",
         f"₺{format_integer_tr(result.remaining_budget_tl)}",
@@ -113,7 +118,7 @@ def render_grant_program(vessel_specs, inputs, fleet):
     st.dataframe(source_df, hide_index=True, use_container_width=True)
 
     st.markdown(
-        f'''
+        f"""
         <div style="border:1px solid #D1FAE5;background:#ECFDF5;
                     border-radius:12px;padding:14px 16px;margin-top:8px;">
           <div style="font-size:0.78rem;color:#047857;font-weight:700;">
@@ -123,11 +128,15 @@ def render_grant_program(vessel_specs, inputs, fleet):
             ₺{format_integer_tr(result.unlocked_investment_tl)}
           </div>
           <div style="font-size:0.76rem;color:#047857;margin-top:5px;">
+            Fiilen tahsis edilen hibe:
+            ₺{format_integer_tr(result.allocated_grant_tl)}
+          </div>
+          <div style="font-size:0.76rem;color:#047857;margin-top:3px;">
             Gerekli tekne sahibi özkaynağı:
             ₺{format_integer_tr(result.required_owner_equity_tl)}
           </div>
         </div>
-        ''',
+        """,
         unsafe_allow_html=True,
     )
 
@@ -139,11 +148,10 @@ def render_grant_program(vessel_specs, inputs, fleet):
         use_container_width=True,
     )
 
-  if result.total_annual_budget_tl <= 0:
-    st.info(
-        "İlk yıl hibe bütçeleri henüz girilmedi. Sol paneldeki "
-        "'Hibe Programı Bütçeleri' bölümünden dört kaynağın yıllık "
-        "bütçesini girin."
-    )
+  st.caption(
+      "Not: 'Bütçe / Hibe İhtiyacı' teorik kaynak kapasitesini; "
+      "'Fiili Tahsis / İhtiyaç' ise yalnız tam tekne hibelerine bağlanabilen "
+      "gerçek tahsisi gösterir."
+  )
 
   st.divider()

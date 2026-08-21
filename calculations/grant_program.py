@@ -14,8 +14,8 @@ GEKA_PRIORITY = {
 class GrantProgramResult:
   total_annual_budget_tl: float
   total_grant_need_tl: float
-  covered_grant_need_tl: float
-  coverage_ratio: float
+  budget_coverage_ratio: float
+  allocated_coverage_ratio: float
   funded_vessels: int
   funded_by_type: dict
   allocated_grant_tl: float
@@ -83,14 +83,20 @@ def calculate_first_year_grant_program(
     owner_equity += funded * (total_cost - per_vessel_grant)
 
   funded_vessels = sum(funded_by_type.values())
-  covered_need = min(total_budget, total_need)
-  coverage_ratio = (covered_need / total_need) if total_need else 0.0
+  budget_coverage_ratio = (
+      min(total_budget, total_need) / total_need
+      if total_need else 0.0
+  )
+  allocated_coverage_ratio = (
+      allocated / total_need
+      if total_need else 0.0
+  )
 
   return GrantProgramResult(
       total_annual_budget_tl=total_budget,
       total_grant_need_tl=total_need,
-      covered_grant_need_tl=covered_need,
-      coverage_ratio=coverage_ratio,
+      budget_coverage_ratio=budget_coverage_ratio,
+      allocated_coverage_ratio=allocated_coverage_ratio,
       funded_vessels=funded_vessels,
       funded_by_type=funded_by_type,
       allocated_grant_tl=allocated,

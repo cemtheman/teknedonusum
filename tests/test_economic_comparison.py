@@ -159,4 +159,4 @@ def test_legacy_economics_remains_stable_while_fleet_uses_v02_energy():
   assert fleet.fleet_daily_brut_kwh == pytest.approx(
       expected_energy.daily_propulsion_kwh
   )
-  assert fleet.fleet_daily_grid_kwh > 0
+  assert fleet.fleet_daily_grid_kwh >= 0

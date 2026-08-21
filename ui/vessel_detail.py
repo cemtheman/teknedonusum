@@ -281,16 +281,9 @@ def render_vessel_details(
         )
       with tech_col4:
         st.info(
-            "**Saatlik PV / Kıyı Enerjisi:**\n\n"
+            "**Ort. Günlük PV / SOC-Normalize Kıyı Enerjisi:**\n\n"
             f"{_format_decimal_tr(detail.daily_solar_kwh)} / "
             f"{_format_decimal_tr(detail.daily_grid_kwh)} kWh/gün"
-        )
-
-      if v_key == "v1":
-        _render_v1_hourly_energy_diagnostics(
-            spec,
-            inputs,
-            typical_hourly_specific_pv,
         )
 
       st.caption(

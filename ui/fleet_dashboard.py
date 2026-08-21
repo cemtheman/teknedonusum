@@ -111,8 +111,8 @@ def render_fleet_dashboard(
 <div style="background-color: #EFF6FF; border: 1.5px solid #3B82F6; border-radius: 8px; padding: 14px 20px; text-align: center; margin-bottom: 20px;">
     <p style="font-size: 1.25rem; font-weight: 700; color: #1E40AF; margin: 0;">⚡ Filo Solar Destek ve Kıyı Şarj Dengesi</p>
     <p style="font-size: 0.95rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">📍 {inputs.location_name} · {inputs.season_start:%d.%m.%Y}–{inputs.season_end:%d.%m.%Y} · Sezon: {inputs.season_days} gün · PVGIS ort. {inputs.average_daily_specific_yield_kwh_per_kwp:.2f} kWh/kWp-gün</p>
-    <p style="font-size: 1.05rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">☀️ Sezonluk PV Üretimi: <b>{fleet.fleet_annual_solar_kwh:,.0f} kWh</b> | 🔌 Sezonluk Kıyı Şarj İhtiyacı: <b>{fleet.fleet_annual_grid_kwh:,.0f} kWh</b> | Günlük ortalama kıyı enerjisi: <b>{fleet.fleet_daily_grid_kwh:,.1f} kWh/gün</b></p>
-    <p style="font-size: 0.88rem; color: #1E40AF; margin: 5px 0 0 0;">Saatlik modelde güneş önce doğrudan tahrike gider; fazlası bataryayı şarj eder. Kıyı enerjisi yalnız batarya rezerv sınırına ulaşıldığında oluşur.</p>
+    <p style="font-size: 1.05rem; font-weight: 600; color: #1D4ED8; margin: 4px 0 0 0;">☀️ Sezonluk PV Üretimi: <b>{fleet.fleet_annual_solar_kwh:,.0f} kWh</b> | 🔌 SOC-Normalize Sezonluk Kıyı Enerjisi: <b>{fleet.fleet_annual_grid_kwh:,.0f} kWh</b> | Günlük ortalama: <b>{fleet.fleet_daily_grid_kwh:,.1f} kWh/gün</b></p>
+    <p style="font-size: 0.88rem; color: #1E40AF; margin: 5px 0 0 0;">Saatlik modelde PV önce aktif elektrik yükünü karşılar; kalan enerji bataryaya yönelir. Kıyı enerjisi batarya rezerv sınırı sonrasında oluşur ve sezon sonu SOC farkı başlangıç seviyesine normalize edilir.</p>
 </div>
 """
   st.markdown(solar_html, unsafe_allow_html=True)

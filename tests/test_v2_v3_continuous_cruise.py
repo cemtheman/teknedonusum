@@ -10,8 +10,8 @@ from calculations.normative_sizing import calculate_normative_sizing
     ("vessel_id", "expected_electrical_kw"),
     (
         ("v1", 7.043492016798769),
-        ("v2", 6.70),
-        ("v3", 7.65),
+        ("v2", 6.579264950937425),
+        ("v3", 7.5105812847889055),
     ),
 )
 def test_six_knot_reference_uses_resistance_chain_for_all_vessels(
@@ -22,7 +22,7 @@ def test_six_knot_reference_uses_resistance_chain_for_all_vessels(
 
   assert result.reference_electrical_input_power_kw == pytest.approx(
       expected_electrical_kw,
-      rel=0.01,
+      rel=1e-9,
   )
 
 

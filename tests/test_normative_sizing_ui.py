@@ -80,7 +80,14 @@ def test_renderer_uses_four_clear_primary_metrics(monkeypatch):
   assert streamlit.expander.call_args.args[0] == "Hesap ayrıntıları"
 
 
-@pytest.mark.parametrize("speed_knots", (4.0, 5.5, 10.5, 11.0))
+def test_ui_accepts_five_knot_lower_bound():
+  result = normative_ui.build_normative_ui_summary("v1", 5.0)
+
+  assert result.selected_speed_knots == 5.0
+  assert result.reference_estimate_daily_propulsion_energy_kwh > 0
+
+
+@pytest.mark.parametrize("speed_knots", (4.0, 4.5, 10.5, 11.0))
 def test_ui_rejects_speed_outside_range(speed_knots):
-  with pytest.raises(ValueError, match="6–10"):
+  with pytest.raises(ValueError, match="5–10"):
     normative_ui.build_normative_ui_summary("v1", speed_knots)

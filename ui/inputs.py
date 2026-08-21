@@ -3,6 +3,11 @@ from datetime import date
 
 import streamlit as st
 
+from config.operational_speed import (
+    DEFAULT_OPERATION_SPEED_KNOTS,
+    MAX_OPERATION_SPEED_KNOTS,
+    MIN_OPERATION_SPEED_KNOTS,
+)
 from config.solar_assumptions import (
     DEFAULT_LATITUDE,
     DEFAULT_LOCATION_NAME,
@@ -182,7 +187,10 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
     )
     cruise_speed = st.number_input(
         "Ortalama Seyir Hızı (Knot)",
-        min_value=4.0, max_value=10.0, value=6.0, step=0.5,
+        min_value=MIN_OPERATION_SPEED_KNOTS,
+        max_value=MAX_OPERATION_SPEED_KNOTS,
+        value=DEFAULT_OPERATION_SPEED_KNOTS,
+        step=0.5,
     )
 
   return SimulationInputs(

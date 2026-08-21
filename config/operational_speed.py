@@ -1,0 +1,5 @@
+"""Supported v0.2 operating-speed domain."""
+
+MIN_OPERATION_SPEED_KNOTS = 5.0
+MAX_OPERATION_SPEED_KNOTS = 10.0
+DEFAULT_OPERATION_SPEED_KNOTS = 6.0

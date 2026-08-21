@@ -168,7 +168,7 @@ def render_vessel_details(
       except (TypeError, ValueError):
         st.warning(
             "Bu tekne için detay analizi hesaplanamadı. v0.2 teknik zinciri "
-            "6–10 knot hizmet hızı aralığında çalışır."
+            "5–10 knot hizmet hızı aralığında çalışır."
         )
         continue
 

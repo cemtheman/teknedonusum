@@ -11,12 +11,13 @@ from config.tax_assumptions import (
     SPECIAL_CONSUMPTION_TAX_RATE,
     VALUE_ADDED_TAX_RATE,
 )
+from config.operational_speed import (
+    MAX_OPERATION_SPEED_KNOTS as SPEED_MAX_KNOTS,
+    MIN_OPERATION_SPEED_KNOTS as SPEED_MIN_KNOTS,
+)
 from models.normative_decision_summary import NormativeDecisionSummary
 from ui.formatting import format_integer_tr
 
-
-SPEED_MIN_KNOTS = 6.0
-SPEED_MAX_KNOTS = 10.0
 
 VESSEL_LABELS = {
     "v1": "Tip 1 — 12 m Tek Gövdeli",
@@ -52,7 +53,7 @@ def build_normative_ui_summary(
     daily_distance_nm=35.0,
 ):
   if not SPEED_MIN_KNOTS <= selected_speed_knots <= SPEED_MAX_KNOTS:
-    raise ValueError("Hizmet hızı 6–10 knot aralığında olmalıdır.")
+    raise ValueError("Hizmet hızı 5–10 knot aralığında olmalıdır.")
   sizing = calculate_normative_sizing(
       vessel_id,
       selected_speed_knots,
@@ -129,7 +130,7 @@ def render_normative_sizing_section(
     )
   except (TypeError, ValueError):
     st.error(
-        "Ön boyutlandırma hesaplanamadı. Hizmet hızı 6–10 knot aralığında "
+        "Ön boyutlandırma hesaplanamadı. Hizmet hızı 5–10 knot aralığında "
         "olmalıdır."
     )
     return None

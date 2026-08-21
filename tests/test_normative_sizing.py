@@ -13,7 +13,7 @@ def test_result_is_immutable():
 
 
 @pytest.mark.parametrize("vessel_id", ("v1", "v2", "v3"))
-@pytest.mark.parametrize("speed_knots", (6.0, 8.0, 10.0))
+@pytest.mark.parametrize("speed_knots", (5.0, 6.0, 8.0, 10.0))
 def test_all_normative_anchor_full_chains(vessel_id, speed_knots):
   result = calculate_normative_sizing(vessel_id, speed_knots)
 
@@ -66,10 +66,25 @@ def test_unsupported_vessel_is_rejected(vessel_id):
     calculate_normative_sizing(vessel_id, 6.0)
 
 
-@pytest.mark.parametrize("speed_knots", (5.0, 11.0))
+@pytest.mark.parametrize("speed_knots", (4.5, 11.0))
 def test_out_of_range_speed_is_rejected(speed_knots):
-  with pytest.raises(ValueError, match="within profile range"):
+  with pytest.raises(ValueError, match="supported operating range"):
     calculate_normative_sizing("v1", speed_knots)
+
+
+@pytest.mark.parametrize("vessel_id", ("v1", "v2", "v3"))
+def test_five_knot_lower_bound_uses_low_speed_chain_without_reducing_installed_envelope(vessel_id):
+  at_five = calculate_normative_sizing(vessel_id, 5.0)
+  at_six = calculate_normative_sizing(vessel_id, 6.0)
+
+  assert at_five.selected_speed_knots == 5.0
+  assert at_five.reference_installed_mechanical_power_kw == pytest.approx(
+      at_six.reference_installed_mechanical_power_kw
+  )
+  assert at_five.reference_electrical_input_power_kw < (
+      at_six.reference_electrical_input_power_kw
+  )
+  assert at_five.operating_hours_per_day == pytest.approx(35.0 / 5.0)
 
 
 @pytest.mark.parametrize(

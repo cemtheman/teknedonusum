@@ -21,7 +21,7 @@ def vessel_specs():
   return build_vessel_specs(108100, 144140, 180180, 55.5)
 
 
-def inputs(speed=4.0, miles=0.0, sun=0.0, days=30):
+def inputs(speed=5.0, miles=0.0, sun=0.0, days=30):
   return make_simulation_inputs(
       count_v1=0,
       count_v2=0,
@@ -38,7 +38,7 @@ def inputs(speed=4.0, miles=0.0, sun=0.0, days=30):
 
 @pytest.mark.parametrize(
     ("speed", "miles", "sun", "days"),
-    [(4.0, 0.0, 0.0, 30), (10.0, 60.0, 12.0, 360)],
+    [(5.0, 0.0, 0.0, 30), (10.0, 60.0, 12.0, 360)],
 )
 def test_operating_boundaries_build_comparisons_without_runtime_errors(
     speed,
@@ -69,7 +69,7 @@ def test_zero_vessel_counts_return_zero_fleet_totals_without_division_by_zero():
   specs["v4_32"] = deepcopy(specs["v2"])
   counts = {key: 0 for key in specs}
 
-  result = calculate_fleet(specs, counts, 4.0, 0.0, 0.0, 30)
+  result = calculate_fleet(specs, counts, 5.0, 0.0, 0.0, 30)
 
   assert result.total_vessels == 0
   assert result.fleet_daily_brut_kwh == 0.0
@@ -81,9 +81,9 @@ def test_zero_vessel_counts_return_zero_fleet_totals_without_division_by_zero():
 def test_xlsx_handles_zero_operation_and_all_unavailable_values():
   current_inputs = inputs()
   specs = vessel_specs()
-  technical = build_vessel_technical_comparison(specs, 4.0, 0.0, 0.0)
+  technical = build_vessel_technical_comparison(specs, 5.0, 0.0, 0.0)
   economic = build_vessel_economic_comparison(
-      specs, 4.0, 0.0, 0.0, 30, 3.0, 81.81, 55.5
+      specs, 5.0, 0.0, 0.0, 30, 3.0, 81.81, 55.5
   )
   decision = tuple(
       replace(row, simple_payback_seasons=None)

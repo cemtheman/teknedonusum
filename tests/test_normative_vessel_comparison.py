@@ -30,7 +30,7 @@ def test_result_rows_and_assumptions_are_immutable():
     result.assumptions.duty_cycle = 1.0
 
 
-@pytest.mark.parametrize("speed_knots", (6.0, 7.0, 8.0, 9.0, 10.0))
+@pytest.mark.parametrize("speed_knots", (5.0, 6.0, 7.0, 8.0, 9.0, 10.0))
 def test_same_speed_ordered_v1_v2_v3_coverage(speed_knots):
   result = comparison(speed_knots)
 
@@ -38,7 +38,7 @@ def test_same_speed_ordered_v1_v2_v3_coverage(speed_knots):
   assert all(row.selected_speed_knots == speed_knots for row in result.rows)
 
 
-@pytest.mark.parametrize("speed_knots", (6.0, 7.0, 8.0, 9.0, 10.0))
+@pytest.mark.parametrize("speed_knots", (5.0, 6.0, 7.0, 8.0, 9.0, 10.0))
 def test_exact_decision_summary_propagation(speed_knots):
   result = comparison(speed_knots)
 
@@ -63,6 +63,7 @@ def test_exact_decision_summary_propagation(speed_knots):
 @pytest.mark.parametrize(
     ("speed_knots", "expected_reference_power"),
     (
+        (5.0, (30.0, 30.0, 35.0)),
         (6.0, (30.0, 30.0, 35.0)),
         (7.0, (36.25, 36.25, 43.75)),
         (8.0, (42.5, 42.5, 52.5)),
@@ -120,9 +121,9 @@ def test_rows_are_raw_numeric_export_ready_without_ranking_fields():
   assert names.isdisjoint({"rank", "score", "recommendation", "best_vessel"})
 
 
-@pytest.mark.parametrize("speed_knots", (5.9, 10.1, float("inf")))
+@pytest.mark.parametrize("speed_knots", (4.9, 10.1, float("inf")))
 def test_invalid_speed_is_rejected(speed_knots):
-  with pytest.raises(ValueError, match="6|finite"):
+  with pytest.raises(ValueError, match="supported operating range|finite"):
     comparison(speed_knots)
 
 

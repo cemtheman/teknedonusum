@@ -17,6 +17,10 @@ from calculations.route_energy import (
     calculate_route_propulsion_energy_envelope,
 )
 from config.normative_power_envelopes import NORMATIVE_POWER_ENVELOPES
+from config.operational_speed import (
+    MAX_OPERATION_SPEED_KNOTS,
+    MIN_OPERATION_SPEED_KNOTS,
+)
 from models.cruise_power import CruisePowerEnvelopeResult
 from models.normative_sizing import NormativeSizingResult
 
@@ -29,6 +33,15 @@ def calculate_normative_sizing(
   """Run installed-power sizing with route-based cruise energy and battery."""
   if vessel_id not in NORMATIVE_POWER_ENVELOPES:
     raise ValueError("vessel_id must be one of v1, v2, or v3")
+  if not (
+      MIN_OPERATION_SPEED_KNOTS
+      <= selected_speed_knots
+      <= MAX_OPERATION_SPEED_KNOTS
+  ):
+    raise ValueError(
+        "selected_speed_knots must be within supported operating range "
+        f"[{MIN_OPERATION_SPEED_KNOTS}, {MAX_OPERATION_SPEED_KNOTS}]"
+    )
 
   profile = NORMATIVE_POWER_ENVELOPES[vessel_id]
   mechanical = interpolate_installed_mechanical_power_envelope(

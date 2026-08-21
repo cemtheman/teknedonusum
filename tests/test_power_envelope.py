@@ -10,9 +10,24 @@ from models.power_envelope import NormativePowerEnvelope, PowerEnvelopeAnchor
 
 
 EXPECTED_ANCHORS = {
-    "v1": ((6.0, 20.0, 40.0), (8.0, 30.0, 55.0), (10.0, 45.0, 75.0)),
-    "v2": ((6.0, 20.0, 40.0), (8.0, 30.0, 55.0), (10.0, 50.0, 80.0)),
-    "v3": ((6.0, 25.0, 45.0), (8.0, 40.0, 65.0), (10.0, 60.0, 90.0)),
+    "v1": (
+        (5.0, 20.0, 40.0),
+        (6.0, 20.0, 40.0),
+        (8.0, 30.0, 55.0),
+        (10.0, 45.0, 75.0),
+    ),
+    "v2": (
+        (5.0, 20.0, 40.0),
+        (6.0, 20.0, 40.0),
+        (8.0, 30.0, 55.0),
+        (10.0, 50.0, 80.0),
+    ),
+    "v3": (
+        (5.0, 25.0, 45.0),
+        (6.0, 25.0, 45.0),
+        (8.0, 40.0, 65.0),
+        (10.0, 60.0, 90.0),
+    ),
 }
 
 
@@ -41,7 +56,7 @@ def test_models_are_immutable():
 
 
 @pytest.mark.parametrize("vessel_id", ("v1", "v2", "v3"))
-@pytest.mark.parametrize("anchor_index", (0, 1, 2))
+@pytest.mark.parametrize("anchor_index", (0, 1, 2, 3))
 def test_exact_normative_anchors(vessel_id, anchor_index):
   expected = EXPECTED_ANCHORS[vessel_id][anchor_index]
   anchor = NORMATIVE_POWER_ENVELOPES[vessel_id].anchors[anchor_index]
@@ -62,6 +77,9 @@ def test_exact_normative_anchors(vessel_id, anchor_index):
 @pytest.mark.parametrize(
     ("vessel_id", "speed_knots", "minimum", "maximum"),
     (
+        ("v1", 5.5, 20.0, 40.0),
+        ("v2", 5.5, 20.0, 40.0),
+        ("v3", 5.5, 25.0, 45.0),
         ("v1", 7.0, 25.0, 47.5),
         ("v1", 9.0, 37.5, 65.0),
         ("v2", 7.0, 25.0, 47.5),
@@ -99,7 +117,7 @@ def test_profile_rejects_unordered_speeds():
     profile((8.0, 30.0, 55.0), (6.0, 20.0, 40.0))
 
 
-@pytest.mark.parametrize("speed_knots", (5.0, 11.0))
+@pytest.mark.parametrize("speed_knots", (4.5, 11.0))
 def test_interpolation_rejects_extrapolation(speed_knots):
   with pytest.raises(ValueError, match="within profile range"):
     interpolate_installed_mechanical_power_envelope(
@@ -114,7 +132,7 @@ def test_registry_coverage_and_metadata():
     assert result.vessel_id == vessel_id
     assert result.assumption_status == "normative preliminary market envelope"
     assert "not manufacturer-certified" in result.provenance
-    assert result.profile_version == "v0.2-commit51"
-    assert result.valid_speed_min_knots == 6.0
+    assert result.profile_version == "v0.2-speed-floor-5"
+    assert result.valid_speed_min_knots == 5.0
     assert result.valid_speed_max_knots == 10.0
     assert result.extrapolation_allowed is False

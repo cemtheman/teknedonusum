@@ -3,6 +3,11 @@
 from dataclasses import dataclass
 from math import isfinite
 
+from config.operational_speed import (
+    MAX_OPERATION_SPEED_KNOTS,
+    MIN_OPERATION_SPEED_KNOTS,
+)
+
 
 EXPECTED_NORMATIVE_VESSEL_IDS = ("v1", "v2", "v3")
 
@@ -87,9 +92,11 @@ class NormativeVesselComparisonRow:
     if self.passenger_capacity <= 0:
       raise ValueError("passenger_capacity must be positive")
     if not isfinite(self.selected_speed_knots) or not (
-        6.0 <= self.selected_speed_knots <= 10.0
+        MIN_OPERATION_SPEED_KNOTS
+        <= self.selected_speed_knots
+        <= MAX_OPERATION_SPEED_KNOTS
     ):
-      raise ValueError("selected_speed_knots must be within 6–10 knots")
+      raise ValueError("selected_speed_knots must be within supported operating range")
     if self.preliminary_only is not True:
       raise ValueError("comparison rows must remain preliminary")
     if self.externally_validated is not False:
@@ -139,9 +146,11 @@ class NormativeVesselComparisonResult:
 
   def __post_init__(self):
     if not isfinite(self.selected_speed_knots) or not (
-        6.0 <= self.selected_speed_knots <= 10.0
+        MIN_OPERATION_SPEED_KNOTS
+        <= self.selected_speed_knots
+        <= MAX_OPERATION_SPEED_KNOTS
     ):
-      raise ValueError("selected_speed_knots must be within 6–10 knots")
+      raise ValueError("selected_speed_knots must be within supported operating range")
     if not self.currency:
       raise ValueError("currency must not be empty")
     ids = tuple(row.vessel_id for row in self.rows)

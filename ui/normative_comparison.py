@@ -66,7 +66,7 @@ def render_normative_comparison_section(
     )
   except (TypeError, ValueError):
     st.error(
-        "Tekne karşılaştırması hazırlanamadı. Hizmet hızı 6–10 knot "
+        "Tekne karşılaştırması hazırlanamadı. Hizmet hızı 5–10 knot "
         "aralığında olmalıdır."
     )
     return None

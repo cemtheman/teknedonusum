@@ -22,7 +22,7 @@ Bu uygulama nihai tekne tasarım yazılımı, klas onaylı mühendislik yazılı
 
 ## Operasyon hızı ve Komisyon hız kriteri
 
-**Operasyon/seyir hızı**, kullanıcının seçtiği senaryo hızıdır; güç, seyahat süresi ve enerji hesaplarında kullanılır.
+**Operasyon/seyir hızı**, kullanıcının seçtiği senaryo hızıdır; güç, seyahat süresi ve enerji hesaplarında kullanılır. v0.2 ürün/model çalışma aralığı **5–10 knot** olarak tanımlıdır.
 
 **Teknik Komisyon hız kriteri** ise teknenin sağlaması gereken hız kabiliyetidir ve mevcut yapılandırmada 10 knottur. Operasyon hızıyla aynı kavram değildir. Doğrulanmış tasarım/azami hız kabiliyeti henüz modele eklenmediğinden tam teknik uygunluk v1, v2 ve v3 için **“Henüz değerlendirilmedi”** olarak gösterilir.
 

@@ -23,7 +23,7 @@ def test_table_contains_single_clear_cost_meaning():
       "Tekne tipi",
       "Yolcu kapasitesi",
       "Toplam kurulu motor gücü",
-      "Günlük tahrik enerjisi",
+      "Günlük tahrik enerji talebi",
       "Gerekli nominal batarya",
       "Anahtar teslim piyasa bedeli",
   ]
@@ -61,7 +61,7 @@ def test_renderer_uses_same_speed_route_and_no_duplicate_download_cards(monkeypa
   assert result is comparison
   build_comparison.assert_called_once_with(7.0, 35.0)
   streamlit.subheader.assert_called_once_with(
-      "⚖️ Tekne Tiplerinin Karşılaştırılması"
+      "⚡ Teknik Ön Boyutlandırma Karşılaştırması"
   )
   streamlit.dataframe.assert_called_once()
   streamlit.download_button.assert_not_called()

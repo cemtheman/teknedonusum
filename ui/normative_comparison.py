@@ -6,6 +6,7 @@ import streamlit as st
 from calculations.normative_vessel_comparison import (
     build_normative_vessel_comparison,
 )
+from config.operational_methodology import cruise_methodology_label_tr
 from models.normative_vessel_comparison import NormativeVesselComparisonResult
 from ui.formatting import format_integer_tr
 
@@ -32,7 +33,7 @@ def build_normative_comparison_table(comparison, vessel_specs):
           "Toplam kurulu motor gücü": (
               f"{_format_decimal_tr(row.reference_installed_mechanical_power_kw)} kW"
           ),
-          "Günlük tahrik enerjisi": (
+          "Günlük tahrik enerji talebi": (
               f"{_format_decimal_tr(row.reference_daily_propulsion_energy_kwh)} "
               "kWh/gün"
           ),
@@ -53,10 +54,16 @@ def render_normative_comparison_section(
     daily_distance_nm=35.0,
 ):
   st.divider()
-  st.subheader("⚖️ Tekne Tiplerinin Karşılaştırılması")
+  st.subheader("⚡ Teknik Ön Boyutlandırma Karşılaştırması")
   st.caption(
       "Üç tekne tipi aynı hizmet hızı ve günlük rota koşullarında "
-      "karşılaştırılmıştır. Piyasa bedelleri %8 ÖTV ve %20 KDV hariçtir."
+      "karşılaştırılır. Günlük tahrik enerji talebi, PV/batarya/kıyı "
+      "enerjisi kaynağından bağımsız rota talebidir."
+  )
+  st.caption(
+      "Seyir/enerji hesap yöntemi: "
+      f"{cruise_methodology_label_tr(selected_speed_knots)}. "
+      "Kurulu motor gücü piyasa/normatif güç zarfından gelir."
   )
 
   try:

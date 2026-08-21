@@ -1,9 +1,10 @@
 from pathlib import Path
 
+
 SOURCE = Path("ui/vessel_detail.py").read_text(encoding="utf-8")
 
 
-def test_energy_audit_rows_are_exposed():
+def test_energy_audit_rows_are_not_exposed_in_product_ui():
   for text in (
       "PVGIS Saatlik Sezonluk Üretim",
       "PV → Batarya Girişi (şarj öncesi)",
@@ -16,4 +17,4 @@ def test_energy_audit_rows_are_exposed():
       "Tahrik denge hatası",
       "Batarya denge hatası",
   ):
-    assert text in SOURCE
+    assert text not in SOURCE

@@ -9,8 +9,17 @@ def test_fleet_dashboard_names_soc_normalized_shore_energy():
   assert "Sezonluk Kıyı Şarj İhtiyacı" not in source
 
 
-def test_vessel_detail_uses_precise_hourly_energy_label():
+def test_technical_comparison_uses_energy_demand_language():
+  source = Path("ui/normative_comparison.py").read_text(encoding="utf-8")
+
+  assert "Günlük tahrik enerji talebi" in source
+  assert "PV/batarya/kıyı" in source
+  assert "Seyir/enerji hesap yöntemi" in source
+
+
+def test_vessel_detail_does_not_repeat_technical_energy_cards():
   source = Path("ui/vessel_detail.py").read_text(encoding="utf-8")
 
-  assert "Ort. Günlük PV / SOC-Normalize Kıyı Enerjisi" in source
-  assert 'if v_key == "v1":' not in source
+  assert "Teknik ve Enerji Özeti" not in source
+  assert "Saatlik PV / Kıyı Enerjisi" not in source
+  assert "SOC-Normalize Kıyı Enerjisi Gideri" in source

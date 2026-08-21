@@ -14,7 +14,6 @@ from services.solar_hourly import (
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.inputs import render_sidebar
 from ui.normative_comparison import render_normative_comparison_section
-from ui.normative_sizing import render_normative_sizing_section
 from ui.vessel_detail import render_vessel_details
 
 
@@ -90,12 +89,6 @@ def main():
   )
 
   render_fleet_dashboard(vessel_specs, inputs, fleet)
-
-  render_normative_sizing_section(
-      vessel_specs,
-      inputs.cruise_speed,
-      inputs.daily_miles,
-  )
 
   render_normative_comparison_section(
       vessel_specs,

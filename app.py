@@ -31,12 +31,12 @@ def main():
       initial_sidebar_state="expanded",
   )
 
-  render_brand_header()
-
   live_eur, eur_is_live = fetch_tcmb_eur()
   live_diesel, diesel_is_live = fetch_aytemiz_diesel()
 
   inputs = render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live)
+
+  render_brand_header(inputs.location_name)
 
   vessel_specs = build_vessel_specs(
       inputs.cost_eur_v1,

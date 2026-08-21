@@ -13,29 +13,43 @@ BRAND_NAME_EN = "Quiet Current"
 BRAND_TAGLINE = "Daha sessiz. Daha temiz. Daha sürdürülebilir."
 
 
-def render_brand_header():
-  logo_col, title_col = st.columns([0.12, 0.88], vertical_alignment="center")
-  with logo_col:
-    st.image(str(BRAND_ICON_PATH), width=82)
-  with title_col:
-    st.markdown(
-        """
-        <div style="margin-top:-2px;">
-          <div style="font-size:2rem;font-weight:750;color:#0A2B55;line-height:1.05;">
-            Sessiz Akım
-          </div>
-          <div style="font-size:2rem;font-weight:750;color:#2E7D57;
-                      line-height:1.05;margin-top:4px;">
-            Quiet Current
-          </div>
-          <div style="font-size:0.92rem;color:#4B5563;margin-top:10px;">
-            Köyceğiz–Dalyan elektrikli tekne dönüşümü için teknik ve ekonomik
-            ön değerlendirme platformu
-          </div>
+def _upper_initial(text):
+  value = str(text or "").strip()
+  if not value:
+    return ""
+  return value[0].upper() + value[1:]
+
+
+def build_brand_description(location_name):
+  location = _upper_initial(location_name)
+  if not location:
+    location = "Seçili lokasyon"
+  return (
+      f"{location} elektrikli tekne dönüşümü için teknik ve ekonomik "
+      "ön değerlendirme platformu"
+  )
+
+
+def render_brand_header(location_name):
+  description = build_brand_description(location_name)
+
+  st.markdown(
+      f"""
+      <div style="margin-top:-2px;">
+        <div style="font-size:2rem;font-weight:750;color:#0A2B55;line-height:1.05;">
+          Sessiz Akım
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        <div style="font-size:2rem;font-weight:750;color:#2E7D57;
+                    line-height:1.05;margin-top:4px;">
+          Quiet Current
+        </div>
+        <div style="font-size:0.92rem;color:#4B5563;margin-top:10px;">
+          {description}
+        </div>
+      </div>
+      """,
+      unsafe_allow_html=True,
+  )
   st.divider()
 
 

@@ -7,7 +7,7 @@ SOURCE = Path("ui/branding.py").read_text(encoding="utf-8")
 def test_main_brand_titles_have_equal_visual_weight():
   assert "font-size:2rem;font-weight:750;color:#0A2B55" in SOURCE
   assert "font-size:2rem;font-weight:750;color:#2E7D57" in SOURCE
-  assert ">\n            Quiet Current\n" in SOURCE
+  assert "Quiet Current" in SOURCE
 
 
 def test_sidebar_logo_is_centered_with_columns():

@@ -40,15 +40,15 @@ def simulate_seasonal_vessel_energy(
     raise ValueError("nominal_battery_kwh must be positive")
   if not 0 < usable_fraction <= 1:
     raise ValueError("usable_fraction must be in (0, 1]")
-  if not 0 <= reserve_fraction < usable_fraction:
-    raise ValueError("reserve_fraction must be below usable_fraction")
+  if not 0 <= reserve_fraction < 1:
+    raise ValueError("reserve_fraction must be in [0, 1)")
   if not 0 < charge_efficiency <= 1:
     raise ValueError("charge_efficiency must be in (0, 1]")
   if not 0 < discharge_efficiency <= 1:
     raise ValueError("discharge_efficiency must be in (0, 1]")
 
   max_soc = nominal_battery_kwh * usable_fraction
-  min_soc = nominal_battery_kwh * reserve_fraction
+  min_soc = max_soc * reserve_fraction
   soc = max_soc
 
   season_propulsion = 0.0

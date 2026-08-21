@@ -68,5 +68,27 @@ def test_shore_energy_appears_only_after_reserve_floor_is_reached():
       discharge_efficiency=1.0,
   )
 
-  assert result.minimum_soc_kwh == pytest.approx(4.0)
+  assert result.minimum_soc_kwh == pytest.approx(3.6)
   assert result.shore_energy_kwh > 0
+
+
+def test_reserve_fraction_is_applied_within_usable_soc_window():
+  dark = {(6, 1, hour): 0.0 for hour in range(24)}
+  result = simulate_seasonal_vessel_energy(
+      season_start=date(2026, 6, 1),
+      season_end=date(2026, 6, 1),
+      typical_hourly_specific_pv=dark,
+      installed_pv_kwp=0.0,
+      propulsion_power_kw=9.0,
+      cruise_hours_per_day=8.0,
+      nominal_battery_kwh=100.0,
+      usable_fraction=0.90,
+      reserve_fraction=0.20,
+      charge_efficiency=1.0,
+      discharge_efficiency=1.0,
+  )
+
+  assert result.initial_soc_kwh == pytest.approx(90.0)
+  assert result.minimum_soc_kwh == pytest.approx(18.0)
+  assert result.battery_discharge_to_propulsion_kwh == pytest.approx(72.0)
+  assert result.shore_energy_kwh == pytest.approx(0.0)

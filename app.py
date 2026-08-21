@@ -103,8 +103,11 @@ def main():
       inputs.daily_miles,
   )
 
-  render_vessel_details(vessel_specs, inputs)
-
+  render_vessel_details(
+      vessel_specs,
+      inputs,
+      typical_hourly_specific_pv=typical_hourly_specific_pv,
+  )
 
 if __name__ == "__main__":
   main()

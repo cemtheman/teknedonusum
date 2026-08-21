@@ -2,6 +2,10 @@ import pandas as pd
 import streamlit as st
 
 from calculations.vessel_detail_analysis import build_vessel_detail_analysis
+from calculations.vessel_hourly_energy import (
+    build_vessel_hourly_energy_balance,
+    installed_pv_kwp,
+)
 from models.inputs import SimulationInputs
 from ui.formatting import format_integer_tr
 
@@ -10,9 +14,87 @@ def _format_decimal_tr(value):
   return f"{value:.1f}".replace(".", ",")
 
 
+def _render_v1_hourly_energy_diagnostics(
+    spec,
+    inputs,
+    typical_hourly_specific_pv,
+):
+  if typical_hourly_specific_pv is None:
+    return
+
+  energy = build_vessel_hourly_energy_balance(
+      vessel_id="v1",
+      spec=spec,
+      cruise_speed=inputs.cruise_speed,
+      daily_miles=inputs.daily_miles,
+      season_start=inputs.season_start,
+      season_end=inputs.season_end,
+      typical_hourly_specific_pv=typical_hourly_specific_pv,
+  )
+
+  st.markdown("**🔎 Tip 1 Saatlik Solar–Batarya Enerji Muhasebesi**")
+  st.caption(
+      "Bu bölüm diagnostic amaçlıdır ve doğrudan saatlik PV → tahrik → "
+      "batarya SOC → kıyı enerjisi simülasyonundan gelir."
+  )
+
+  energy_df = pd.DataFrame({
+      "Enerji Akışı": [
+          "Kurulu PV Gücü",
+          "Sezonluk Tahrik Enerjisi",
+          "PV → Doğrudan Tahrik",
+          "PV → Batarya (depolanan)",
+          "Batarya → Tahrik",
+          "Kullanılamayan / Fazla PV",
+          "Sezonluk Kıyı Şarjı",
+          "Solar-Only Seyir Süresi",
+      ],
+      "Değer": [
+          f"{_format_decimal_tr(installed_pv_kwp(spec))} kWp",
+          f"{_format_decimal_tr(energy.season_propulsion_kwh)} kWh",
+          f"{_format_decimal_tr(energy.solar_direct_to_propulsion_kwh)} kWh",
+          f"{_format_decimal_tr(energy.battery_charge_from_solar_kwh)} kWh",
+          f"{_format_decimal_tr(energy.battery_discharge_to_propulsion_kwh)} kWh",
+          f"{_format_decimal_tr(energy.curtailed_solar_kwh)} kWh",
+          f"{_format_decimal_tr(energy.shore_energy_kwh)} kWh",
+          f"{_format_decimal_tr(energy.solar_only_propulsion_hours)} saat",
+      ],
+  })
+  st.table(energy_df)
+
+  soc_df = pd.DataFrame({
+      "SOC Kontrolü": [
+          "Sezon Başlangıç SOC",
+          "Sezon Minimum SOC",
+          "Sezon Sonu SOC",
+          "Başlangıç → Son SOC Farkı",
+      ],
+      "kWh": [
+          _format_decimal_tr(energy.initial_soc_kwh),
+          _format_decimal_tr(energy.minimum_soc_kwh),
+          _format_decimal_tr(energy.final_soc_kwh),
+          _format_decimal_tr(energy.final_soc_kwh - energy.initial_soc_kwh),
+      ],
+  })
+  st.table(soc_df)
+
+  soc_delta = energy.final_soc_kwh - energy.initial_soc_kwh
+  if abs(soc_delta) <= 0.5:
+    st.success(
+        "Sezon sonu SOC başlangıç SOC seviyesine yakındır; sezonluk kıyı "
+        "enerjisi başlangıç bataryasından gizli enerji tüketimine dayanmıyor."
+    )
+  else:
+    st.warning(
+        "Sezon başlangıç ve son SOC seviyeleri arasında belirgin fark var. "
+        "Kıyı enerjisi yorumlanırken bu SOC farkı ayrıca dikkate alınmalıdır."
+    )
+
+
 def render_vessel_details(
     vessel_specs,
     inputs: SimulationInputs,
+    typical_hourly_specific_pv=None,
 ):
   st.divider()
   st.subheader("📊 Tüm Tekne Tipleri İçin Tekil Detay Analizleri")
@@ -133,6 +215,13 @@ def render_vessel_details(
             "**Güneş Katkısı / Net Şebeke Şarjı:**\n\n"
             f"{_format_decimal_tr(detail.daily_solar_kwh)} / "
             f"{_format_decimal_tr(detail.daily_grid_kwh)} kWh/gün"
+        )
+
+      if v_key == "v1":
+        _render_v1_hourly_energy_diagnostics(
+            spec,
+            inputs,
+            typical_hourly_specific_pv,
         )
 
       st.caption(

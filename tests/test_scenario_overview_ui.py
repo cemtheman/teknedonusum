@@ -5,62 +5,61 @@ from models.inputs import SimulationInputs
 from ui.scenario_overview import build_scenario_summary
 
 
+SOURCE = Path("ui/scenario_overview.py").read_text(encoding="utf-8")
+
+
 def inputs():
   return SimulationInputs(
-      count_v1=1,
-      count_v2=2,
-      count_v3=3,
-      count_v4_24=4,
-      count_v4_32=5,
-      cost_eur_v1=100000,
-      cost_eur_v2=120000,
-      cost_eur_v3=140000,
-      eur_rate=50.25,
-      diesel_price=55.75,
-      elec_price=4.25,
+      count_v1=50,
+      count_v2=50,
+      count_v3=40,
+      count_v4_24=30,
+      count_v4_32=20,
+      cost_eur_v1=108100,
+      cost_eur_v2=144140,
+      cost_eur_v3=180180,
+      eur_rate=56.12,
+      diesel_price=84.60,
+      elec_price=3.50,
       operating_days=183,
       daily_miles=35.0,
-      cruise_speed=5.5,
-      location_name="Köyceğiz",
-      latitude=36.97,
-      longitude=28.69,
+      cruise_speed=6.0,
+      location_name="Dalyan, Ortaca, Muğla, Türkiye",
+      latitude=36.8344,
+      longitude=28.6439,
       season_start=date(2026, 4, 1),
       season_end=date(2026, 9, 30),
       season_days=183,
-      average_daily_specific_yield_kwh_per_kwp=5.42,
-      season_specific_yield_kwh_per_kwp=991.86,
+      average_daily_specific_yield_kwh_per_kwp=5.50,
+      season_specific_yield_kwh_per_kwp=1006.5,
       solar_resource_source="PVGIS",
   )
 
 
-def test_scenario_summary_exposes_decision_inputs_without_fleet_counts():
+def test_scenario_summary_preserves_core_values():
   summary = build_scenario_summary(inputs())
 
-  assert summary == {
-      "Hizmet hızı": "5,5 kn",
-      "Günlük rota": "35,0 NM",
-      "Sezon": "183 gün",
-      "PVGIS ort. özgül üretim": "5,42 kWh/kWp-gün",
-      "Liman elektriği": "4,25 TL/kWh",
-      "Dizel": "55,75 TL/L",
-      "EUR / TRY": "50,25",
-  }
+  assert summary["Hizmet hızı"] == "6,0 kn"
+  assert summary["Günlük rota"] == "35,0 NM"
+  assert summary["Sezon"] == "183 gün"
+  assert summary["Liman elektriği"] == "3,50 TL/kWh"
+  assert summary["Dizel"] == "84,60 TL/L"
+  assert summary["EUR / TRY"] == "56,12"
 
 
-def test_scenario_overview_contains_map_and_location_context():
-  source = Path("ui/scenario_overview.py").read_text(encoding="utf-8")
-
-  assert 'st.subheader("🧭 Senaryo ve Lokasyon Özeti")' in source
-  assert "st.map(" in source
-  assert '"lat": [float(inputs.latitude)]' in source
-  assert '"lon": [float(inputs.longitude)]' in source
-  assert "Anahtar Senaryo Girdileri" in source
+def test_scenario_overview_uses_compact_visual_cards():
+  assert "def _scenario_metric_card(" in SOURCE
+  assert "def _location_badge(" in SOURCE
+  assert "border-radius:12px" in SOURCE
+  assert "border-radius:999px" in SOURCE
 
 
-def test_app_renders_scenario_overview_before_fleet_dashboard():
-  source = Path("app.py").read_text(encoding="utf-8")
+def test_scenario_map_is_compact_and_summary_is_wider():
+  assert 'st.columns(\n      [0.92, 1.08],' in SOURCE
+  assert 'height=225' in SOURCE
+  assert 'zoom=12' in SOURCE
 
-  overview_position = source.index("render_scenario_overview(inputs)")
-  fleet_position = source.index("render_fleet_dashboard(vessel_specs, inputs, fleet)")
 
-  assert overview_position < fleet_position
+def test_summary_uses_cards_instead_of_streamlit_metrics():
+  assert "st.metric(" not in SOURCE
+  assert "_scenario_metric_card(label, value)" in SOURCE

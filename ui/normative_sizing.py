@@ -15,6 +15,7 @@ from config.operational_speed import (
     MAX_OPERATION_SPEED_KNOTS as SPEED_MAX_KNOTS,
     MIN_OPERATION_SPEED_KNOTS as SPEED_MIN_KNOTS,
 )
+from config.operational_methodology import cruise_methodology_label_tr
 from models.normative_decision_summary import NormativeDecisionSummary
 from ui.formatting import format_integer_tr
 
@@ -27,7 +28,7 @@ VESSEL_LABELS = {
 
 LIMITATION_LABELS = {
     "market_envelope_power_sizing": (
-        "Motor gücü, piyasa referans aralığına dayalı ön boyutlandırmadır."
+        "Kurulu motor gücü, piyasa/normatif referans aralığına dayalıdır."
     ),
     "not_manufacturer_certified": "Üretici sertifikalı performans verisi değildir.",
     "not_sea_trial_validated": "Deniz deneyi ile doğrulanmamıştır.",
@@ -141,6 +142,10 @@ def render_normative_sizing_section(
   st.write(
       f"{selected_label} · {values['speed']} hizmet hızı · "
       f"{_format_decimal_tr(daily_distance_nm)} NM/gün"
+  )
+  st.caption(
+      "Seyir/enerji hesap yöntemi: "
+      f"{cruise_methodology_label_tr(summary.selected_speed_knots)}."
   )
 
   columns = st.columns(4)

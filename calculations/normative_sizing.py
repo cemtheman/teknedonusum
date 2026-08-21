@@ -17,6 +17,10 @@ from calculations.route_energy import (
     calculate_route_propulsion_energy_envelope,
 )
 from config.normative_power_envelopes import NORMATIVE_POWER_ENVELOPES
+from config.operational_methodology import (
+    RESISTANCE_CHAIN_METHOD,
+    cruise_methodology_for_speed,
+)
 from config.operational_speed import (
     MAX_OPERATION_SPEED_KNOTS,
     MIN_OPERATION_SPEED_KNOTS,
@@ -49,7 +53,8 @@ def calculate_normative_sizing(
       selected_speed_knots,
   )
 
-  if 5.0 <= selected_speed_knots <= 6.0:
+  cruise_methodology = cruise_methodology_for_speed(selected_speed_knots)
+  if cruise_methodology == RESISTANCE_CHAIN_METHOD:
     minimum, reference, maximum = calculate_continuous_cruise_envelope(
         vessel_id,
         selected_speed_knots,

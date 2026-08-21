@@ -91,3 +91,12 @@ def test_ui_accepts_five_knot_lower_bound():
 def test_ui_rejects_speed_outside_range(speed_knots):
   with pytest.raises(ValueError, match="5–10"):
     normative_ui.build_normative_ui_summary("v1", speed_knots)
+
+
+def test_methodology_labels_are_explicit_at_transition():
+  assert normative_ui.cruise_methodology_label_tr(6.0) == (
+      "Direnç tabanlı ön seyir hesabı"
+  )
+  assert normative_ui.cruise_methodology_label_tr(6.5) == (
+      "Piyasa referanslı ön güç ölçeklemesi"
+  )

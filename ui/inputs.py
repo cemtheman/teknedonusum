@@ -49,7 +49,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
     st.header("⚙️ Simülasyon Girdileri")
     st.caption(
         "Aktif senaryoyu aşağıdaki başlıklardan düzenleyin. "
-        "Sık kullanılan gruplar açık, ikincil varsayımlar kapalı başlar."
+        "Tüm girdi grupları düzenli bir görünüm için kapalı başlar."
     )
 
     with st.expander("🚢 Filo Dönüşüm Hedefleri", expanded=False):
@@ -110,10 +110,13 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       )
 
     with st.expander("🌐 Piyasa & Enerji Fiyatları", expanded=False):
-      st.caption("TCMB ve Aytemiz servislerinden otomatik güncellenir.")
+      st.caption(
+          "TCMB ve Aytemiz servislerinden otomatik güncellenir. "
+          "Canlı kaynağa erişilemezse tanımlı yedek değer kullanılır."
+      )
 
       eur_rate = st.number_input(
-          f"EUR / TRY Kuru {'🟢 Canlı TCMB' if eur_is_live else '🟡 Sabit'}",
+          f"EUR / TRY Kuru {'🟢 Canlı TCMB' if eur_is_live else '🟡 Yedek değer'}",
           min_value=30.0,
           max_value=120.0,
           value=float(live_eur),
@@ -121,7 +124,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       )
       diesel_price = st.number_input(
           "Dizel Yakıt Fiyatı TL/L "
-          f"{'🟢 Canlı Aytemiz' if diesel_is_live else '🟡 Sabit'}",
+          f"{'🟢 Canlı Aytemiz' if diesel_is_live else '🟡 Yedek değer'}",
           min_value=30.0,
           max_value=180.0,
           value=float(live_diesel),

@@ -25,9 +25,9 @@ def test_grant_program_is_wired_after_fleet_calculation():
 def test_right_panel_exposes_first_year_decision_metrics():
   for text in (
       "Yıllık Hibe Bütçesi",
-      "Bütçe / Hibe İhtiyacı",
-      "Fiili Tahsis / İhtiyaç",
-      "İlk Yıl Finanse Edilebilir",
-      "GEKA Önceliğine Göre İlk Yıl Tahsisi",
+      "Teorik Bütçe Karşılama",
+      "Fiili Hibe Tahsisi",
+      "İlk Yıl Desteklenebilecek Tekne",
+      "Program Önceliğine Göre İlk Yıl Tahsisi",
   ):
     assert text in UI

@@ -42,10 +42,14 @@ def render_grant_program(vessel_specs, inputs, fleet):
   )
 
   st.subheader("🎯 İlk Yıl Hibe Programı")
+  st.info(
+      "Senaryo varsayımı: Dört finansman kaynağı ilk yıl için tek bir toplam "
+      "hibe havuzu gibi modellenir. Kaynakların gerçek başvuru, uygunluk, "
+      "eş-finansman ve harcama kuralları bu ekranda ayrı ayrı uygulanmaz."
+  )
   st.caption(
-      "Dört kaynak ilk-yıl için birleşik bir hibe havuzu olarak değerlendirilir. "
-      "Tahsis GEKA öncelik sırasını izler; aynı öncelikte daha düşük tekne-başı "
-      "hibe ihtiyacı önce finanse edilir."
+      "Tahsis sırası mevcut program önceliği varsayımını izler; aynı öncelik "
+      "seviyesinde daha düşük tekne-başı hibe ihtiyacı önce finanse edilir."
   )
 
   c1, c2, c3, c4, c5 = st.columns(5)
@@ -56,22 +60,22 @@ def render_grant_program(vessel_specs, inputs, fleet):
     )
   with c2:
     st.metric(
-        "Bütçe / Hibe İhtiyacı",
+        "Teorik Bütçe Karşılama",
         f"%{result.budget_coverage_ratio * 100:.1f}",
     )
   with c3:
     st.metric(
-        "Fiili Tahsis / İhtiyaç",
+        "Fiili Hibe Tahsisi",
         f"%{result.allocated_coverage_ratio * 100:.1f}",
     )
   with c4:
     st.metric(
-        "İlk Yıl Finanse Edilebilir",
+        "İlk Yıl Desteklenebilecek Tekne",
         f"{result.funded_vessels} tekne",
     )
   with c5:
     st.metric(
-        "Tahsis Sonrası Kalan",
+        "Tam Tekne Hibesi İçin Kullanılamayan Bakiye",
         f"₺{format_integer_tr(result.remaining_budget_tl)}",
     )
 
@@ -83,7 +87,7 @@ def render_grant_program(vessel_specs, inputs, fleet):
           "Sıfır Atık Vakfı",
           "TOPLAM",
       ],
-      "Yıllık Bütçe (TL)": [
+      "Senaryo Bütçesi (TL)": [
           inputs.grant_budget_ministry_tl,
           inputs.grant_budget_geka_tl,
           inputs.grant_budget_yikob_tl,
@@ -91,7 +95,7 @@ def render_grant_program(vessel_specs, inputs, fleet):
           result.total_annual_budget_tl,
       ],
   })
-  source_df["Yıllık Bütçe (TL)"] = source_df["Yıllık Bütçe (TL)"].map(
+  source_df["Senaryo Bütçesi (TL)"] = source_df["Senaryo Bütçesi (TL)"].map(
       lambda value: f"₺{format_integer_tr(value)}"
   )
 
@@ -100,7 +104,7 @@ def render_grant_program(vessel_specs, inputs, fleet):
     funded = result.funded_by_type[key]
     requested = counts[key]
     allocation_rows.append({
-        "GEKA Önceliği": PRIORITY_LABELS[key],
+        "Program Önceliği": PRIORITY_LABELS[key],
         "Tekne Türü": TYPE_LABELS[key],
         "Hedef": requested,
         "İlk Yıl": funded,
@@ -115,6 +119,10 @@ def render_grant_program(vessel_specs, inputs, fleet):
   left, right = st.columns([0.36, 0.64], vertical_alignment="top")
   with left:
     st.markdown("**Yıllık Kaynak Bütçeleri**")
+    st.caption(
+        "Bu tutarlar kaynak bazında gerçek tahsis değil, birleşik hibe havuzunu "
+        "oluşturan senaryo girdileridir."
+    )
     st.dataframe(source_df, hide_index=True, use_container_width=True)
 
     st.markdown(
@@ -141,7 +149,11 @@ def render_grant_program(vessel_specs, inputs, fleet):
     )
 
   with right:
-    st.markdown("**GEKA Önceliğine Göre İlk Yıl Tahsisi**")
+    st.markdown("**Program Önceliğine Göre İlk Yıl Tahsisi**")
+    st.caption(
+        "Öncelik sırası mevcut programlama varsayımıdır; fon sağlayıcıların "
+        "nihai uygunluk ve tahsis kararlarının yerine geçmez."
+    )
     st.dataframe(
         allocation_df,
         hide_index=True,
@@ -149,9 +161,9 @@ def render_grant_program(vessel_specs, inputs, fleet):
     )
 
   st.caption(
-      "Not: 'Bütçe / Hibe İhtiyacı' teorik kaynak kapasitesini; "
-      "'Fiili Tahsis / İhtiyaç' ise yalnız tam tekne hibelerine bağlanabilen "
-      "gerçek tahsisi gösterir."
+      "Teorik Bütçe Karşılama toplam bütçenin toplam hibe ihtiyacına oranını; "
+      "Fiili Hibe Tahsisi ise yalnız tam tekne hibelerine bağlanabilen gerçek "
+      "tahsis oranını gösterir."
   )
 
   st.divider()

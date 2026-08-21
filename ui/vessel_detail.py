@@ -159,7 +159,12 @@ def render_vessel_details(
   for v_key, spec in vessel_specs.items():
     with st.expander(f"📌 {spec['name']}", expanded=False):
       try:
-        detail = build_vessel_detail_analysis(v_key, spec, inputs)
+        detail = build_vessel_detail_analysis(
+            v_key,
+            spec,
+            inputs,
+            typical_hourly_specific_pv=typical_hourly_specific_pv,
+        )
       except (TypeError, ValueError):
         st.warning(
             "Bu tekne için detay analizi hesaplanamadı. v0.2 teknik zinciri "
@@ -276,7 +281,7 @@ def render_vessel_details(
         )
       with tech_col4:
         st.info(
-            "**Güneş Katkısı / Net Şebeke Şarjı:**\n\n"
+            "**Saatlik PV / Kıyı Enerjisi:**\n\n"
             f"{_format_decimal_tr(detail.daily_solar_kwh)} / "
             f"{_format_decimal_tr(detail.daily_grid_kwh)} kWh/gün"
         )

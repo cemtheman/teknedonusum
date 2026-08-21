@@ -40,7 +40,7 @@ def test_scenario_summary_preserves_core_values():
   summary = build_scenario_summary(inputs())
 
   assert summary["Hizmet hızı"] == "6,0 kn"
-  assert summary["Günlük rota"] == "35,0 NM"
+  assert summary["Günlük rota"] == "35,0 deniz mili"
   assert summary["Sezon"] == "183 gün"
   assert summary["Liman elektriği"] == "3,50 TL/kWh"
   assert summary["Dizel"] == "84,60 TL/L"

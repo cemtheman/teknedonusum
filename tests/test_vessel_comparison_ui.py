@@ -63,8 +63,8 @@ def test_table_formats_three_rows_statuses_basis_and_unavailable_values():
       "Kalibre ön tahmin",
       "Kalibre ön tahmin",
   ]
-  assert table.loc[1, "Tahmini menzil (NM)"] == "Mevcut değil"
-  assert table.loc[2, "Tahmini menzil (NM)"] == "Mevcut değil"
+  assert table.loc[1, "Tahmini menzil (deniz mili)"] == "Mevcut değil"
+  assert table.loc[2, "Tahmini menzil (deniz mili)"] == "Mevcut değil"
 
 
 def test_table_numeric_formatting_is_compact_and_turkish():
@@ -76,7 +76,7 @@ def test_table_numeric_formatting_is_compact_and_turkish():
   assert table.loc[0, "Günlük sevk enerjisi (kWh)"] == "83,0"
   assert table.loc[0, "Güneş katkısı (kWh/gün)"] == "25,2"
   assert table.loc[0, "Net şebeke ihtiyacı (kWh/gün)"] == "63,1"
-  assert table.loc[0, "Tahmini menzil (NM)"] == "22,8"
+  assert table.loc[0, "Tahmini menzil (deniz mili)"] == "22,8"
 
 
 def test_table_rejects_wrong_row_type():

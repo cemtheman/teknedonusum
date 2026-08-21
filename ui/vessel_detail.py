@@ -45,7 +45,7 @@ def render_vessel_details(
       kpi1, kpi2, kpi3, kpi4 = st.columns(4)
       with kpi1:
         st.metric(
-            "Net Özkaynak CAPEX",
+            "Hibe Sonrası Özkaynak Yatırımı",
             f"₺{format_integer_tr(detail.net_capex_tl)}",
         )
       with kpi2:
@@ -55,7 +55,7 @@ def render_vessel_details(
         )
       with kpi3:
         st.metric(
-            "Özkaynak Amortisman (ROI)",
+            "Yatırımın Geri Dönüş Süresi",
             f"{detail.payback_seasons:.1f} Sezon "
             f"({int(detail.payback_months)} Ay)",
         )
@@ -92,7 +92,7 @@ def render_vessel_details(
         st.table(capex_df)
 
       with col_right:
-        st.markdown("**Sezonluk İşletme Giderleri (OPEX) ve Tasarruf Dökümü**")
+        st.markdown("**Sezonluk İşletme Giderleri ve Tasarruf Dökümü**")
         opex_df = pd.DataFrame({
             "Gider Kalemi": [
                 (
@@ -102,7 +102,7 @@ def render_vessel_details(
                 ),
                 "Eski Tekne Sezonluk Bakım/Rektefiye",
                 "ESKİ TEKNE SEZONLUK GİDERLER TOPLAMI",
-                "SOC-Normalize Kıyı Enerjisi Gideri",
+                "Şebekeden Karşılanan Enerji Gideri",
                 "Yeni Batarya Yıpranma Karşılığı",
                 "Yeni Elektrikli Periyodik Bakım",
                 "YENİ TEKNE SEZONLUK GİDER TOPLAMI",

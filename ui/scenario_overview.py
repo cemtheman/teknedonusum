@@ -11,7 +11,7 @@ def _format_decimal_tr(value, digits=1):
 def build_scenario_summary(inputs: SimulationInputs):
   return {
       "Hizmet hızı": f"{_format_decimal_tr(inputs.cruise_speed)} kn",
-      "Günlük rota": f"{_format_decimal_tr(inputs.daily_miles)} NM",
+      "Günlük rota": f"{_format_decimal_tr(inputs.daily_miles)} deniz mili",
       "Sezon": f"{inputs.season_days} gün",
       "PVGIS ort. özgül üretim": (
           f"{_format_decimal_tr(inputs.average_daily_specific_yield_kwh_per_kwp, 2)} "

@@ -25,8 +25,8 @@ def test_grant_program_is_wired_after_fleet_calculation():
 def test_right_panel_exposes_first_year_decision_metrics():
   for text in (
       "Yıllık Hibe Bütçesi",
-      "Teorik Bütçe Karşılama",
-      "Fiili Hibe Tahsisi",
+      "Toplam İhtiyacın Bütçeyle Karşılanma Oranı",
+      "Tam Tekne Hibelerine Ayrılabilen Oran",
       "İlk Yıl Desteklenebilecek Tekne",
       "Program Önceliğine Göre İlk Yıl Tahsisi",
   ):

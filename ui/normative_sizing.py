@@ -141,7 +141,7 @@ def render_normative_sizing_section(
 
   st.write(
       f"{selected_label} · {values['speed']} hizmet hızı · "
-      f"{_format_decimal_tr(daily_distance_nm)} NM/gün"
+      f"{_format_decimal_tr(daily_distance_nm)} deniz mili/gün"
   )
   st.caption(
       "Seyir/enerji hesap yöntemi: "
@@ -177,7 +177,7 @@ def render_normative_sizing_section(
         f"{_format_decimal_tr(summary.reference_electrical_input_power_kw)} kW"
     )
     st.write(
-        f"Günlük rota: {_format_decimal_tr(daily_distance_nm)} NM · "
+        f"Günlük rota: {_format_decimal_tr(daily_distance_nm)} deniz mili · "
         f"Tahmini seyir süresi: "
         f"{_format_decimal_tr(assumptions.operating_hours_per_day)} saat/gün"
     )

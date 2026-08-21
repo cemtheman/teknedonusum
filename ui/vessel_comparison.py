@@ -60,7 +60,7 @@ def build_vessel_comparison_table(rows):
           "Net şebeke ihtiyacı (kWh/gün)": _format_decimal(
               row.net_grid_energy_requirement_kwh
           ),
-          "Tahmini menzil (NM)": _format_decimal(
+          "Tahmini menzil (deniz mili)": _format_decimal(
               row.estimated_navigation_range_nm
           ),
           "Teknik uygunluk": STATUS_LABELS[

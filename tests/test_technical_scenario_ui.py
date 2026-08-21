@@ -83,7 +83,7 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   assert [call.args[1] for call in streamlit.metric.call_args_list[:5]] == [
       "25,9 kW",
       "23,7 kW",
-      "22,8 NM",
+      "22,8 deniz mili",
       "25,2 kWh/gün",
       "63,1 kWh/gün",
   ]
@@ -97,7 +97,7 @@ def test_pass_scenario_rendering_and_formatting(monkeypatch):
   assert [call.args[1] for call in streamlit.metric.call_args_list[5:]] == [
       "13,53 kW",
       "22,54 kW",
-      "2,52 kWh/NM",
+      "2,52 kWh/deniz mili",
       "%28,5",
       "0,00 kWh/gün",
   ]

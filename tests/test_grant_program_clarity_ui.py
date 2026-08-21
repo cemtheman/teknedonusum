@@ -6,8 +6,8 @@ UI = Path("ui/grant_program.py").read_text(encoding="utf-8")
 
 def test_grant_ui_labels_are_decision_friendly():
   for text in (
-      "Teorik Bütçe Karşılama",
-      "Fiili Hibe Tahsisi",
+      "Toplam İhtiyacın Bütçeyle Karşılanma Oranı",
+      "Tam Tekne Hibelerine Ayrılabilen Oran",
       "İlk Yıl Desteklenebilecek Tekne",
       "Tam Tekne Hibesi İçin Kullanılamayan Bakiye",
       "Program Önceliğine Göre İlk Yıl Tahsisi",

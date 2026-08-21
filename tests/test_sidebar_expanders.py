@@ -36,5 +36,5 @@ def test_operational_inputs_are_kept_in_operational_profile():
   )
   operation_block = SOURCE[operation_start:cost_start]
 
-  assert '"Günlük Rota Mesafesi (NM)"' in operation_block
+  assert '"Günlük Rota Mesafesi (deniz mili)"' in operation_block
   assert '"Ortalama Seyir Hızı (Knot)"' in operation_block

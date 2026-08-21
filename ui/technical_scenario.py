@@ -19,7 +19,7 @@ def _format_primary_value(value):
   if value.unit == "kW":
     return f"{_format_decimal(value.value, 1)} kW"
   if value.unit == "NM":
-    return f"{_format_decimal(value.value, 1)} NM"
+    return f"{_format_decimal(value.value, 1)} deniz mili"
   if value.unit == "kWh/day":
     return f"{_format_decimal(value.value, 1)} kWh/gün"
   return str(value.value)
@@ -31,7 +31,7 @@ def _format_compliance_actual(value):
   if value.criterion == "passenger_capacity":
     return f"{int(value.actual_value)}"
   if value.criterion == "minimum_navigation_range":
-    return f"{_format_decimal(value.actual_value, 1)} NM"
+    return f"{_format_decimal(value.actual_value, 1)} deniz mili"
   if value.criterion == "motor_efficiency":
     return _format_percentage(value.actual_value)
   if value.criterion == "battery_capacity":
@@ -56,7 +56,7 @@ def _format_detail_value(value):
   if value.key == "motor_output_power":
     return f"{_format_decimal(value.value, 2)} kW"
   if value.key == "energy_per_nm":
-    return f"{_format_decimal(value.value, 2)} kWh/NM"
+    return f"{_format_decimal(value.value, 2)} kWh/deniz mili"
   if value.key == "solar_coverage":
     return _format_percentage(value.value)
   if value.key == "excess_solar_energy":

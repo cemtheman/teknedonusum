@@ -4,7 +4,7 @@ from pathlib import Path
 def test_fleet_dashboard_names_soc_normalized_shore_energy():
   source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
 
-  assert "SOC-Normalize Sezonluk Kıyı Enerjisi" in source
+  assert "Şebekeden Karşılanan Sezonluk Enerji" in source
   assert "sezon sonu SOC farkı başlangıç seviyesine normalize edilir" in source
   assert "Sezonluk Kıyı Şarj İhtiyacı" not in source
 
@@ -22,4 +22,4 @@ def test_vessel_detail_does_not_repeat_technical_energy_cards():
 
   assert "Teknik ve Enerji Özeti" not in source
   assert "Saatlik PV / Kıyı Enerjisi" not in source
-  assert "SOC-Normalize Kıyı Enerjisi Gideri" in source
+  assert "Şebekeden Karşılanan Enerji Gideri" in source

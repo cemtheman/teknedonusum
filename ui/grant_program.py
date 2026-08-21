@@ -62,12 +62,12 @@ def render_grant_program(vessel_specs, inputs, fleet):
     )
   with c2:
     st.metric(
-        "Teorik Bütçe Karşılama",
+        "Toplam İhtiyacın Bütçeyle Karşılanma Oranı",
         f"%{result.budget_coverage_ratio * 100:.1f}",
     )
   with c3:
     st.metric(
-        "Fiili Hibe Tahsisi",
+        "Tam Tekne Hibelerine Ayrılabilen Oran",
         f"%{result.allocated_coverage_ratio * 100:.1f}",
     )
   with c4:
@@ -163,8 +163,8 @@ def render_grant_program(vessel_specs, inputs, fleet):
     )
 
   st.caption(
-      "Teorik Bütçe Karşılama toplam bütçenin toplam hibe ihtiyacına oranını; "
-      "Fiili Hibe Tahsisi ise yalnız tam tekne hibelerine bağlanabilen gerçek "
+      "Toplam İhtiyacın Bütçeyle Karşılanma Oranı toplam bütçenin toplam hibe ihtiyacına oranını; "
+      "Tam Tekne Hibelerine Ayrılabilen Oran ise yalnız tam tekne hibelerine bağlanabilen gerçek "
       "tahsis oranını gösterir."
   )
 

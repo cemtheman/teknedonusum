@@ -72,7 +72,7 @@ def test_turkish_formatting_and_unavailable_labels():
   assert table.loc[0, "Yıllık işletme tasarrufu"] == "₺647.576"
   assert table.loc[0, "Geri ödeme (sezon)"] == "5,0"
   assert table.loc[0, "CO₂ azaltımı (ton/yıl)"] == "19,7"
-  assert table.loc[1, "Tahmini menzil (NM)"] == "Mevcut değil"
+  assert table.loc[1, "Tahmini menzil (deniz mili)"] == "Mevcut değil"
   assert table.loc[1, "Geri ödeme (sezon)"] == "Mevcut değil"
   assert list(table["Teknik uygunluk"]) == [
       "Henüz değerlendirilmedi",

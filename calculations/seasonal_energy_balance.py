@@ -20,6 +20,7 @@ def simulate_seasonal_vessel_energy(
     season_end,
     typical_hourly_specific_pv,
     installed_pv_kwp,
+    operating_days=None,
     propulsion_power_kw,
     cruise_hours_per_day,
     nominal_battery_kwh,
@@ -34,6 +35,35 @@ def simulate_seasonal_vessel_energy(
   """Simulate one vessel over every calendar day in the selected season."""
   if season_end < season_start:
     raise ValueError("season_end must not be before season_start")
+
+  season_days = (season_end - season_start).days + 1
+
+  if operating_days is None:
+    operating_days = season_days
+
+  if not isinstance(operating_days, int):
+    raise ValueError("operating_days must be an integer")
+  if operating_days < 1:
+    raise ValueError("operating_days must be at least 1")
+  if operating_days > season_days:
+    raise ValueError("operating_days must not exceed season duration")
+
+  # Select exactly operating_days calendar days, spread as evenly as
+  # possible across the season.  Full-season operation therefore
+  # preserves the historical behaviour exactly.
+  if operating_days == season_days:
+    operating_day_offsets = set(range(season_days))
+  elif operating_days == 1:
+    operating_day_offsets = {0}
+  else:
+    operating_day_offsets = {
+        round(i * (season_days - 1) / (operating_days - 1))
+        for i in range(operating_days)
+    }
+
+  if len(operating_day_offsets) != operating_days:
+    raise RuntimeError("failed to construct deterministic operating-day schedule")
+
   if installed_pv_kwp < 0 or propulsion_power_kw < 0:
     raise ValueError("power values must be non-negative")
   if auxiliary_power_kw < 0:
@@ -186,7 +216,10 @@ def simulate_seasonal_vessel_energy(
     minimum_soc = min(minimum_soc, soc)
 
   current = season_start
+  day_offset = 0
   while current <= season_end:
+    is_operating_day = day_offset in operating_day_offsets
+
     for hour in range(24):
       specific_power = float(
           typical_hourly_specific_pv.get(
@@ -197,15 +230,23 @@ def simulate_seasonal_vessel_energy(
       solar_power_kw = installed_pv_kwp * max(0.0, specific_power)
       season_solar += solar_power_kw
 
-      propulsion_active_hours = _hour_overlap(
-          operation_start_hour_local,
-          cruise_hours_per_day,
-          hour,
+      propulsion_active_hours = (
+          _hour_overlap(
+              operation_start_hour_local,
+              cruise_hours_per_day,
+              hour,
+          )
+          if is_operating_day
+          else 0.0
       )
-      auxiliary_active_hours = _hour_overlap(
-          operation_start_hour_local,
-          auxiliary_operating_hours_per_day,
-          hour,
+      auxiliary_active_hours = (
+          _hour_overlap(
+              operation_start_hour_local,
+              auxiliary_operating_hours_per_day,
+              hour,
+          )
+          if is_operating_day
+          else 0.0
       )
 
       season_propulsion += (
@@ -267,6 +308,7 @@ def simulate_seasonal_vessel_energy(
       )
 
     current += timedelta(days=1)
+    day_offset += 1
 
   shore_energy = shore_propulsion + shore_auxiliary
 

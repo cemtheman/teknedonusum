@@ -15,12 +15,11 @@ def test_sidebar_uses_location_and_date_defined_solar_season():
   assert "build_season_solar_resource(" in INPUTS_SOURCE
 
 
-def test_sidebar_no_longer_exposes_manual_sun_hours_or_season_length():
+def test_sidebar_keeps_solar_season_automatic_but_exposes_operating_days():
   assert '"Günlük Güneşlenme Süresi (Saat/Gün)"' not in INPUTS_SOURCE
-  assert '"Sezon Operasyon Gün Sayısı"' not in INPUTS_SOURCE
-  assert '"Sezonluk planlanan operasyon / rota günü"' not in INPUTS_SOURCE
   assert '"Sezon Süresi (gün)"' in INPUTS_SOURCE
-  assert "operating_days = season_days" in INPUTS_SOURCE
+  assert '"Fiili Operasyon Günü"' in INPUTS_SOURCE
+  assert "operating_days = season_days" not in INPUTS_SOURCE
 
 
 def test_primary_app_passes_pvgis_specific_yield_to_fleet():

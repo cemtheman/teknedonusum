@@ -40,7 +40,32 @@ def test_hourly_fleet_path_can_report_zero_shore_energy_for_v1():
   assert result.daily_grid_kwh == pytest.approx(0.0)
 
 
-def test_hourly_path_requires_operating_days_to_equal_season_duration():
+def test_hourly_path_supports_fewer_operating_days_than_calendar_days():
+  specs = {"v1": deepcopy(BASE_VESSEL_SPECS["v1"])}
+  specs["v1"].update(
+      merged=1,
+      totalCost=0.0,
+      maxGrant=0.0,
+      grantRate=0.0,
+  )
+
+  result = build_fleet_energy_balance(
+      specs,
+      {"v1": 1},
+      6.0,
+      35.0,
+      None,
+      1,
+      season_start=date(2026, 6, 1),
+      season_end=date(2026, 6, 2),
+      typical_hourly_specific_pv={},
+  )
+
+  assert result.annual_grid_kwh >= 0.0
+  assert result.daily_propulsion_kwh > 0.0
+
+
+def test_hourly_path_rejects_operating_days_above_season_duration():
   specs = {"v1": deepcopy(BASE_VESSEL_SPECS["v1"])}
   specs["v1"].update(
       merged=1,
@@ -56,7 +81,7 @@ def test_hourly_path_requires_operating_days_to_equal_season_duration():
         6.0,
         35.0,
         None,
-        1,
+        3,
         season_start=date(2026, 6, 1),
         season_end=date(2026, 6, 2),
         typical_hourly_specific_pv={},

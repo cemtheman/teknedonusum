@@ -197,7 +197,21 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           step=1,
           disabled=True,
       )
-      operating_days = season_days
+      operating_days = st.number_input(
+          "Fiili Operasyon Günü",
+          min_value=1,
+          max_value=season_days,
+          value=season_days,
+          step=1,
+          help=(
+              "Teknenin seçilen sezon içinde fiilen hizmet verdiği gün sayısıdır. "
+              "Güneş üretimi ise sezonun tüm takvim günleri için hesaplanır."
+          ),
+      )
+      st.caption(
+          f"Operasyon oranı: %{operating_days / season_days * 100:.1f} · "
+          f"{operating_days}/{season_days} gün"
+      )
 
       try:
         solar_resource = build_season_solar_resource(

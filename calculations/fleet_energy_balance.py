@@ -44,8 +44,10 @@ def _build_hourly_fleet_energy_balance(vessel_specs, counts, cruise_speed, daily
   season_days = (season_end - season_start).days + 1
   if season_days <= 0:
     raise ValueError("season date range must contain at least one day")
-  if operating_days != season_days:
-    raise ValueError("hourly seasonal model requires operating_days to equal season duration")
+  if operating_days < 1:
+    raise ValueError("operating_days must be at least 1")
+  if operating_days > season_days:
+    raise ValueError("operating_days must not exceed season duration")
 
   for vessel_key, spec in vessel_specs.items():
     count = counts.get(vessel_key, 0)
@@ -64,6 +66,7 @@ def _build_hourly_fleet_energy_balance(vessel_specs, counts, cruise_speed, daily
         season_start=season_start,
         season_end=season_end,
         typical_hourly_specific_pv=typical_hourly_specific_pv,
+        operating_days=operating_days,
     )
     sizing = calculate_normative_sizing(technical_profile_id, cruise_speed, daily_miles)
     old_diesel_lph = _diesel_baseline_lph(spec, cruise_speed)

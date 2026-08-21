@@ -13,9 +13,11 @@ def test_sidebar_uses_requested_season_labels():
   assert "Sezonluk planlanan operasyon / rota günü" not in SOURCE
 
 
-def test_operating_days_follow_calendar_season_duration():
+def test_operating_days_are_user_defined_within_calendar_season():
   assert "season_days = (season_end - season_start).days + 1" in SOURCE
-  assert "operating_days = season_days" in SOURCE
+  assert '"Fiili Operasyon Günü"' in SOURCE
+  assert "max_value=season_days" in SOURCE
+  assert "operating_days = season_days" not in SOURCE
 
 
 def test_location_name_is_wired_to_geocoder():

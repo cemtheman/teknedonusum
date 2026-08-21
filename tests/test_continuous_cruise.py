@@ -1,3 +1,5 @@
+import math
+
 import pytest
 
 from calculations.continuous_cruise import (
@@ -18,7 +20,8 @@ def test_continuous_cruise_uses_resistance_chain_not_speed_power_exponent():
       motor_efficiency=0.95,
   )
 
-  assert result.froude_number == pytest.approx(0.2916, rel=1e-3)
+  expected_froude = (6.0 * 0.514444) / math.sqrt(9.80665 * 11.4)
+  assert result.froude_number == pytest.approx(expected_froude)
   assert result.frictional_resistance_n > 0
   assert result.viscous_resistance_n > result.frictional_resistance_n
   assert result.total_resistance_n == pytest.approx(

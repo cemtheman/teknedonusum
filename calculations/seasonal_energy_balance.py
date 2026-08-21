@@ -28,14 +28,20 @@ def simulate_seasonal_vessel_energy(
     operation_start_hour_local=9.0,
     charge_efficiency=0.95,
     discharge_efficiency=0.95,
+    auxiliary_power_kw=0.0,
+    auxiliary_operating_hours_per_day=0.0,
 ):
   """Simulate one vessel over every calendar day in the selected season."""
   if season_end < season_start:
     raise ValueError("season_end must not be before season_start")
   if installed_pv_kwp < 0 or propulsion_power_kw < 0:
     raise ValueError("power values must be non-negative")
+  if auxiliary_power_kw < 0:
+    raise ValueError("auxiliary_power_kw must be non-negative")
   if cruise_hours_per_day <= 0 or cruise_hours_per_day > 24:
     raise ValueError("cruise_hours_per_day must be in (0, 24]")
+  if not 0 <= auxiliary_operating_hours_per_day <= 24:
+    raise ValueError("auxiliary_operating_hours_per_day must be in [0, 24]")
   if nominal_battery_kwh <= 0:
     raise ValueError("nominal_battery_kwh must be positive")
   if not 0 < usable_fraction <= 1:
@@ -52,16 +58,132 @@ def simulate_seasonal_vessel_energy(
   soc = max_soc
 
   season_propulsion = 0.0
+  season_auxiliary = 0.0
   season_solar = 0.0
-  direct_solar = 0.0
-  battery_discharge = 0.0
+  direct_solar_propulsion = 0.0
+  direct_solar_auxiliary = 0.0
+  battery_discharge_propulsion = 0.0
+  battery_discharge_auxiliary = 0.0
   battery_storage_withdrawal = 0.0
   battery_charge = 0.0
   solar_to_battery_input = 0.0
   curtailed_solar = 0.0
-  shore_energy = 0.0
+  shore_propulsion = 0.0
+  shore_auxiliary = 0.0
   solar_only_hours = 0.0
   minimum_soc = soc
+
+  def process_segment(
+      *,
+      duration_hours,
+      solar_power_kw,
+      propulsion_active,
+      auxiliary_active,
+  ):
+    nonlocal soc
+    nonlocal direct_solar_propulsion
+    nonlocal direct_solar_auxiliary
+    nonlocal battery_discharge_propulsion
+    nonlocal battery_discharge_auxiliary
+    nonlocal battery_storage_withdrawal
+    nonlocal battery_charge
+    nonlocal solar_to_battery_input
+    nonlocal curtailed_solar
+    nonlocal shore_propulsion
+    nonlocal shore_auxiliary
+    nonlocal minimum_soc
+
+    if duration_hours <= 0:
+      return
+
+    solar_available_kwh = solar_power_kw * duration_hours
+    propulsion_demand_kwh = (
+        propulsion_power_kw * duration_hours
+        if propulsion_active
+        else 0.0
+    )
+    auxiliary_demand_kwh = (
+        auxiliary_power_kw * duration_hours
+        if auxiliary_active
+        else 0.0
+    )
+
+    solar_to_propulsion_kwh = min(
+        propulsion_demand_kwh,
+        solar_available_kwh,
+    )
+    direct_solar_propulsion += solar_to_propulsion_kwh
+    solar_available_kwh -= solar_to_propulsion_kwh
+
+    solar_to_auxiliary_kwh = min(
+        auxiliary_demand_kwh,
+        solar_available_kwh,
+    )
+    direct_solar_auxiliary += solar_to_auxiliary_kwh
+    solar_available_kwh -= solar_to_auxiliary_kwh
+
+    propulsion_deficit_kwh = (
+        propulsion_demand_kwh - solar_to_propulsion_kwh
+    )
+    auxiliary_deficit_kwh = (
+        auxiliary_demand_kwh - solar_to_auxiliary_kwh
+    )
+
+    available_to_bus_kwh = max(
+        0.0,
+        (soc - min_soc) * discharge_efficiency,
+    )
+
+    battery_to_propulsion_kwh = min(
+        propulsion_deficit_kwh,
+        available_to_bus_kwh,
+    )
+    available_to_bus_kwh -= battery_to_propulsion_kwh
+
+    battery_to_auxiliary_kwh = min(
+        auxiliary_deficit_kwh,
+        available_to_bus_kwh,
+    )
+
+    battery_to_loads_kwh = (
+        battery_to_propulsion_kwh + battery_to_auxiliary_kwh
+    )
+    if battery_to_loads_kwh > 0:
+      storage_withdrawal_kwh = (
+          battery_to_loads_kwh / discharge_efficiency
+      )
+      soc -= storage_withdrawal_kwh
+      battery_storage_withdrawal += storage_withdrawal_kwh
+
+    battery_discharge_propulsion += battery_to_propulsion_kwh
+    battery_discharge_auxiliary += battery_to_auxiliary_kwh
+
+    shore_propulsion += max(
+        0.0,
+        propulsion_deficit_kwh - battery_to_propulsion_kwh,
+    )
+    shore_auxiliary += max(
+        0.0,
+        auxiliary_deficit_kwh - battery_to_auxiliary_kwh,
+    )
+
+    storage_room_kwh = max(0.0, max_soc - soc)
+    storable_kwh = solar_available_kwh * charge_efficiency
+    charged_kwh = min(storage_room_kwh, storable_kwh)
+    soc += charged_kwh
+    battery_charge += charged_kwh
+
+    solar_used_for_charge_bus_kwh = (
+        charged_kwh / charge_efficiency
+        if charge_efficiency > 0
+        else 0.0
+    )
+    solar_to_battery_input += solar_used_for_charge_bus_kwh
+    curtailed_solar += max(
+        0.0,
+        solar_available_kwh - solar_used_for_charge_bus_kwh,
+    )
+    minimum_soc = min(minimum_soc, soc)
 
   current = season_start
   while current <= season_end:
@@ -73,90 +195,95 @@ def simulate_seasonal_vessel_energy(
           )
       )
       solar_power_kw = installed_pv_kwp * max(0.0, specific_power)
-      solar_energy_kwh = solar_power_kw
-      season_solar += solar_energy_kwh
+      season_solar += solar_power_kw
 
-      active_hours = _hour_overlap(
+      propulsion_active_hours = _hour_overlap(
           operation_start_hour_local,
           cruise_hours_per_day,
           hour,
       )
-      propulsion_energy_kwh = propulsion_power_kw * active_hours
-      season_propulsion += propulsion_energy_kwh
+      auxiliary_active_hours = _hour_overlap(
+          operation_start_hour_local,
+          auxiliary_operating_hours_per_day,
+          hour,
+      )
 
-      solar_direct_kwh = min(
-          propulsion_power_kw,
-          solar_power_kw,
-      ) * active_hours
-      direct_solar += solar_direct_kwh
+      season_propulsion += (
+          propulsion_power_kw * propulsion_active_hours
+      )
+      season_auxiliary += (
+          auxiliary_power_kw * auxiliary_active_hours
+      )
 
-      propulsion_deficit_kwh = max(
+      if (
+          propulsion_active_hours > 0
+          and solar_power_kw >= propulsion_power_kw
+      ):
+        solar_only_hours += propulsion_active_hours
+
+      both_active_hours = min(
+          propulsion_active_hours,
+          auxiliary_active_hours,
+      )
+      propulsion_only_hours = max(
           0.0,
-          propulsion_energy_kwh - solar_direct_kwh,
+          propulsion_active_hours - both_active_hours,
       )
-
-      available_to_bus = max(
+      auxiliary_only_hours = max(
           0.0,
-          (soc - min_soc) * discharge_efficiency,
+          auxiliary_active_hours - both_active_hours,
       )
-      battery_to_propulsion_kwh = min(
-          propulsion_deficit_kwh,
-          available_to_bus,
-      )
-      if battery_to_propulsion_kwh > 0:
-        storage_withdrawal_kwh = (
-            battery_to_propulsion_kwh / discharge_efficiency
-        )
-        soc -= storage_withdrawal_kwh
-        battery_storage_withdrawal += storage_withdrawal_kwh
-      battery_discharge += battery_to_propulsion_kwh
-
-      shore_energy += max(
+      inactive_hours = max(
           0.0,
-          propulsion_deficit_kwh - battery_to_propulsion_kwh,
+          1.0
+          - both_active_hours
+          - propulsion_only_hours
+          - auxiliary_only_hours,
       )
 
-      if active_hours > 0 and solar_power_kw >= propulsion_power_kw:
-        solar_only_hours += active_hours
-
-      solar_surplus_active_kwh = max(
-          0.0,
-          solar_power_kw - propulsion_power_kw,
-      ) * active_hours
-      solar_inactive_kwh = solar_power_kw * (1.0 - active_hours)
-      solar_for_charge_bus_kwh = (
-          solar_surplus_active_kwh + solar_inactive_kwh
+      process_segment(
+          duration_hours=both_active_hours,
+          solar_power_kw=solar_power_kw,
+          propulsion_active=True,
+          auxiliary_active=True,
       )
-
-      storage_room_kwh = max(0.0, max_soc - soc)
-      storable_kwh = solar_for_charge_bus_kwh * charge_efficiency
-      charged_kwh = min(storage_room_kwh, storable_kwh)
-      soc += charged_kwh
-      battery_charge += charged_kwh
-
-      solar_used_for_charge_bus_kwh = (
-          charged_kwh / charge_efficiency
-          if charge_efficiency > 0
-          else 0.0
+      process_segment(
+          duration_hours=propulsion_only_hours,
+          solar_power_kw=solar_power_kw,
+          propulsion_active=True,
+          auxiliary_active=False,
       )
-      solar_to_battery_input += solar_used_for_charge_bus_kwh
-      curtailed_solar += max(
-          0.0,
-          solar_for_charge_bus_kwh - solar_used_for_charge_bus_kwh,
+      process_segment(
+          duration_hours=auxiliary_only_hours,
+          solar_power_kw=solar_power_kw,
+          propulsion_active=False,
+          auxiliary_active=True,
       )
-      minimum_soc = min(minimum_soc, soc)
+      process_segment(
+          duration_hours=inactive_hours,
+          solar_power_kw=solar_power_kw,
+          propulsion_active=False,
+          auxiliary_active=False,
+      )
 
     current += timedelta(days=1)
 
+  shore_energy = shore_propulsion + shore_auxiliary
+
   return SeasonalVesselEnergyBalance(
       season_propulsion_kwh=season_propulsion,
+      season_auxiliary_kwh=season_auxiliary,
       season_solar_generation_kwh=season_solar,
-      solar_direct_to_propulsion_kwh=direct_solar,
-      battery_discharge_to_propulsion_kwh=battery_discharge,
+      solar_direct_to_propulsion_kwh=direct_solar_propulsion,
+      solar_direct_to_auxiliary_kwh=direct_solar_auxiliary,
+      battery_discharge_to_propulsion_kwh=battery_discharge_propulsion,
+      battery_discharge_to_auxiliary_kwh=battery_discharge_auxiliary,
       battery_charge_from_solar_kwh=battery_charge,
       solar_to_battery_input_kwh=solar_to_battery_input,
       battery_storage_withdrawal_kwh=battery_storage_withdrawal,
       curtailed_solar_kwh=curtailed_solar,
+      shore_to_propulsion_kwh=shore_propulsion,
+      shore_to_auxiliary_kwh=shore_auxiliary,
       shore_energy_kwh=shore_energy,
       initial_soc_kwh=max_soc,
       final_soc_kwh=soc,

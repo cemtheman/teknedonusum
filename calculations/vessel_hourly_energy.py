@@ -25,6 +25,8 @@ def build_vessel_hourly_energy_balance(
     season_end,
     typical_hourly_specific_pv,
     sizing_calculator=calculate_normative_sizing,
+    auxiliary_power_kw=0.0,
+    auxiliary_operating_hours_per_day=0.0,
 ):
   sizing = sizing_calculator(vessel_id, cruise_speed, daily_miles)
 
@@ -41,4 +43,6 @@ def build_vessel_hourly_energy_balance(
       operation_start_hour_local=DEFAULT_OPERATION_START_HOUR_LOCAL,
       charge_efficiency=BATTERY_CHARGE_EFFICIENCY,
       discharge_efficiency=BATTERY_DISCHARGE_EFFICIENCY,
+      auxiliary_power_kw=auxiliary_power_kw,
+      auxiliary_operating_hours_per_day=auxiliary_operating_hours_per_day,
   )

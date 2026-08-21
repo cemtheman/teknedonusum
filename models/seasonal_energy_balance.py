@@ -1,4 +1,4 @@
-"""Seasonal solar-assisted propulsion energy results."""
+"""Seasonal solar-assisted propulsion and auxiliary energy results."""
 
 from dataclasses import dataclass
 
@@ -6,13 +6,18 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class SeasonalVesselEnergyBalance:
   season_propulsion_kwh: float
+  season_auxiliary_kwh: float
   season_solar_generation_kwh: float
   solar_direct_to_propulsion_kwh: float
+  solar_direct_to_auxiliary_kwh: float
   battery_discharge_to_propulsion_kwh: float
+  battery_discharge_to_auxiliary_kwh: float
   battery_charge_from_solar_kwh: float
   solar_to_battery_input_kwh: float
   battery_storage_withdrawal_kwh: float
   curtailed_solar_kwh: float
+  shore_to_propulsion_kwh: float
+  shore_to_auxiliary_kwh: float
   shore_energy_kwh: float
   initial_soc_kwh: float
   final_soc_kwh: float
@@ -26,10 +31,14 @@ class SeasonalVesselEnergyBalance:
     return self.season_propulsion_kwh
 
   @property
+  def season_total_demand_kwh(self):
+    return self.season_propulsion_kwh + self.season_auxiliary_kwh
+
+  @property
   def shore_dependency_ratio(self):
-    if self.season_propulsion_kwh <= 0:
+    if self.season_total_demand_kwh <= 0:
       return 0.0
-    return self.shore_energy_kwh / self.season_propulsion_kwh
+    return self.shore_energy_kwh / self.season_total_demand_kwh
 
   @property
   def charge_conversion_loss_kwh(self):
@@ -40,6 +49,7 @@ class SeasonalVesselEnergyBalance:
     return (
         self.battery_storage_withdrawal_kwh
         - self.battery_discharge_to_propulsion_kwh
+        - self.battery_discharge_to_auxiliary_kwh
     )
 
   @property
@@ -59,6 +69,7 @@ class SeasonalVesselEnergyBalance:
     return (
         self.season_solar_generation_kwh
         - self.solar_direct_to_propulsion_kwh
+        - self.solar_direct_to_auxiliary_kwh
         - self.solar_to_battery_input_kwh
         - self.curtailed_solar_kwh
     )
@@ -69,7 +80,16 @@ class SeasonalVesselEnergyBalance:
         self.season_propulsion_kwh
         - self.solar_direct_to_propulsion_kwh
         - self.battery_discharge_to_propulsion_kwh
-        - self.shore_energy_kwh
+        - self.shore_to_propulsion_kwh
+    )
+
+  @property
+  def auxiliary_balance_error_kwh(self):
+    return (
+        self.season_auxiliary_kwh
+        - self.solar_direct_to_auxiliary_kwh
+        - self.battery_discharge_to_auxiliary_kwh
+        - self.shore_to_auxiliary_kwh
     )
 
   @property

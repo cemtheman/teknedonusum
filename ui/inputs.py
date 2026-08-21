@@ -3,6 +3,9 @@ from datetime import date
 
 import streamlit as st
 
+from calculations.fleet_inventory_analysis import (
+    load_and_analyze_inventory_excel,
+)
 from config.operational_speed import (
     DEFAULT_OPERATION_SPEED_KNOTS,
     MAX_OPERATION_SPEED_KNOTS,
@@ -76,6 +79,144 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "Tip 4B (13,5 m Katamaran - 32 Kişi) Adet",
           min_value=0, max_value=200, value=20, step=1,
       )
+
+    with st.expander(
+        "📊 Filo Envanteri & Dönüşüm Planı",
+        expanded=False,
+    ):
+      st.caption(
+          "Tekne listesini Excel formatında yükleyin. Envanter önce dönüşüm "
+          "fazlarına ayrılır; Faz 1 yolcu motorları daha sonra hedef Tip 1/2/3 "
+          "filo dağılımına dönüştürülür."
+      )
+
+      inventory_file = st.file_uploader(
+          "Tekne Listesi (.xlsx)",
+          type=["xlsx"],
+          key="fleet_inventory_excel",
+      )
+
+      inventory_plan_active = False
+
+      if inventory_file is not None:
+        st.markdown("**Hedef Faz 1 Filo Dağılımı**")
+
+        target_v1_percent = st.number_input(
+            "Tip 1 hedef payı (%)",
+            min_value=0,
+            max_value=100,
+            value=50,
+            step=5,
+            key="inventory_target_v1",
+        )
+        target_v2_percent = st.number_input(
+            "Tip 2 hedef payı (%)",
+            min_value=0,
+            max_value=100,
+            value=30,
+            step=5,
+            key="inventory_target_v2",
+        )
+        target_v3_percent = st.number_input(
+            "Tip 3 hedef payı (%)",
+            min_value=0,
+            max_value=100,
+            value=20,
+            step=5,
+            key="inventory_target_v3",
+        )
+
+        target_total_percent = (
+            target_v1_percent
+            + target_v2_percent
+            + target_v3_percent
+        )
+
+        if target_total_percent != 100:
+          st.error(
+              "Tip 1 + Tip 2 + Tip 3 hedef paylarının toplamı %100 olmalıdır."
+          )
+        else:
+          try:
+            inventory_analysis = load_and_analyze_inventory_excel(
+                inventory_file,
+                target_shares={
+                    "v1": target_v1_percent / 100.0,
+                    "v2": target_v2_percent / 100.0,
+                    "v3": target_v3_percent / 100.0,
+                },
+            )
+          except Exception as exc:
+            st.error(f"Tekne listesi analiz edilemedi: {exc}")
+          else:
+            total_inventory = len(inventory_analysis.recommendations)
+            phase_counts = inventory_analysis.phase_counts
+            target_counts = inventory_analysis.target_fleet.target_counts
+
+            st.success(
+                f"{total_inventory} tekne başarıyla analiz edildi."
+            )
+
+            p1, p2, p3, p4 = st.columns(4)
+            p1.metric(
+                "Faz 1",
+                phase_counts.get("Faz 1", 0),
+                help="Doğrudan elektrikli dönüşüm adayı Yolcu Motorları",
+            )
+            p2.metric(
+                "Faz 2",
+                phase_counts.get("Faz 2", 0),
+                help="Ticari yat ve gezinti/tenezzüh gemileri",
+            )
+            p3.metric(
+                "Faz 3",
+                phase_counts.get("Faz 3", 0),
+                help="Özel tekneler",
+            )
+            p4.metric(
+                "İnceleme",
+                phase_counts.get("Özel İnceleme", 0),
+                help="Mevcut otomatik dönüşüm sınıflarının dışındaki tekneler",
+            )
+
+            st.markdown("**Önerilen Faz 1 Hedef Filosı**")
+            st.caption(
+                f"Tip 1: {target_counts['v1']} tekne · "
+                f"Tip 2: {target_counts['v2']} tekne · "
+                f"Tip 3: {target_counts['v3']} tekne"
+            )
+
+            st.warning(
+                "Finansman varsayımı: Excel dosyasında kooperatif üyeliği "
+                "bulunmadığından aktif envanter planı, Faz 1 filosunu mevcut "
+                "Tip 1/2/3 kooperatif hibe senaryosuna aktarır. Bu yaklaşım "
+                "planlama varsayımıdır; gerçek uygunluk ayrıca doğrulanmalıdır."
+            )
+
+            inventory_plan_active = st.checkbox(
+                "Envanter planını aktif senaryo olarak kullan",
+                value=False,
+                key="inventory_plan_active",
+            )
+
+            if inventory_plan_active:
+              count_v1 = int(target_counts["v1"])
+              count_v2 = int(target_counts["v2"])
+              count_v3 = int(target_counts["v3"])
+
+              # Excel envanteri için kooperatif-dışı statü bilgisi yoktur.
+              # Aynı teknenin iki kez sayılmasını önlemek için manuel v4
+              # hedefleri aktif envanter senaryosunda sıfırlanır.
+              count_v4_24 = 0
+              count_v4_32 = 0
+
+              st.info(
+                  "Aktif filo hedefi Excel envanterinden alınıyor: "
+                  f"Tip 1 = {count_v1}, Tip 2 = {count_v2}, "
+                  f"Tip 3 = {count_v3}. "
+                  "Kooperatif dışı manuel Tip 4 hedefleri bu senaryoda "
+                  "çifte sayımı önlemek için sıfırlandı."
+              )
 
     with st.expander("⚓ Operasyon Profili", expanded=False):
       st.caption(

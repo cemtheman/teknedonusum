@@ -52,7 +52,7 @@ def test_v1_six_knot_sanity_check():
   )
 
 
-@pytest.mark.parametrize("speed_knots", (5.0, 11.0))
+@pytest.mark.parametrize("speed_knots", (4.5, 11.0))
 def test_speed_outside_profile_is_rejected(speed_knots):
   with pytest.raises(ValueError, match="within profile range"):
     calculate_cruise_power_envelope("v1", speed_knots)

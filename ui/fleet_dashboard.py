@@ -133,112 +133,129 @@ def _render_fleet_top_kpis(fleet: FleetResult):
       )
 
 
-def _render_fleet_donut(inputs: SimulationInputs):
+def _vessel_icon_svg(kind, color):
+  if kind == "monohull":
+    return f"""
+    <svg viewBox="0 0 64 40" width="42" height="28" aria-hidden="true">
+      <path d="M8 24h48l-7 9H17z" fill="{color}"/>
+      <path d="M17 19h28l5 5H13z" fill="{color}" opacity="0.9"/>
+      <rect x="24" y="11" width="18" height="8" rx="2" fill="{color}"/>
+      <rect x="28" y="13" width="5" height="4" rx="1" fill="white"/>
+      <rect x="35" y="13" width="5" height="4" rx="1" fill="white"/>
+      <path d="M9 35c7 3 13 3 20 0 7 3 13 3 20 0" fill="none"
+            stroke="{color}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    """
+
+  if kind == "catamaran_32":
+    return f"""
+    <svg viewBox="0 0 64 40" width="44" height="28" aria-hidden="true">
+      <path d="M8 26h20l-5 8H12z" fill="{color}"/>
+      <path d="M36 26h20l-5 8H41z" fill="{color}"/>
+      <path d="M16 20h32l6 6H10z" fill="{color}" opacity="0.92"/>
+      <rect x="22" y="11" width="20" height="9" rx="2" fill="{color}"/>
+      <rect x="25" y="13" width="6" height="4" rx="1" fill="white"/>
+      <rect x="33" y="13" width="6" height="4" rx="1" fill="white"/>
+      <path d="M10 36c6 2 11 2 16 0M38 36c6 2 11 2 16 0" fill="none"
+            stroke="{color}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    """
+
+  return f"""
+  <svg viewBox="0 0 64 40" width="46" height="30" aria-hidden="true">
+    <path d="M6 27h22l-5 8H10z" fill="{color}"/>
+    <path d="M36 27h22l-5 8H41z" fill="{color}"/>
+    <path d="M13 20h38l6 7H7z" fill="{color}" opacity="0.94"/>
+    <rect x="18" y="9" width="28" height="11" rx="2" fill="{color}"/>
+    <rect x="22" y="12" width="6" height="4" rx="1" fill="white"/>
+    <rect x="30" y="12" width="6" height="4" rx="1" fill="white"/>
+    <rect x="38" y="12" width="5" height="4" rx="1" fill="white"/>
+    <path d="M9 37c6 2 11 2 17 0M38 37c6 2 11 2 17 0" fill="none"
+          stroke="{color}" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  """
+
+
+def _fleet_donut_svg(inputs: SimulationInputs):
+  import math
+
   data = build_fleet_distribution_chart_data(inputs)
   nonzero = data[data["Adet"] > 0].copy()
+  total = float(nonzero["Adet"].sum())
 
-  if nonzero.empty:
+  if total <= 0:
+    return ""
+
+  cx = 210
+  cy = 210
+  radius = 132
+  stroke_width = 74
+  circumference = 2 * math.pi * radius
+
+  segments = []
+  labels = []
+  offset = 0.0
+
+  for row in nonzero.to_dict("records"):
+    fraction = row["Adet"] / total
+    dash = fraction * circumference
+    gap = circumference - dash
+    segments.append(
+        (
+            f'<circle cx="{cx}" cy="{cy}" r="{radius}" fill="none" '
+            f'stroke="{row["Renk"]}" stroke-width="{stroke_width}" '
+            f'stroke-dasharray="{dash:.4f} {gap:.4f}" '
+            f'stroke-dashoffset="{-offset:.4f}" '
+            f'transform="rotate(-90 {cx} {cy})" />'
+        )
+    )
+
+    mid_fraction = (offset + dash / 2) / circumference
+    angle = -math.pi / 2 + 2 * math.pi * mid_fraction
+    label_radius = radius
+    x = cx + label_radius * math.cos(angle)
+    y = cy + label_radius * math.sin(angle)
+
+    share = 100.0 * fraction
+    labels.append(
+        f'<text x="{x:.1f}" y="{y - 7:.1f}" text-anchor="middle" '
+        f'font-size="19" font-weight="800" fill="white" '
+        f'stroke="#0F172A" stroke-width="0.5" paint-order="stroke">'
+        f'{row["Kod"]}</text>'
+    )
+    labels.append(
+        f'<text x="{x:.1f}" y="{y + 15:.1f}" text-anchor="middle" '
+        f'font-size="17" font-weight="800" fill="white" '
+        f'stroke="#0F172A" stroke-width="0.45" paint-order="stroke">'
+        f'{int(row["Adet"])} · %{share:.1f}</text>'
+    )
+
+    offset += dash
+
+  total_int = int(total)
+  return (
+      '<div style="display:flex;justify-content:center;width:100%;">'
+      '<svg viewBox="0 0 420 420" '
+      'style="width:100%;max-width:430px;height:auto;overflow:visible;" '
+      'role="img" aria-label="Filo kompozisyonu donut grafiği">'
+      + "".join(segments)
+      + "".join(labels)
+      + f'<text x="{cx}" y="{cy - 3}" text-anchor="middle" '
+        'font-size="44" font-weight="850" fill="#0F172A">'
+        f'{total_int}</text>'
+      + f'<text x="{cx}" y="{cy + 29}" text-anchor="middle" '
+        'font-size="17" font-weight="700" fill="#475569">'
+        'Toplam Tekne</text>'
+      + '</svg></div>'
+  )
+
+
+def _render_fleet_donut(inputs: SimulationInputs):
+  html = _fleet_donut_svg(inputs)
+  if not html:
     st.info("Filo dağılımı için en az bir tekne adedi girilmelidir.")
     return
-
-  st.vega_lite_chart(
-      nonzero,
-      {
-          "height": 410,
-          "layer": [
-              {
-                  "mark": {
-                      "type": "arc",
-                      "innerRadius": 96,
-                      "outerRadius": 178,
-                      "cornerRadius": 2,
-                      "stroke": "white",
-                      "strokeWidth": 3,
-                  },
-                  "encoding": {
-                      "theta": {
-                          "field": "Adet",
-                          "type": "quantitative",
-                          "stack": True,
-                      },
-                      "order": {
-                          "field": "Sıra",
-                          "type": "ordinal",
-                          "sort": "ascending",
-                      },
-                      "color": {
-                          "field": "Kod",
-                          "type": "nominal",
-                          "scale": {
-                              "domain": ["K1", "K2", "K3", "D1", "D2"],
-                              "range": [
-                                  "#0F766E",
-                                  "#22C55E",
-                                  "#F59E0B",
-                                  "#2563EB",
-                                  "#7C3AED",
-                              ],
-                          },
-                          "legend": None,
-                      },
-                      "tooltip": [
-                          {"field": "Kod", "type": "nominal", "title": "Kod"},
-                          {
-                              "field": "Tekne Türü",
-                              "type": "nominal",
-                              "title": "Tekne türü",
-                          },
-                          {
-                              "field": "Statü",
-                              "type": "nominal",
-                              "title": "Statü",
-                          },
-                          {
-                              "field": "Adet",
-                              "type": "quantitative",
-                              "title": "Adet",
-                          },
-                          {
-                              "field": "Pay (%)",
-                              "type": "quantitative",
-                              "title": "Pay (%)",
-                              "format": ".1f",
-                          },
-                      ],
-                  },
-              },
-              {
-                  "mark": {
-                      "type": "text",
-                      "radius": 137,
-                      "fontSize": 17,
-                      "fontWeight": 800,
-                      "color": "white",
-                      "stroke": "#0F172A",
-                      "strokeWidth": 0.4,
-                  },
-                  "encoding": {
-                      "theta": {
-                          "field": "Adet",
-                          "type": "quantitative",
-                          "stack": True,
-                      },
-                      "order": {
-                          "field": "Sıra",
-                          "type": "ordinal",
-                          "sort": "ascending",
-                      },
-                      "text": {
-                          "field": "Etiket",
-                          "type": "nominal",
-                      },
-                  },
-              },
-          ],
-          "view": {"stroke": None},
-      },
-      use_container_width=True,
-  )
+  st.markdown(html, unsafe_allow_html=True)
 
 
 def _legend_card(row):
@@ -299,9 +316,21 @@ def _summary_table_html(inputs: SimulationInputs):
   total = int(summary["Toplam"].sum())
 
   row_styles = [
-      {"color": "#0F766E", "bg": "#ECFDF5", "icon": "🚤"},
-      {"color": "#22C55E", "bg": "#F0FDF4", "icon": "⛴️"},
-      {"color": "#F59E0B", "bg": "#FFFBEB", "icon": "🛳️"},
+      {
+          "color": "#0F766E",
+          "bg": "#ECFDF5",
+          "kind": "monohull",
+      },
+      {
+          "color": "#22C55E",
+          "bg": "#F0FDF4",
+          "kind": "catamaran_32",
+      },
+      {
+          "color": "#F59E0B",
+          "bg": "#FFFBEB",
+          "kind": "catamaran_54",
+      },
   ]
 
   html = [
@@ -318,16 +347,15 @@ def _summary_table_html(inputs: SimulationInputs):
 
   for index, row in summary.iterrows():
     style = row_styles[index]
+    icon = _vessel_icon_svg(style["kind"], style["color"])
     html.extend([
         '<tr style="border-top:1px solid #E2E8F0;">',
         (
             '<td style="text-align:left;padding:12px 10px;color:#0F172A;">'
             '<div style="display:flex;align-items:center;gap:9px;">'
-            f'<span style="width:34px;height:34px;border-radius:9px;'
-            f'background:{style["bg"]};color:{style["color"]};'
-            'display:inline-flex;align-items:center;justify-content:center;'
-            'font-size:1.15rem;flex:0 0 34px;">'
-            f'{style["icon"]}</span>'
+            f'<span style="width:52px;height:38px;border-radius:9px;'
+            f'background:{style["bg"]};display:inline-flex;align-items:center;'
+            f'justify-content:center;flex:0 0 52px;">{icon}</span>'
             '<span style="font-weight:750;line-height:1.25;">'
             f'{row["Tekne Türü"]}</span>'
             '</div></td>'

@@ -56,23 +56,6 @@ def test_type_summary_merges_matching_vessel_types():
   assert list(summary["Kooperatif Dışı"]) == [30, 20, 0]
 
 
-def test_final_fleet_dashboard_visual_contract():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert "_render_fleet_top_kpis" in source
-  assert "_render_fleet_donut" in source
-  assert "_render_fleet_legend" in source
-  assert "_summary_table_html" in source
-  assert "_render_membership_kpis" in source
-  assert "Grafik Anahtarı" in source
-  assert "Tekne Tiplerine Göre Özet" in source
-  assert '"outerRadius": 178' in source
-  assert '"fontSize": 17' in source
-
-
-def test_donut_text_and_arc_layers_share_same_explicit_order():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert '"field": "Sıra"' in source
-  assert source.count('"field": "Sıra"') >= 2
 
 
 def test_summary_table_html_is_renderable_not_markdown_code():
@@ -81,9 +64,44 @@ def test_summary_table_html_is_renderable_not_markdown_code():
   assert '<table style=' in source
 
 
-def test_vessel_type_summary_restores_visual_boat_icons():
+
+def test_donut_is_svg_with_center_total_and_stable_labels():
   source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert '"icon": "🚤"' in source
-  assert '"icon": "⛴️"' in source
-  assert '"icon": "🛳️"' in source
-  assert 'width:34px;height:34px;border-radius:9px' in source
+  assert "def _fleet_donut_svg(" in source
+  assert "Toplam Tekne" in source
+  assert "stroke-dasharray" in source
+  assert "st.vega_lite_chart(" not in source
+
+
+def test_summary_uses_distinct_svg_vessel_icons():
+  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+  assert 'kind == "monohull"' in source
+  assert 'kind == "catamaran_32"' in source
+  assert "catamaran_54" in source
+  assert "<svg viewBox=" in source
+
+def test_final_fleet_dashboard_visual_contract_svg():
+  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+
+  assert "_render_fleet_top_kpis" in source
+  assert "_render_fleet_donut" in source
+  assert "_render_fleet_legend" in source
+  assert "_summary_table_html" in source
+  assert "_render_membership_kpis" in source
+  assert "Grafik Anahtarı" in source
+  assert "Tekne Tiplerine Göre Özet" in source
+
+  assert "def _fleet_donut_svg(" in source
+  assert "stroke-dasharray" in source
+  assert "Toplam Tekne" in source
+  assert "st.vega_lite_chart(" not in source
+
+
+def test_summary_table_uses_distinct_svg_vessel_icons():
+  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+
+  assert 'kind == "monohull"' in source
+  assert 'kind == "catamaran_32"' in source
+  assert "catamaran_54" in source
+  assert "<svg viewBox=" in source
+  assert "width:52px;height:38px;border-radius:9px" in source

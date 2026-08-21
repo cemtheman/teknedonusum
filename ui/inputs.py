@@ -9,6 +9,7 @@ from config.solar_assumptions import (
     DEFAULT_LONGITUDE,
 )
 from models.inputs import SimulationInputs
+from services.location_geocoding import geocode_location
 from services.solar_resource import build_season_solar_resource
 from ui.formatting import format_integer_tr
 
@@ -97,42 +98,66 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
         min_value=3.0, max_value=30.0, value=3.50, step=0.5,
     )
 
-    st.subheader("☀️ Lokasyon, Solar Sezon ve Operasyon")
+    st.subheader("☀️ Lokasyon ve Sezon")
     st.caption(
-        "Solar sezon tarih aralığıyla tanımlanır. Operasyon günü sayısı sezon "
-        "uzunluğundan ayrıdır ve seçilen dönemde kaç gün rota yapıldığını belirtir."
+        "Lokasyon solar kaynak koordinatlarını belirler. Sezon süresi, başlangıç "
+        "ve bitiş tarihleri arasındaki takvim günlerinden otomatik hesaplanır."
     )
+
+    if "solar_latitude" not in st.session_state:
+      st.session_state["solar_latitude"] = float(DEFAULT_LATITUDE)
+    if "solar_longitude" not in st.session_state:
+      st.session_state["solar_longitude"] = float(DEFAULT_LONGITUDE)
+
     location_name = st.text_input("Lokasyon", value=DEFAULT_LOCATION_NAME)
+    if st.button("Lokasyonu Çözümle", use_container_width=True):
+      try:
+        resolved_name, resolved_latitude, resolved_longitude = geocode_location(
+            location_name
+        )
+      except Exception as exc:
+        st.error(f"Lokasyon çözümlenemedi: {exc}")
+      else:
+        st.session_state["solar_latitude"] = resolved_latitude
+        st.session_state["solar_longitude"] = resolved_longitude
+        st.caption(f"Çözümlenen lokasyon: {resolved_name}")
+
     latitude = st.number_input(
-        "Enlem", min_value=-90.0, max_value=90.0,
-        value=float(DEFAULT_LATITUDE), step=0.0001, format="%.4f",
+        "Enlem",
+        min_value=-90.0,
+        max_value=90.0,
+        step=0.0001,
+        format="%.4f",
+        key="solar_latitude",
     )
     longitude = st.number_input(
-        "Boylam", min_value=-180.0, max_value=180.0,
-        value=float(DEFAULT_LONGITUDE), step=0.0001, format="%.4f",
+        "Boylam",
+        min_value=-180.0,
+        max_value=180.0,
+        step=0.0001,
+        format="%.4f",
+        key="solar_longitude",
     )
+
     season_start = st.date_input(
-        "Solar sezon başlangıcı", value=date(2026, 4, 1), format="DD.MM.YYYY"
+        "Sezon Başlangıcı", value=date(2026, 4, 1), format="DD.MM.YYYY"
     )
     season_end = st.date_input(
-        "Solar sezon bitişi", value=date(2026, 9, 30), format="DD.MM.YYYY"
+        "Sezon Bitişi", value=date(2026, 9, 30), format="DD.MM.YYYY"
     )
     if season_end < season_start:
-      st.error("Solar sezon bitiş tarihi başlangıç tarihinden önce olamaz.")
+      st.error("Sezon bitiş tarihi başlangıç tarihinden önce olamaz.")
       st.stop()
 
     season_days = (season_end - season_start).days + 1
-    operating_days = st.number_input(
-        "Sezonluk planlanan operasyon / rota günü",
+    st.number_input(
+        "Sezon Süresi (gün)",
         min_value=1,
-        max_value=season_days,
-        value=min(150, season_days),
+        value=season_days,
         step=1,
-        help=(
-            "Solar sezonun takvim uzunluğu değildir. Seçilen tarih aralığında "
-            "kaç gün 35 NM gibi tanımlı günlük rotanın yapılacağını belirtir."
-        ),
+        disabled=True,
     )
+    operating_days = season_days
 
     try:
       solar_resource = build_season_solar_resource(

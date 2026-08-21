@@ -17,3 +17,5 @@ htmlcov/
 .venv/
 venv/
 env/
+# macOS
+.DS_Store

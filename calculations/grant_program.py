@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from itertools import groupby
 
 
 GEKA_PRIORITY = {
@@ -63,24 +64,42 @@ def calculate_first_year_grant_program(
       ),
   )
 
-  for key in ordered_types:
-    per_vessel_grant = float(grants_per_type[key])
-    if per_vessel_grant <= 0:
-      continue
+  stop_after_priority = False
 
-    affordable = int(remaining // per_vessel_grant)
-    funded = min(int(counts[key]), affordable)
-    if funded <= 0:
-      continue
+  for priority, grouped in groupby(
+      ordered_types,
+      key=lambda key: GEKA_PRIORITY.get(key, 999),
+  ):
+    priority_keys = list(grouped)
 
-    funded_by_type[key] = funded
-    grant_amount = funded * per_vessel_grant
-    allocated += grant_amount
-    remaining -= grant_amount
+    for key in priority_keys:
+      per_vessel_grant = float(grants_per_type[key])
+      if per_vessel_grant <= 0:
+        continue
 
-    total_cost = float(vessel_specs[key]["totalCost"])
-    unlocked_investment += funded * total_cost
-    owner_equity += funded * (total_cost - per_vessel_grant)
+      requested = int(counts[key])
+      if requested <= 0:
+        continue
+
+      affordable = int(remaining // per_vessel_grant)
+      funded = min(requested, affordable)
+
+      if funded > 0:
+        funded_by_type[key] = funded
+        grant_amount = funded * per_vessel_grant
+        allocated += grant_amount
+        remaining -= grant_amount
+
+        total_cost = float(vessel_specs[key]["totalCost"])
+        unlocked_investment += funded * total_cost
+        owner_equity += funded * (total_cost - per_vessel_grant)
+
+      if funded < requested:
+        stop_after_priority = True
+        break
+
+    if stop_after_priority:
+      break
 
   funded_vessels = sum(funded_by_type.values())
   budget_coverage_ratio = (

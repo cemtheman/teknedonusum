@@ -48,8 +48,10 @@ def render_grant_program(vessel_specs, inputs, fleet):
       "eş-finansman ve harcama kuralları bu ekranda ayrı ayrı uygulanmaz."
   )
   st.caption(
-      "Tahsis sırası mevcut program önceliği varsayımını izler; aynı öncelik "
-      "seviyesinde daha düşük tekne-başı hibe ihtiyacı önce finanse edilir."
+      "Tahsis sırası mevcut program önceliği varsayımını izler; yüksek "
+      "öncelikli grup tamamlanmadan daha düşük öncelik seviyesine geçilmez. "
+      "Aynı öncelik seviyesinde daha düşük tekne-başı hibe ihtiyacı önce "
+      "finanse edilir."
   )
 
   c1, c2, c3, c4, c5 = st.columns(5)

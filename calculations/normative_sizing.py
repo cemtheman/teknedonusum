@@ -3,6 +3,9 @@
 from calculations.battery_capacity_envelope import (
     calculate_route_based_battery_capacity_envelope,
 )
+from calculations.continuous_cruise_envelope import (
+    calculate_continuous_cruise_envelope,
+)
 from calculations.cruise_power import calculate_cruise_power_envelope
 from calculations.power_envelope import (
     interpolate_installed_mechanical_power_envelope,
@@ -14,10 +17,8 @@ from calculations.route_energy import (
     calculate_route_propulsion_energy_envelope,
 )
 from config.normative_power_envelopes import NORMATIVE_POWER_ENVELOPES
-from models.normative_sizing import NormativeSizingResult
-
-from calculations.continuous_cruise_envelope import calculate_v1_continuous_cruise_envelope
 from models.cruise_power import CruisePowerEnvelopeResult
+from models.normative_sizing import NormativeSizingResult
 
 
 def calculate_normative_sizing(
@@ -34,12 +35,16 @@ def calculate_normative_sizing(
       profile,
       selected_speed_knots,
   )
-  if vessel_id == "v1" and 5.0 <= selected_speed_knots <= 6.0:
-    minimum, reference, maximum = calculate_v1_continuous_cruise_envelope(selected_speed_knots)
+
+  if 5.0 <= selected_speed_knots <= 6.0:
+    minimum, reference, maximum = calculate_continuous_cruise_envelope(
+        vessel_id,
+        selected_speed_knots,
+    )
     cruise_power = CruisePowerEnvelopeResult(
         vessel_id=vessel_id,
         speed_knots=selected_speed_knots,
-        speed_power_exponent=1.0,  # compatibility field only; not used in this path
+        speed_power_exponent=1.0,  # compatibility field only; unused here
         min_cruise_mechanical_power_kw=minimum.shaft_power_kw,
         reference_cruise_mechanical_power_kw=reference.shaft_power_kw,
         max_cruise_mechanical_power_kw=maximum.shaft_power_kw,
@@ -49,7 +54,10 @@ def calculate_normative_sizing(
         max_cruise_electrical_power_kw=maximum.electrical_input_power_kw,
     )
   else:
-    cruise_power = calculate_cruise_power_envelope(vessel_id, selected_speed_knots)
+    cruise_power = calculate_cruise_power_envelope(
+        vessel_id,
+        selected_speed_knots,
+    )
 
   route_energy = calculate_route_propulsion_energy_envelope(
       cruise_power,

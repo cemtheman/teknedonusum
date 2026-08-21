@@ -213,6 +213,40 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "kWh/kWp-gün"
       )
 
+    with st.expander("🎯 Hibe Programı Bütçeleri", expanded=False):
+      st.caption(
+          "Dört ana kaynağın ilk yıl için programa ayrılabilecek toplam hibe "
+          "bütçesini TL olarak girin."
+      )
+      grant_budget_ministry_tl = st.number_input(
+          "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı (TL)",
+          min_value=0,
+          max_value=5_000_000_000,
+          value=0,
+          step=1_000_000,
+      )
+      grant_budget_geka_tl = st.number_input(
+          "GEKA (TL)",
+          min_value=0,
+          max_value=5_000_000_000,
+          value=0,
+          step=1_000_000,
+      )
+      grant_budget_yikob_tl = st.number_input(
+          "YİKOB (TL)",
+          min_value=0,
+          max_value=5_000_000_000,
+          value=0,
+          step=1_000_000,
+      )
+      grant_budget_zero_waste_tl = st.number_input(
+          "Sıfır Atık Vakfı (TL)",
+          min_value=0,
+          max_value=5_000_000_000,
+          value=0,
+          step=1_000_000,
+      )
+
   return SimulationInputs(
       count_v1=count_v1,
       count_v2=count_v2,
@@ -242,4 +276,8 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       ),
       solar_resource_source=solar_resource.source,
       sun_hours=None,
+      grant_budget_ministry_tl=grant_budget_ministry_tl,
+      grant_budget_geka_tl=grant_budget_geka_tl,
+      grant_budget_yikob_tl=grant_budget_yikob_tl,
+      grant_budget_zero_waste_tl=grant_budget_zero_waste_tl,
   )

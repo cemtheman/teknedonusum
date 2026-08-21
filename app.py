@@ -17,6 +17,7 @@ from ui.branding import (
     render_brand_header,
 )
 from ui.fleet_dashboard import render_fleet_dashboard
+from ui.grant_program import render_grant_program
 from ui.inputs import render_sidebar
 from ui.normative_comparison import render_normative_comparison_section
 from ui.scenario_overview import render_scenario_overview
@@ -86,6 +87,8 @@ def main():
   render_scenario_overview(inputs)
 
   render_fleet_dashboard(vessel_specs, inputs, fleet)
+
+  render_grant_program(vessel_specs, inputs, fleet)
 
   render_normative_comparison_section(
       vessel_specs,

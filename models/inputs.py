@@ -29,3 +29,7 @@ class SimulationInputs:
   solar_resource_source: str
   # Transitional compatibility only; primary UI no longer exposes it.
   sun_hours: float | None = None
+  grant_budget_ministry_tl: float = 0.0
+  grant_budget_geka_tl: float = 0.0
+  grant_budget_yikob_tl: float = 0.0
+  grant_budget_zero_waste_tl: float = 0.0

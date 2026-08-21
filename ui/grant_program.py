@@ -1,0 +1,149 @@
+import pandas as pd
+import streamlit as st
+
+from calculations.grant_program import calculate_first_year_grant_program
+from ui.formatting import format_integer_tr
+
+
+TYPE_LABELS = {
+    "v1": "12 m Tek Gövdeli · 24 yolcu",
+    "v2": "13,5 m Katamaran · 32 yolcu",
+    "v3": "14 m Katamaran · 54 yolcu",
+    "v4_24": "12 m Tek Gövdeli · 24 yolcu · Kooperatif Dışı",
+    "v4_32": "13,5 m Katamaran · 32 yolcu · Kooperatif Dışı",
+}
+
+PRIORITY_LABELS = {
+    "v3": "1",
+    "v2": "2",
+    "v1": "3",
+    "v4_24": "4",
+    "v4_32": "4",
+}
+
+
+def render_grant_program(vessel_specs, inputs, fleet):
+  counts = {
+      "v1": inputs.count_v1,
+      "v2": inputs.count_v2,
+      "v3": inputs.count_v3,
+      "v4_24": inputs.count_v4_24,
+      "v4_32": inputs.count_v4_32,
+  }
+
+  result = calculate_first_year_grant_program(
+      vessel_specs,
+      counts,
+      fleet.grants_per_type,
+      ministry_budget_tl=inputs.grant_budget_ministry_tl,
+      geka_budget_tl=inputs.grant_budget_geka_tl,
+      yikob_budget_tl=inputs.grant_budget_yikob_tl,
+      zero_waste_budget_tl=inputs.grant_budget_zero_waste_tl,
+  )
+
+  st.subheader("🎯 İlk Yıl Hibe Programı")
+  st.caption(
+      "Dört kaynak tek bir ilk-yıl hibe havuzu olarak değerlendirilir. "
+      "Tahsis GEKA öncelik sırasını izler; aynı öncelikte daha düşük tekne-başı "
+      "hibe ihtiyacı önce finanse edilir."
+  )
+
+  c1, c2, c3, c4 = st.columns(4)
+  with c1:
+    st.metric(
+        "Toplam Yıllık Hibe Bütçesi",
+        f"₺{format_integer_tr(result.total_annual_budget_tl)}",
+    )
+  with c2:
+    st.metric(
+        "Toplam Hibe İhtiyacı Karşılama",
+        f"%{result.coverage_ratio * 100:.1f}",
+    )
+  with c3:
+    st.metric(
+        "İlk Yıl Finanse Edilebilir",
+        f"{result.funded_vessels} tekne",
+    )
+  with c4:
+    st.metric(
+        "Tahsis Sonrası Kalan",
+        f"₺{format_integer_tr(result.remaining_budget_tl)}",
+    )
+
+  source_df = pd.DataFrame({
+      "Hibe Kaynağı": [
+          "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı",
+          "GEKA",
+          "YİKOB",
+          "Sıfır Atık Vakfı",
+          "TOPLAM",
+      ],
+      "Yıllık Bütçe (TL)": [
+          inputs.grant_budget_ministry_tl,
+          inputs.grant_budget_geka_tl,
+          inputs.grant_budget_yikob_tl,
+          inputs.grant_budget_zero_waste_tl,
+          result.total_annual_budget_tl,
+      ],
+  })
+  source_df["Yıllık Bütçe (TL)"] = source_df["Yıllık Bütçe (TL)"].map(
+      lambda value: f"₺{format_integer_tr(value)}"
+  )
+
+  allocation_rows = []
+  for key in ("v3", "v2", "v1", "v4_24", "v4_32"):
+    funded = result.funded_by_type[key]
+    requested = counts[key]
+    allocation_rows.append({
+        "GEKA Önceliği": PRIORITY_LABELS[key],
+        "Tekne Türü": TYPE_LABELS[key],
+        "Hedef": requested,
+        "İlk Yıl": funded,
+        "Kalan": requested - funded,
+        "Tekne Başı Hibe": (
+            f"₺{format_integer_tr(fleet.grants_per_type[key])}"
+        ),
+    })
+
+  allocation_df = pd.DataFrame(allocation_rows)
+
+  left, right = st.columns([0.36, 0.64], vertical_alignment="top")
+  with left:
+    st.markdown("**Yıllık Kaynak Bütçeleri**")
+    st.dataframe(source_df, hide_index=True, use_container_width=True)
+
+    st.markdown(
+        f'''
+        <div style="border:1px solid #D1FAE5;background:#ECFDF5;
+                    border-radius:12px;padding:14px 16px;margin-top:8px;">
+          <div style="font-size:0.78rem;color:#047857;font-weight:700;">
+            İlk Yıl Harekete Geçen Toplam Yatırım
+          </div>
+          <div style="font-size:1.35rem;color:#065F46;font-weight:850;">
+            ₺{format_integer_tr(result.unlocked_investment_tl)}
+          </div>
+          <div style="font-size:0.76rem;color:#047857;margin-top:5px;">
+            Gerekli tekne sahibi özkaynağı:
+            ₺{format_integer_tr(result.required_owner_equity_tl)}
+          </div>
+        </div>
+        ''',
+        unsafe_allow_html=True,
+    )
+
+  with right:
+    st.markdown("**GEKA Önceliğine Göre İlk Yıl Tahsisi**")
+    st.dataframe(
+        allocation_df,
+        hide_index=True,
+        use_container_width=True,
+    )
+
+  if result.total_annual_budget_tl <= 0:
+    st.info(
+        "İlk yıl hibe bütçeleri henüz girilmedi. Sol paneldeki "
+        "'Hibe Programı Bütçeleri' bölümünden dört kaynağın yıllık "
+        "bütçesini girin."
+    )
+
+  st.divider()

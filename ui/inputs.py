@@ -222,7 +222,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı (TL)",
           min_value=0,
           max_value=5_000_000_000,
-          value=0,
+          value=200_000_000,
           step=1_000_000,
       )
       grant_budget_geka_tl = st.number_input(
@@ -236,14 +236,14 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "YİKOB (TL)",
           min_value=0,
           max_value=5_000_000_000,
-          value=0,
+          value=100_000_000,
           step=1_000_000,
       )
       grant_budget_zero_waste_tl = st.number_input(
           "Sıfır Atık Vakfı (TL)",
           min_value=0,
           max_value=5_000_000_000,
-          value=0,
+          value=100_000_000,
           step=1_000_000,
       )
 

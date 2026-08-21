@@ -24,11 +24,11 @@ def render_brand_header():
           <div style="font-size:2rem;font-weight:750;color:#0A2B55;line-height:1.05;">
             Sessiz Akım
           </div>
-          <div style="font-size:0.92rem;font-weight:600;letter-spacing:0.16em;
-                      color:#2E7D57;margin-top:4px;">
-            QUIET CURRENT
+          <div style="font-size:2rem;font-weight:750;color:#2E7D57;
+                      line-height:1.05;margin-top:4px;">
+            Quiet Current
           </div>
-          <div style="font-size:0.92rem;color:#4B5563;margin-top:8px;">
+          <div style="font-size:0.92rem;color:#4B5563;margin-top:10px;">
             Köyceğiz–Dalyan elektrikli tekne dönüşümü için teknik ve ekonomik
             ön değerlendirme platformu
           </div>
@@ -40,13 +40,24 @@ def render_brand_header():
 
 
 def render_sidebar_brand():
-  st.image(str(BRAND_LOGO_PATH), width=150)
+  left, logo_col, right = st.columns([1, 2, 1])
+
+  with logo_col:
+    st.image(
+        str(BRAND_LOGO_PATH),
+        use_container_width=True,
+    )
+
   st.markdown(
       """
       <div style="text-align:center;margin-top:-12px;margin-bottom:12px;">
-        <div style="font-size:1.15rem;font-weight:750;color:#0A2B55;">Sessiz Akım</div>
+        <div style="font-size:1.15rem;font-weight:750;color:#0A2B55;">
+          Sessiz Akım
+        </div>
         <div style="font-size:0.70rem;font-weight:650;letter-spacing:0.14em;
-                    color:#2E7D57;">QUIET CURRENT</div>
+                    color:#2E7D57;">
+          QUIET CURRENT
+        </div>
       </div>
       """,
       unsafe_allow_html=True,

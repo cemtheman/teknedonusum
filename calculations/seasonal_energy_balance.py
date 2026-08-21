@@ -1,6 +1,6 @@
 """Hourly solar-first propulsion and battery-SOC simulation."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from models.seasonal_energy_balance import SeasonalVesselEnergyBalance
 
@@ -29,12 +29,7 @@ def simulate_seasonal_vessel_energy(
     charge_efficiency=0.95,
     discharge_efficiency=0.95,
 ):
-  """Simulate one vessel over every calendar day in the selected season.
-
-  Solar feeds propulsion first during route hours. Solar surplus and all solar
-  outside route hours charge the battery. Battery supplies only the propulsion
-  deficit. Shore energy appears only when the battery reaches its reserve floor.
-  """
+  """Simulate one vessel over every calendar day in the selected season."""
   if season_end < season_start:
     raise ValueError("season_end must not be before season_start")
   if installed_pv_kwp < 0 or propulsion_power_kw < 0:
@@ -60,7 +55,9 @@ def simulate_seasonal_vessel_energy(
   season_solar = 0.0
   direct_solar = 0.0
   battery_discharge = 0.0
+  battery_storage_withdrawal = 0.0
   battery_charge = 0.0
+  solar_to_battery_input = 0.0
   curtailed_solar = 0.0
   shore_energy = 0.0
   solar_only_hours = 0.0
@@ -107,7 +104,11 @@ def simulate_seasonal_vessel_energy(
           available_to_bus,
       )
       if battery_to_propulsion_kwh > 0:
-        soc -= battery_to_propulsion_kwh / discharge_efficiency
+        storage_withdrawal_kwh = (
+            battery_to_propulsion_kwh / discharge_efficiency
+        )
+        soc -= storage_withdrawal_kwh
+        battery_storage_withdrawal += storage_withdrawal_kwh
       battery_discharge += battery_to_propulsion_kwh
 
       shore_energy += max(
@@ -138,6 +139,7 @@ def simulate_seasonal_vessel_energy(
           if charge_efficiency > 0
           else 0.0
       )
+      solar_to_battery_input += solar_used_for_charge_bus_kwh
       curtailed_solar += max(
           0.0,
           solar_for_charge_bus_kwh - solar_used_for_charge_bus_kwh,
@@ -152,10 +154,14 @@ def simulate_seasonal_vessel_energy(
       solar_direct_to_propulsion_kwh=direct_solar,
       battery_discharge_to_propulsion_kwh=battery_discharge,
       battery_charge_from_solar_kwh=battery_charge,
+      solar_to_battery_input_kwh=solar_to_battery_input,
+      battery_storage_withdrawal_kwh=battery_storage_withdrawal,
       curtailed_solar_kwh=curtailed_solar,
       shore_energy_kwh=shore_energy,
       initial_soc_kwh=max_soc,
       final_soc_kwh=soc,
       minimum_soc_kwh=minimum_soc,
       solar_only_propulsion_hours=solar_only_hours,
+      charge_efficiency=charge_efficiency,
+      discharge_efficiency=discharge_efficiency,
   )

@@ -14,6 +14,10 @@ def _format_decimal_tr(value):
   return f"{value:.1f}".replace(".", ",")
 
 
+def _format_decimal_tr_3(value):
+  return f"{value:.3f}".replace(".", ",")
+
+
 def _render_v1_hourly_energy_diagnostics(
     spec,
     inputs,
@@ -41,22 +45,34 @@ def _render_v1_hourly_energy_diagnostics(
   energy_df = pd.DataFrame({
       "Enerji Akışı": [
           "Kurulu PV Gücü",
+          "PVGIS Saatlik Sezonluk Üretim",
           "Sezonluk Tahrik Enerjisi",
           "PV → Doğrudan Tahrik",
+          "PV → Batarya Girişi (şarj öncesi)",
           "PV → Batarya (depolanan)",
+          "Şarj Dönüşüm Kaybı",
+          "Batarya İçinden Çekilen Enerji",
           "Batarya → Tahrik",
+          "Deşarj Dönüşüm Kaybı",
           "Kullanılamayan / Fazla PV",
           "Sezonluk Kıyı Şarjı",
+          "Terminal SOC Düzeltmeli Kıyı Enerjisi",
           "Solar-Only Seyir Süresi",
       ],
       "Değer": [
           f"{_format_decimal_tr(installed_pv_kwp(spec))} kWp",
+          f"{_format_decimal_tr(energy.season_solar_generation_kwh)} kWh",
           f"{_format_decimal_tr(energy.season_propulsion_kwh)} kWh",
           f"{_format_decimal_tr(energy.solar_direct_to_propulsion_kwh)} kWh",
+          f"{_format_decimal_tr(energy.solar_to_battery_input_kwh)} kWh",
           f"{_format_decimal_tr(energy.battery_charge_from_solar_kwh)} kWh",
+          f"{_format_decimal_tr(energy.charge_conversion_loss_kwh)} kWh",
+          f"{_format_decimal_tr(energy.battery_storage_withdrawal_kwh)} kWh",
           f"{_format_decimal_tr(energy.battery_discharge_to_propulsion_kwh)} kWh",
+          f"{_format_decimal_tr(energy.discharge_conversion_loss_kwh)} kWh",
           f"{_format_decimal_tr(energy.curtailed_solar_kwh)} kWh",
           f"{_format_decimal_tr(energy.shore_energy_kwh)} kWh",
+          f"{_format_decimal_tr(energy.normalized_shore_energy_kwh)} kWh",
           f"{_format_decimal_tr(energy.solar_only_propulsion_hours)} saat",
       ],
   })
@@ -68,15 +84,50 @@ def _render_v1_hourly_energy_diagnostics(
           "Sezon Minimum SOC",
           "Sezon Sonu SOC",
           "Başlangıç → Son SOC Farkı",
+          "Terminal SOC Açığı",
+          "Terminal SOC Geri Kazanım Kıyı Enerjisi",
       ],
       "kWh": [
           _format_decimal_tr(energy.initial_soc_kwh),
           _format_decimal_tr(energy.minimum_soc_kwh),
           _format_decimal_tr(energy.final_soc_kwh),
           _format_decimal_tr(energy.final_soc_kwh - energy.initial_soc_kwh),
+          _format_decimal_tr(energy.terminal_soc_deficit_kwh),
+          _format_decimal_tr(energy.terminal_soc_recovery_shore_kwh),
       ],
   })
   st.table(soc_df)
+
+  balance_df = pd.DataFrame({
+      "Enerji Korunumu Kontrolü": [
+          "PV denge hatası",
+          "Tahrik denge hatası",
+          "Batarya denge hatası",
+      ],
+      "kWh": [
+          _format_decimal_tr_3(energy.pv_balance_error_kwh),
+          _format_decimal_tr_3(energy.propulsion_balance_error_kwh),
+          _format_decimal_tr_3(energy.battery_balance_error_kwh),
+      ],
+  })
+  st.table(balance_df)
+
+  tolerance_kwh = 0.01
+  balances_ok = all(
+      abs(value) <= tolerance_kwh
+      for value in (
+          energy.pv_balance_error_kwh,
+          energy.propulsion_balance_error_kwh,
+          energy.battery_balance_error_kwh,
+      )
+  )
+  if balances_ok:
+    st.success("PV, tahrik ve batarya enerji dengeleri kapanıyor.")
+  else:
+    st.error(
+        "Enerji korunumu kontrolü kapanmıyor. Bu sonuç mühendislik çıktısı "
+        "olarak kullanılmamalıdır."
+    )
 
   soc_delta = energy.final_soc_kwh - energy.initial_soc_kwh
   if abs(soc_delta) <= 0.5:
@@ -87,7 +138,8 @@ def _render_v1_hourly_energy_diagnostics(
   else:
     st.warning(
         "Sezon başlangıç ve son SOC seviyeleri arasında belirgin fark var. "
-        "Kıyı enerjisi yorumlanırken bu SOC farkı ayrıca dikkate alınmalıdır."
+        "Bu nedenle ham kıyı enerjisinin yanında terminal SOC düzeltmeli "
+        "kıyı enerjisi esas alınmalıdır."
     )
 
 
@@ -119,7 +171,10 @@ def render_vessel_details(
 
       kpi1, kpi2, kpi3, kpi4 = st.columns(4)
       with kpi1:
-        st.metric("Net Özkaynak CAPEX", f"₺{format_integer_tr(detail.net_capex_tl)}")
+        st.metric(
+            "Net Özkaynak CAPEX",
+            f"₺{format_integer_tr(detail.net_capex_tl)}",
+        )
       with kpi2:
         st.metric(
             "Sezonluk Net Tasarruf",
@@ -128,7 +183,8 @@ def render_vessel_details(
       with kpi3:
         st.metric(
             "Özkaynak Amortisman (ROI)",
-            f"{detail.payback_seasons:.1f} Sezon ({int(detail.payback_months)} Ay)",
+            f"{detail.payback_seasons:.1f} Sezon "
+            f"({int(detail.payback_months)} Ay)",
         )
       with kpi4:
         st.metric(
@@ -167,7 +223,8 @@ def render_vessel_details(
         opex_df = pd.DataFrame({
             "Gider Kalemi": [
                 (
-                    f"Eski Tekne Yakıt Gideri ({inputs.cruise_speed:.1f} kt / "
+                    f"Eski Tekne Yakıt Gideri "
+                    f"({inputs.cruise_speed:.1f} kt / "
                     f"{detail.old_diesel_lph:.2f} L/h)"
                 ),
                 "Eski Tekne Sezonluk Bakım/Rektefiye",
@@ -196,19 +253,26 @@ def render_vessel_details(
       with tech_col1:
         st.info(
             "**Toplam Kurulu Motor Gücü:**\n\n"
-            f"{_format_decimal_tr(sizing.reference_installed_mechanical_power_kw)} kW"
+            f"{_format_decimal_tr(
+                sizing.reference_installed_mechanical_power_kw
+            )} kW"
         )
       with tech_col2:
         st.info(
             f"**{inputs.cruise_speed:.1f} Knot Seyir Elektrik Gücü:**\n\n"
-            f"{_format_decimal_tr(sizing.reference_electrical_input_power_kw)} kW"
+            f"{_format_decimal_tr(
+                sizing.reference_electrical_input_power_kw
+            )} kW"
         )
       with tech_col3:
         st.info(
             "**Günlük Tahrik Enerjisi / Gerekli Batarya:**\n\n"
-            f"{_format_decimal_tr(sizing.reference_daily_propulsion_energy_kwh)} "
-            "kWh/gün · "
-            f"{_format_decimal_tr(sizing.reference_nominal_battery_capacity_kwh)} kWh"
+            f"{_format_decimal_tr(
+                sizing.reference_daily_propulsion_energy_kwh
+            )} kWh/gün · "
+            f"{_format_decimal_tr(
+                sizing.reference_nominal_battery_capacity_kwh
+            )} kWh"
         )
       with tech_col4:
         st.info(
@@ -227,7 +291,8 @@ def render_vessel_details(
       st.caption(
           f"Teknik profil: {detail.technical_profile_id.upper()} · "
           f"Günlük rota: {_format_decimal_tr(inputs.daily_miles)} NM · "
-          f"Tahmini seyir süresi: {_format_decimal_tr(sizing.operating_hours_per_day)} saat/gün. "
+          f"Tahmini seyir süresi: "
+          f"{_format_decimal_tr(sizing.operating_hours_per_day)} saat/gün. "
           "Tip 4A teknik olarak Tip 1, Tip 4B teknik olarak Tip 2 profiliyle "
           "boyutlandırılır; hibe ve ekonomik kimlikleri ayrı tutulur."
       )

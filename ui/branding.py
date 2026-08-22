@@ -70,14 +70,20 @@ def render_sidebar_brand():
   st.markdown(
       """
       <style>
-      section[data-testid="stSidebar"] {
-        width: 330px !important;
-        min-width: 330px !important;
-        max-width: 330px !important;
-      }
-
-      section[data-testid="stSidebar"] > div {
-        width: 330px !important;
+      /*
+       * Sidebar geometry is intentionally left to Streamlit.
+       *
+       * Do not set width/min-width/max-width on stSidebar:
+       * custom geometry breaks Streamlit's native collapse and
+       * responsive layout behaviour.
+       */
+      @media (max-width: 768px) {
+        html,
+        body,
+        [data-testid="stAppViewContainer"] {
+          max-width: 100vw;
+          overflow-x: hidden;
+        }
       }
       </style>
       """,

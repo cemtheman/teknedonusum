@@ -7,6 +7,22 @@ ASSET_DIR = Path(__file__).resolve().parents[1] / "assets"
 BRAND_LOGO_PATH = ASSET_DIR / "sessiz_akim_logo.png"
 BRAND_ICON_PATH = ASSET_DIR / "sessiz_akim_icon.png"
 FAVICON_PATH = ASSET_DIR / "favicon.png"
+SUPPORTER_ASSET_DIR = ASSET_DIR / "supporters"
+
+SUPPORTERS = (
+    ("Sıfır Atık Vakfı", "sifir_atik_vakfi.png"),
+    (
+        "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı",
+        "cevre_sehircilik_iklim_bakanligi.png",
+    ),
+    ("Muğla Valiliği", "mugla_valiligi.png"),
+    ("GEKA", "geka.png"),
+    ("Ortaca Kaymakamlığı", "ortaca_kaymakamligi.png"),
+    ("Köyceğiz Kaymakamlığı", "koycegiz_kaymakamligi.png"),
+    ("Muğla Büyükşehir Belediyesi", "mugla_buyuksehir.png"),
+    ("Ortaca Belediyesi", "ortaca_belediyesi.png"),
+    ("Köyceğiz Belediyesi", "koycegiz_belediyesi.png"),
+)
 
 BRAND_NAME = "Sessiz Akım"
 BRAND_NAME_EN = "Quiet Current"
@@ -20,12 +36,9 @@ def _upper_initial(text):
   return value[0].upper() + value[1:]
 
 
-def build_brand_description(location_name):
-  location = _upper_initial(location_name)
-  if not location:
-    location = "Seçili lokasyon"
+def build_brand_description(location_name=None):
   return (
-      f"{location} elektrikli tekne dönüşümü için teknik ve ekonomik "
+      "Elektrikli tekne dönüşümü için teknik ve ekonomik "
       "ön değerlendirme platformu"
   )
 
@@ -54,6 +67,22 @@ def render_brand_header(location_name):
 
 
 def render_sidebar_brand():
+  st.markdown(
+      """
+      <style>
+      section[data-testid="stSidebar"] {
+        width: 300px !important;
+        min-width: 300px !important;
+        max-width: 300px !important;
+      }
+
+      section[data-testid="stSidebar"] > div {
+        width: 300px !important;
+      }
+      </style>
+      """,
+      unsafe_allow_html=True,
+  )
   left, logo_col, right = st.columns([1, 2, 1])
 
   with logo_col:
@@ -78,14 +107,80 @@ def render_sidebar_brand():
   )
 
 
+def _image_data_uri(path):
+  import base64
+  import mimetypes
+
+  mime_type = mimetypes.guess_type(str(path))[0] or "image/png"
+  encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+  return f"data:{mime_type};base64,{encoded}"
+
+
 def render_brand_footer():
   st.divider()
-  left, right = st.columns([0.78, 0.22], vertical_alignment="center")
-  with left:
-    st.caption(
-        "Sessiz Akım · "
-        + BRAND_TAGLINE
-        + " · Tüm sonuçlar ön teknik değerlendirme niteliğindedir."
-    )
-  with right:
-    st.image(str(BRAND_ICON_PATH), width=42)
+
+  brand_icon_uri = _image_data_uri(BRAND_ICON_PATH)
+
+  st.markdown(
+      f"""
+      <div style="
+          display:flex;
+          align-items:center;
+          gap:7px;
+          color:#6B7280;
+          font-size:0.82rem;
+          line-height:1.4;
+      ">
+        <span>
+          Sessiz Akım · {BRAND_TAGLINE} ·
+          Tüm sonuçlar ön teknik değerlendirme niteliğindedir.
+        </span>
+        <img
+          src="{brand_icon_uri}"
+          alt="Sessiz Akım"
+          style="
+              width:30px;
+              height:30px;
+              object-fit:contain;
+              flex:0 0 auto;
+          "
+        />
+      </div>
+      """,
+      unsafe_allow_html=True,
+  )
+
+  st.markdown(
+      """
+      <div style="
+          margin-top:24px;
+          margin-bottom:16px;
+          font-size:0.95rem;
+          font-weight:750;
+          color:#4B5563;
+      ">
+        Destekleyenler
+      </div>
+      """,
+      unsafe_allow_html=True,
+  )
+
+  logo_columns = st.columns(
+      len(SUPPORTERS),
+      vertical_alignment="center",
+  )
+
+  for column, (name, filename) in zip(
+      logo_columns,
+      SUPPORTERS,
+  ):
+    logo_path = SUPPORTER_ASSET_DIR / filename
+
+    with column:
+      if logo_path.exists():
+        st.image(
+            str(logo_path),
+            width=84,
+        )
+      else:
+        st.caption(f"Logo eksik: {name}")

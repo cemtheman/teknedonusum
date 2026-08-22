@@ -224,7 +224,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       )
       daily_miles = st.number_input(
           "Günlük Rota Mesafesi (deniz mili)",
-          min_value=15.0, max_value=60.0, value=35.0, step=5.0,
+          min_value=15.0, max_value=60.0, value=20.0, step=5.0,
       )
       cruise_speed = st.number_input(
           "Ortalama Seyir Hızı (Knot)",

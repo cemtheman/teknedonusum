@@ -7,12 +7,18 @@ BRANDING = Path("ui/branding.py").read_text(encoding="utf-8")
 APP = Path("app.py").read_text(encoding="utf-8")
 
 
-def test_brand_description_uses_dynamic_location_without_lowercasing_rest():
+def test_brand_description_is_location_independent():
   assert build_brand_description("dalyan, Ortaca, Muğla, Türkiye") == (
-      "Dalyan, Ortaca, Muğla, Türkiye elektrikli tekne dönüşümü için "
-      "teknik ve ekonomik ön değerlendirme platformu"
+      "Elektrikli tekne dönüşümü için teknik ve ekonomik "
+      "ön değerlendirme platformu"
   )
 
+
+def test_brand_description_does_not_include_location():
+  description = build_brand_description("Dalyan, Muğla")
+
+  assert "Dalyan" not in description
+  assert "Muğla" not in description
 
 def test_main_header_has_no_duplicate_logo_image():
   start = BRANDING.index("def render_brand_header")

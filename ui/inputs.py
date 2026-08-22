@@ -98,6 +98,10 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
       inventory_plan_active = False
 
+      if inventory_file is None:
+        st.session_state["fleet_inventory_analysis"] = None
+        st.session_state["fleet_inventory_plan_active"] = False
+
       if inventory_file is not None:
         st.markdown("**Hedef Faz 1 Filo Dağılımı**")
 
@@ -133,6 +137,8 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
         )
 
         if target_total_percent != 100:
+          st.session_state["fleet_inventory_analysis"] = None
+          st.session_state["fleet_inventory_plan_active"] = False
           st.error(
               "Tip 1 + Tip 2 + Tip 3 hedef paylarının toplamı %100 olmalıdır."
           )
@@ -147,8 +153,12 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 },
             )
           except Exception as exc:
+            st.session_state["fleet_inventory_analysis"] = None
+            st.session_state["fleet_inventory_plan_active"] = False
             st.error(f"Tekne listesi analiz edilemedi: {exc}")
           else:
+            st.session_state["fleet_inventory_analysis"] = inventory_analysis
+
             total_inventory = len(inventory_analysis.recommendations)
             phase_counts = inventory_analysis.phase_counts
             target_counts = inventory_analysis.target_fleet.target_counts
@@ -179,7 +189,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 help="Mevcut otomatik dönüşüm sınıflarının dışındaki tekneler",
             )
 
-            st.markdown("**Önerilen Faz 1 Hedef Filosı**")
+            st.markdown("**Önerilen Faz 1 Hedef Filosu**")
             st.caption(
                 f"Tip 1: {target_counts['v1']} tekne · "
                 f"Tip 2: {target_counts['v2']} tekne · "
@@ -197,6 +207,9 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 "Envanter planını aktif senaryo olarak kullan",
                 value=False,
                 key="inventory_plan_active",
+            )
+            st.session_state["fleet_inventory_plan_active"] = (
+                inventory_plan_active
             )
 
             if inventory_plan_active:

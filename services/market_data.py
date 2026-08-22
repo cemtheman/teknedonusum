@@ -6,7 +6,10 @@ import streamlit as st
 
 
 # Helper function to fetch TCMB EUR Rate online
-@st.cache_data(ttl=3600)
+@st.cache_data(
+    ttl=3600,
+    show_spinner="Güncel kur verisi alınıyor...",
+)
 def fetch_tcmb_eur():
   try:
     url = "https://www.tcmb.gov.tr/kurlar/today.xml"
@@ -27,7 +30,10 @@ def fetch_tcmb_eur():
 
 
 # Helper function to fetch Aytemiz Mugla / Ortaca Diesel price online
-@st.cache_data(ttl=3600)
+@st.cache_data(
+    ttl=3600,
+    show_spinner="Güncel yakıt fiyatı alınıyor...",
+)
 def fetch_aytemiz_diesel():
   try:
     url = "https://www.aytemiz.com.tr/akaryakit-fiyatlari/motorin-fiyatlari/mugla-motorin-fiyati"

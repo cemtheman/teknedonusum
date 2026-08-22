@@ -63,7 +63,10 @@ def parse_hourly_specific_pv(payload):
   return tuple(points)
 
 
-@st.cache_data(ttl=86400)
+@st.cache_data(
+    ttl=86400,
+    show_spinner="Saatlik güneş enerjisi profili alınıyor...",
+)
 def fetch_pvgis_hourly_specific_pv(
     latitude,
     longitude,

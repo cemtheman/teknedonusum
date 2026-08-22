@@ -45,7 +45,10 @@ def parse_monthly_specific_yield(payload):
   return monthly
 
 
-@st.cache_data(ttl=86400)
+@st.cache_data(
+    ttl=86400,
+    show_spinner="Güneş enerjisi verisi alınıyor...",
+)
 def fetch_pvgis_monthly_specific_yield(latitude, longitude):
   """Fetch average monthly specific PV yield for a horizontal 1 kWp system."""
   params = {

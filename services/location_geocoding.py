@@ -33,7 +33,10 @@ def parse_nominatim_first_result(payload):
   return display_name, latitude, longitude
 
 
-@st.cache_data(ttl=86400)
+@st.cache_data(
+    ttl=86400,
+    show_spinner="Güncel lokasyon verisi alınıyor...",
+)
 def geocode_location(location_name):
   """Resolve one explicit location query through OpenStreetMap Nominatim."""
   query = str(location_name).strip()

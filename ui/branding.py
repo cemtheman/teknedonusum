@@ -71,13 +71,13 @@ def render_sidebar_brand():
       """
       <style>
       section[data-testid="stSidebar"] {
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
+        width: 330px !important;
+        min-width: 330px !important;
+        max-width: 330px !important;
       }
 
       section[data-testid="stSidebar"] > div {
-        width: 300px !important;
+        width: 330px !important;
       }
       </style>
       """,
@@ -165,22 +165,98 @@ def render_brand_footer():
       unsafe_allow_html=True,
   )
 
-  logo_columns = st.columns(
-      len(SUPPORTERS),
-      vertical_alignment="center",
-  )
+  supporter_items = []
 
-  for column, (name, filename) in zip(
-      logo_columns,
-      SUPPORTERS,
-  ):
+  for name, filename in SUPPORTERS:
     logo_path = SUPPORTER_ASSET_DIR / filename
 
-    with column:
-      if logo_path.exists():
-        st.image(
-            str(logo_path),
-            width=84,
-        )
-      else:
-        st.caption(f"Logo eksik: {name}")
+    if not logo_path.exists():
+      supporter_items.append(
+          f"""
+          <div class="supporter-logo-item supporter-logo-missing">
+            {name}
+          </div>
+          """
+      )
+      continue
+
+    logo_uri = _image_data_uri(logo_path)
+
+    supporter_items.append(
+        f"""
+        <div class="supporter-logo-item" title="{name}">
+          <img
+            src="{logo_uri}"
+            alt="{name}"
+          />
+        </div>
+        """
+    )
+
+  st.markdown(
+      f"""
+      <style>
+      .supporter-logo-strip {{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 2px 0 8px 0;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }}
+
+      .supporter-logo-item {{
+        flex: 0 0 auto;
+        width: 92px;
+        min-width: 92px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }}
+
+      .supporter-logo-item img {{
+        display: block;
+        max-width: 78px;
+        max-height: 64px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+      }}
+
+      .supporter-logo-missing {{
+        font-size: 0.65rem;
+        color: #9CA3AF;
+        text-align: center;
+      }}
+
+      @media (max-width: 768px) {{
+        .supporter-logo-strip {{
+          gap: 8px;
+        }}
+
+        .supporter-logo-item {{
+          width: 82px;
+          min-width: 82px;
+          height: 64px;
+        }}
+
+        .supporter-logo-item img {{
+          max-width: 70px;
+          max-height: 56px;
+        }}
+      }}
+      </style>
+
+      <div class="supporter-logo-strip">
+        {''.join(supporter_items)}
+      </div>
+      """,
+      unsafe_allow_html=True,
+  )

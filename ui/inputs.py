@@ -105,30 +105,37 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       if inventory_file is not None:
         st.markdown("**Hedef Faz 1 Filo Dağılımı**")
 
-        target_v1_percent = st.number_input(
-            "Tip 1 hedef payı (%)",
-            min_value=0,
-            max_value=100,
-            value=50,
-            step=5,
-            key="inventory_target_v1",
-        )
-        target_v2_percent = st.number_input(
-            "Tip 2 hedef payı (%)",
-            min_value=0,
-            max_value=100,
-            value=30,
-            step=5,
-            key="inventory_target_v2",
-        )
-        target_v3_percent = st.number_input(
-            "Tip 3 hedef payı (%)",
-            min_value=0,
-            max_value=100,
-            value=20,
-            step=5,
-            key="inventory_target_v3",
-        )
+        target_col1, target_col2, target_col3 = st.columns(3)
+
+        with target_col1:
+          target_v1_percent = st.number_input(
+              "Tip 1 (%)",
+              min_value=0,
+              max_value=100,
+              value=50,
+              step=5,
+              key="inventory_target_v1",
+          )
+
+        with target_col2:
+          target_v2_percent = st.number_input(
+              "Tip 2 (%)",
+              min_value=0,
+              max_value=100,
+              value=30,
+              step=5,
+              key="inventory_target_v2",
+          )
+
+        with target_col3:
+          target_v3_percent = st.number_input(
+              "Tip 3 (%)",
+              min_value=0,
+              max_value=100,
+              value=20,
+              step=5,
+              key="inventory_target_v3",
+          )
 
         target_total_percent = (
             target_v1_percent
@@ -167,40 +174,24 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 f"{total_inventory} tekne başarıyla analiz edildi."
             )
 
-            p1, p2, p3, p4 = st.columns(4)
-            p1.metric(
-                "Faz 1",
-                phase_counts.get("Faz 1", 0),
-                help="Doğrudan elektrikli dönüşüm adayı Yolcu Motorları",
-            )
-            p2.metric(
-                "Faz 2",
-                phase_counts.get("Faz 2", 0),
-                help="Ticari yat ve gezinti/tenezzüh gemileri",
-            )
-            p3.metric(
-                "Faz 3",
-                phase_counts.get("Faz 3", 0),
-                help="Özel tekneler",
-            )
-            p4.metric(
-                "İnceleme",
-                phase_counts.get("Özel İnceleme", 0),
-                help="Mevcut otomatik dönüşüm sınıflarının dışındaki tekneler",
+            st.caption(
+                f"Faz 1: {phase_counts.get('Faz 1', 0)} · "
+                f"Faz 2: {phase_counts.get('Faz 2', 0)} · "
+                f"Faz 3: {phase_counts.get('Faz 3', 0)} · "
+                f"İnceleme: {phase_counts.get('Özel İnceleme', 0)}"
             )
 
             st.markdown("**Önerilen Faz 1 Hedef Filosu**")
             st.caption(
-                f"Tip 1: {target_counts['v1']} tekne · "
-                f"Tip 2: {target_counts['v2']} tekne · "
-                f"Tip 3: {target_counts['v3']} tekne"
+                f"Tip 1: {target_counts['v1']} · "
+                f"Tip 2: {target_counts['v2']} · "
+                f"Tip 3: {target_counts['v3']}"
             )
 
             st.warning(
-                "Finansman varsayımı: Excel dosyasında kooperatif üyeliği "
-                "bulunmadığından aktif envanter planı, Faz 1 filosunu mevcut "
-                "Tip 1/2/3 kooperatif hibe senaryosuna aktarır. Bu yaklaşım "
-                "planlama varsayımıdır; gerçek uygunluk ayrıca doğrulanmalıdır."
+                "Excel'de kooperatif üyeliği bulunmadığından Faz 1 için "
+                "mevcut kooperatif hibe senaryosu kullanılır. "
+                "Gerçek uygunluk ayrıca doğrulanmalıdır."
             )
 
             inventory_plan_active = st.checkbox(
@@ -224,11 +215,9 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
               count_v4_32 = 0
 
               st.info(
-                  "Aktif filo hedefi Excel envanterinden alınıyor: "
-                  f"Tip 1 = {count_v1}, Tip 2 = {count_v2}, "
-                  f"Tip 3 = {count_v3}. "
-                  "Kooperatif dışı manuel Tip 4 hedefleri bu senaryoda "
-                  "çifte sayımı önlemek için sıfırlandı."
+                  "Aktif envanter senaryosu: "
+                  f"Tip 1 {count_v1} · Tip 2 {count_v2} · Tip 3 {count_v3}. "
+                  "Tip 4 hedefleri sıfırlandı."
               )
 
     with st.expander("⚓ Operasyon Profili", expanded=False):

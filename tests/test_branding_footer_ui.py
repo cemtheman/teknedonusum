@@ -28,11 +28,12 @@ def test_footer_brand_icon_is_inline_after_disclaimer():
   )
 
 
-def test_supporters_are_rendered_in_one_compact_row():
-  assert "logo_columns = st.columns(" in SOURCE
-  assert "len(SUPPORTERS)" in SOURCE
-  assert "vertical_alignment=\"center\"" in SOURCE
-  assert "width=84" in SOURCE
+def test_supporters_are_rendered_in_single_responsive_strip():
+  assert 'class="supporter-logo-strip"' in SOURCE
+  assert "flex-wrap: nowrap" in SOURCE
+  assert "overflow-x: auto" in SOURCE
+  assert "gap: 10px" in SOURCE
+  assert "logo_columns = st.columns(" not in SOURCE
 
 
 def test_supporter_names_are_not_rendered_under_logos():
@@ -63,3 +64,9 @@ def test_mugla_metropolitan_uses_png_asset():
       "Muğla Büyükşehir Belediyesi",
       "mugla_buyuksehir.png",
   ) in SUPPORTERS
+
+def test_supporter_strip_does_not_stack_on_mobile():
+  assert "flex-direction: row" in SOURCE
+  assert "flex-wrap: nowrap" in SOURCE
+  assert "@media (max-width: 768px)" in SOURCE
+  assert "overflow-x: auto" in SOURCE

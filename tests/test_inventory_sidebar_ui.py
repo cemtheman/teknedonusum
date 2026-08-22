@@ -12,9 +12,10 @@ def test_sidebar_exposes_inventory_excel_module():
 
 
 def test_inventory_target_distribution_is_user_configurable():
-  assert '"Tip 1 hedef payı (%)"' in SOURCE
-  assert '"Tip 2 hedef payı (%)"' in SOURCE
-  assert '"Tip 3 hedef payı (%)"' in SOURCE
+  assert '"Tip 1 (%)"' in SOURCE
+  assert '"Tip 2 (%)"' in SOURCE
+  assert '"Tip 3 (%)"' in SOURCE
+  assert "target_col1, target_col2, target_col3 = st.columns(3)" in SOURCE
   assert "target_total_percent != 100" in SOURCE
 
 
@@ -39,5 +40,6 @@ def test_active_inventory_plan_overrides_primary_counts_only():
 
 
 def test_inventory_financing_assumption_is_explicit():
-  assert "Excel dosyasında kooperatif üyeliği" in SOURCE
-  assert "planlama varsayımıdır" in SOURCE
+  assert "Excel'de kooperatif üyeliği bulunmadığından" in SOURCE
+  assert "mevcut kooperatif hibe senaryosu kullanılır" in SOURCE
+  assert "Gerçek uygunluk ayrıca doğrulanmalıdır." in SOURCE

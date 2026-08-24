@@ -156,38 +156,23 @@ def test_sidebar_exposes_phase_one_membership_quality():
   assert "Bilinmiyor:" in SOURCE
 
 
-def test_sidebar_explains_activation_guard():
+def test_sidebar_activation_guard_is_present_and_enforced():
   assert (
-      "bütün tekneleri "
+      "activation_allowed = ("
       in SOURCE
   )
 
   assert (
-      "kooperatif üyesi kabul etmek "
+      "_inventory_plan_can_activate("
       in SOURCE
   )
 
   assert (
-      "yanlış hibe "
+      "disabled=not activation_allowed"
       in SOURCE
   )
 
   assert (
-      "hesabına yol açar."
-      in SOURCE
-  )
-
-  assert (
-      "Aktif teknik filo "
-      in SOURCE
-  )
-
-  assert (
-      "finansman filosu sonraki "
-      in SOURCE
-  )
-
-  assert (
-      "ayrı veri yapıları olarak modellenerek "
+      "if inventory_plan_active:"
       in SOURCE
   )

@@ -42,6 +42,11 @@ PHASE_2_TYPES = {
     "gezinti/tenezzüh gemisi",
 }
 
+EXCURSION_TYPES = {
+    "gezinti / tenezzüh gemisi",
+    "gezinti/tenezzüh gemisi",
+}
+
 PRIVATE_TYPES = {
     "özel tekne",
 }
@@ -235,6 +240,7 @@ class FleetInventoryAnalysis:
     phase_counts: dict[str, int]
     review_count: int
     target_fleet: TargetFleetPlan
+    cooperative_summary: dict[str, dict[str, int]]
     data_quality: InventoryDataQuality | None = None
 
 
@@ -857,6 +863,57 @@ def allocate_target_fleet(
     )
 
 
+def _build_cooperative_summary(
+    recommendations: tuple[
+        VesselConversionRecommendation,
+        ...
+    ],
+) -> dict[str, dict[str, int]]:
+    """Build cooperative-level fleet and conversion-phase counts."""
+
+    summary: dict[str, dict[str, int]] = {}
+
+    for recommendation in recommendations:
+        vessel = recommendation.vessel
+        cooperative_name = _normalize_text(
+            vessel.cooperative_name
+        )
+
+        if not cooperative_name:
+            continue
+
+        if cooperative_name not in summary:
+            summary[cooperative_name] = {
+                "total": 0,
+                "phase_1": 0,
+                "phase_2": 0,
+                "passenger_motor": 0,
+                "excursion": 0,
+            }
+
+        cooperative = summary[cooperative_name]
+
+        cooperative["total"] += 1
+
+        if recommendation.conversion_phase == "Faz 1":
+            cooperative["phase_1"] += 1
+
+        if recommendation.conversion_phase == "Faz 2":
+            cooperative["phase_2"] += 1
+
+        vessel_type = _normalize_type(
+            vessel.vessel_type
+        )
+
+        if vessel_type in DIRECT_ELECTRIC_TYPES:
+            cooperative["passenger_motor"] += 1
+
+        if vessel_type in EXCURSION_TYPES:
+            cooperative["excursion"] += 1
+
+    return summary
+
+
 def analyze_inventory(
     vessels: (
         tuple[InventoryVessel, ...]
@@ -884,6 +941,10 @@ def analyze_inventory(
         0,
     )
 
+    cooperative_summary = _build_cooperative_summary(
+        recommendations
+    )
+
     return FleetInventoryAnalysis(
         recommendations=recommendations,
         phase_counts=phase_counts,
@@ -895,6 +956,7 @@ def analyze_inventory(
             phase_one_count,
             target_shares=target_shares,
         ),
+        cooperative_summary=cooperative_summary,
         data_quality=data_quality,
     )
 

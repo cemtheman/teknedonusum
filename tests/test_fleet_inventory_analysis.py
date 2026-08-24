@@ -675,6 +675,60 @@ def test_analysis_builds_phases_and_target_fleet():
     assert result.review_count == 1
 
 
+def test_analysis_builds_cooperative_fleet_summary():
+    vessels = [
+        InventoryVessel(
+            row_number=1,
+            vessel_name="Dalyan 1",
+            owner_name="Donatan 1",
+            vessel_type="Yolcu Motoru",
+            length_m=11.5,
+            beam_m=3.4,
+            cooperative_name="Dalyan Kooperatifi",
+            cooperative_status=COOPERATIVE_MEMBER,
+        ),
+        InventoryVessel(
+            row_number=2,
+            vessel_name="Dalyan 2",
+            owner_name="Donatan 2",
+            vessel_type="Gezinti / Tenezzüh Gemisi",
+            length_m=14.0,
+            beam_m=4.2,
+            cooperative_name="Dalyan Kooperatifi",
+            cooperative_status=COOPERATIVE_MEMBER,
+        ),
+        InventoryVessel(
+            row_number=3,
+            vessel_name="Çandır 1",
+            owner_name="Donatan 3",
+            vessel_type="Yolcu Motoru",
+            length_m=11.0,
+            beam_m=3.3,
+            cooperative_name="Çandır Kooperatifi",
+            cooperative_status=COOPERATIVE_MEMBER,
+        ),
+    ]
+
+    analysis = analyze_inventory(vessels)
+
+    assert analysis.cooperative_summary == {
+        "Dalyan Kooperatifi": {
+            "total": 2,
+            "phase_1": 1,
+            "phase_2": 1,
+            "passenger_motor": 1,
+            "excursion": 1,
+        },
+        "Çandır Kooperatifi": {
+            "total": 1,
+            "phase_1": 1,
+            "phase_2": 0,
+            "passenger_motor": 1,
+            "excursion": 0,
+        },
+    }
+
+
 def test_loader_rejects_rows_without_vessel_type():
     source = _excel_bytes(
         [

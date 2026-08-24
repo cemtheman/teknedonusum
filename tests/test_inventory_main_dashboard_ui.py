@@ -17,11 +17,31 @@ from ui.fleet_inventory_dashboard import (
 )
 
 
-APP_SOURCE = Path("app.py").read_text(encoding="utf-8")
-INPUTS_SOURCE = Path("ui/inputs.py").read_text(encoding="utf-8")
+APP_SOURCE = Path(
+    "app.py"
+).read_text(
+    encoding="utf-8"
+)
+
+INPUTS_SOURCE = Path(
+    "ui/inputs.py"
+).read_text(
+    encoding="utf-8"
+)
+
 DASHBOARD_SOURCE = Path(
     "ui/fleet_inventory_dashboard.py"
-).read_text(encoding="utf-8")
+).read_text(
+    encoding="utf-8"
+)
+
+NORMALIZED_INPUTS_SOURCE = " ".join(
+    INPUTS_SOURCE.split()
+)
+
+NORMALIZED_DASHBOARD_SOURCE = " ".join(
+    DASHBOARD_SOURCE.split()
+)
 
 
 def _vessel(
@@ -67,20 +87,32 @@ def _analysis(
 
 def test_sidebar_persists_inventory_analysis_in_session_state():
   assert (
-      'st.session_state["fleet_inventory_analysis"] = inventory_analysis'
-      in INPUTS_SOURCE
+      'st.session_state[ "fleet_inventory_analysis" ] = inventory_analysis'
+      .replace(" ", "")
+      in INPUTS_SOURCE.replace(" ", "").replace("\n", "")
   )
+
   assert (
-      'st.session_state["fleet_inventory_plan_active"]'
+      '"fleet_inventory_plan_active"'
       in INPUTS_SOURCE
   )
 
 
 def test_sidebar_clears_stale_inventory_when_file_is_removed():
-  assert 'if inventory_file is None:' in INPUTS_SOURCE
   assert (
-      'st.session_state["fleet_inventory_analysis"] = None'
+      "if inventory_file is None:"
       in INPUTS_SOURCE
+  )
+
+  compact = (
+      INPUTS_SOURCE
+      .replace(" ", "")
+      .replace("\n", "")
+  )
+
+  assert (
+      'st.session_state["fleet_inventory_analysis"]=None'
+      in compact
   )
 
 
@@ -88,11 +120,15 @@ def test_app_renders_inventory_dashboard_before_fleet_dashboard():
   inventory_pos = APP_SOURCE.index(
       "render_fleet_inventory_dashboard("
   )
+
   fleet_pos = APP_SOURCE.index(
       "render_fleet_dashboard("
   )
 
-  assert inventory_pos < fleet_pos
+  assert (
+      inventory_pos
+      < fleet_pos
+  )
 
 
 def test_inventory_dashboard_contains_expected_sections():
@@ -103,35 +139,41 @@ def test_inventory_dashboard_contains_expected_sections():
       "Faz 1 Finansman İhtiyacı",
       "Tekne Bazlı Dönüşüm Kararları",
   ):
-    assert label in DASHBOARD_SOURCE
+    assert (
+        label
+        in DASHBOARD_SOURCE
+    )
 
 
 def test_inventory_dashboard_financing_scope_is_explicit():
   assert (
       "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar."
-      in DASHBOARD_SOURCE
+      in NORMALIZED_DASHBOARD_SOURCE
   )
+
   assert (
       "Faz 2 hibrit tekneler ile Faz 3 özel tekneler"
-      in DASHBOARD_SOURCE
+      in NORMALIZED_DASHBOARD_SOURCE
   )
 
 
 def test_dashboard_no_longer_assumes_missing_membership_is_member():
   assert (
       "Excel dosyasında kooperatif üyeliği bulunmadığından"
-      not in DASHBOARD_SOURCE
+      not in NORMALIZED_DASHBOARD_SOURCE
   )
 
   assert (
-      "bütün Faz 1 filosunu "
-      "kooperatif üyesi kabul ederek hibe hesaplamak doğru değildir"
-      in DASHBOARD_SOURCE
+      "bütün Faz 1 filosunu kooperatif üyesi kabul ederek "
+      "hibe hesaplamak doğru değildir"
+      in NORMALIZED_DASHBOARD_SOURCE
   )
 
 
 def test_decision_table_exposes_vessel_level_recommendation():
-  table = build_inventory_decision_table(_analysis())
+  table = build_inventory_decision_table(
+      _analysis()
+  )
 
   assert list(table.columns) == [
       "Tekne Adı",
@@ -149,20 +191,47 @@ def test_decision_table_exposes_vessel_level_recommendation():
       "Karar Gerekçesi",
   ]
 
-  assert table.loc[0, "Tekne Adı"] == "Martı"
-  assert table.loc[0, "Dönüşüm Fazı"] == "Faz 1"
+  assert (
+      table.loc[0, "Tekne Adı"]
+      == "Martı"
+  )
+
+  assert (
+      table.loc[0, "Dönüşüm Fazı"]
+      == "Faz 1"
+  )
+
   assert (
       table.loc[0, "Kooperatif Üyeliği"]
       == COOPERATIVE_UNKNOWN
   )
-  assert table.loc[1, "Dönüşüm Fazı"] == "Faz 3"
+
+  assert (
+      table.loc[1, "Dönüşüm Fazı"]
+      == "Faz 3"
+  )
 
 
 def test_inventory_dashboard_has_phase_and_type_filters():
-  assert 'st.selectbox(' in DASHBOARD_SOURCE
-  assert '"Dönüşüm fazı"' in DASHBOARD_SOURCE
-  assert 'st.multiselect(' in DASHBOARD_SOURCE
-  assert '"Tekne cinsi"' in DASHBOARD_SOURCE
+  assert (
+      "st.selectbox("
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      '"Dönüşüm fazı"'
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "st.multiselect("
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      '"Tekne cinsi"'
+      in DASHBOARD_SOURCE
+  )
 
 
 def test_phase_one_cooperative_summary_separates_statuses():
@@ -197,7 +266,11 @@ def test_phase_one_cooperative_summary_separates_statuses():
       ),
   ])
 
-  summary = build_phase_one_cooperative_summary(analysis)
+  summary = (
+      build_phase_one_cooperative_summary(
+          analysis
+      )
+  )
 
   assert summary == {
       "total": 3,
@@ -212,7 +285,12 @@ def test_financing_is_not_ready_when_membership_is_unknown():
       phase_one_status=COOPERATIVE_UNKNOWN
   )
 
-  assert inventory_financing_is_ready(analysis) is False
+  assert (
+      inventory_financing_is_ready(
+          analysis
+      )
+      is False
+  )
 
 
 def test_financing_is_not_ready_for_non_member_phase_one_vessel():
@@ -220,7 +298,12 @@ def test_financing_is_not_ready_for_non_member_phase_one_vessel():
       phase_one_status=COOPERATIVE_NON_MEMBER
   )
 
-  assert inventory_financing_is_ready(analysis) is False
+  assert (
+      inventory_financing_is_ready(
+          analysis
+      )
+      is False
+  )
 
 
 def test_financing_is_ready_when_all_phase_one_members_are_verified():
@@ -228,7 +311,12 @@ def test_financing_is_ready_when_all_phase_one_members_are_verified():
       phase_one_status=COOPERATIVE_MEMBER
   )
 
-  assert inventory_financing_is_ready(analysis) is True
+  assert (
+      inventory_financing_is_ready(
+          analysis
+      )
+      is True
+  )
 
 
 def test_financing_is_not_ready_without_phase_one_vessels():
@@ -241,7 +329,12 @@ def test_financing_is_not_ready_without_phase_one_vessels():
       ),
   ])
 
-  assert inventory_financing_is_ready(analysis) is False
+  assert (
+      inventory_financing_is_ready(
+          analysis
+      )
+      is False
+  )
 
 
 def test_calculate_financing_rejects_unverified_membership():
@@ -251,7 +344,10 @@ def test_calculate_financing_rejects_unverified_membership():
 
   with pytest.raises(
       ValueError,
-      match="tüm Faz 1 teknelerinin kooperatif üyeliği",
+      match=(
+          "tüm Faz 1 teknelerinin "
+          "kooperatif üyeliği"
+      ),
   ):
     calculate_inventory_financing(
         analysis,
@@ -264,11 +360,11 @@ def test_calculate_financing_rejects_unverified_membership():
 def test_dashboard_explains_financing_guard():
   assert (
       "Envanter kaynaklı hibe hesabı henüz oluşturulmadı."
-      in DASHBOARD_SOURCE
+      in NORMALIZED_DASHBOARD_SOURCE
   )
 
   assert (
       "tekne bazlı kooperatif statüsü ve yeni hibe tahsis "
       "yöntemi kesinleştirildikten sonra"
-      in DASHBOARD_SOURCE
+      in NORMALIZED_DASHBOARD_SOURCE
   )

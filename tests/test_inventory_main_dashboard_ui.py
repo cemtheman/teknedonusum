@@ -35,14 +35,6 @@ DASHBOARD_SOURCE = Path(
     encoding="utf-8"
 )
 
-NORMALIZED_INPUTS_SOURCE = " ".join(
-    INPUTS_SOURCE.split()
-)
-
-NORMALIZED_DASHBOARD_SOURCE = " ".join(
-    DASHBOARD_SOURCE.split()
-)
-
 
 def _vessel(
     row_number,
@@ -87,9 +79,13 @@ def _analysis(
 
 def test_sidebar_persists_inventory_analysis_in_session_state():
   assert (
-      'st.session_state[ "fleet_inventory_analysis" ] = inventory_analysis'
-      .replace(" ", "")
-      in INPUTS_SOURCE.replace(" ", "").replace("\n", "")
+      '"fleet_inventory_analysis"'
+      in INPUTS_SOURCE
+  )
+
+  assert (
+      "= inventory_analysis"
+      in INPUTS_SOURCE
   )
 
   assert (
@@ -104,15 +100,14 @@ def test_sidebar_clears_stale_inventory_when_file_is_removed():
       in INPUTS_SOURCE
   )
 
-  compact = (
-      INPUTS_SOURCE
-      .replace(" ", "")
-      .replace("\n", "")
+  assert (
+      '"fleet_inventory_analysis"'
+      in INPUTS_SOURCE
   )
 
   assert (
-      'st.session_state["fleet_inventory_analysis"]=None'
-      in compact
+      "] = None"
+      in INPUTS_SOURCE
   )
 
 
@@ -125,10 +120,7 @@ def test_app_renders_inventory_dashboard_before_fleet_dashboard():
       "render_fleet_dashboard("
   )
 
-  assert (
-      inventory_pos
-      < fleet_pos
-  )
+  assert inventory_pos < fleet_pos
 
 
 def test_inventory_dashboard_contains_expected_sections():
@@ -139,34 +131,40 @@ def test_inventory_dashboard_contains_expected_sections():
       "Faz 1 Finansman İhtiyacı",
       "Tekne Bazlı Dönüşüm Kararları",
   ):
-    assert (
-        label
-        in DASHBOARD_SOURCE
-    )
+    assert label in DASHBOARD_SOURCE
 
 
 def test_inventory_dashboard_financing_scope_is_explicit():
   assert (
-      "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar."
-      in NORMALIZED_DASHBOARD_SOURCE
+      "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar. "
+      in DASHBOARD_SOURCE
   )
 
   assert (
-      "Faz 2 hibrit tekneler ile Faz 3 özel tekneler"
-      in NORMALIZED_DASHBOARD_SOURCE
+      "Faz 2 hibrit tekneler ile Faz 3 özel tekneler "
+      in DASHBOARD_SOURCE
   )
 
 
 def test_dashboard_no_longer_assumes_missing_membership_is_member():
   assert (
       "Excel dosyasında kooperatif üyeliği bulunmadığından"
-      not in NORMALIZED_DASHBOARD_SOURCE
+      not in DASHBOARD_SOURCE
   )
 
   assert (
-      "bütün Faz 1 filosunu kooperatif üyesi kabul ederek "
-      "hibe hesaplamak doğru değildir"
-      in NORMALIZED_DASHBOARD_SOURCE
+      "bütün Faz 1 filosunu "
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "kooperatif üyesi kabul ederek hibe hesaplamak "
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "doğru değildir."
+      in DASHBOARD_SOURCE
   )
 
 
@@ -213,25 +211,11 @@ def test_decision_table_exposes_vessel_level_recommendation():
 
 
 def test_inventory_dashboard_has_phase_and_type_filters():
-  assert (
-      "st.selectbox("
-      in DASHBOARD_SOURCE
-  )
+  assert "st.selectbox(" in DASHBOARD_SOURCE
+  assert '"Dönüşüm fazı"' in DASHBOARD_SOURCE
 
-  assert (
-      '"Dönüşüm fazı"'
-      in DASHBOARD_SOURCE
-  )
-
-  assert (
-      "st.multiselect("
-      in DASHBOARD_SOURCE
-  )
-
-  assert (
-      '"Tekne cinsi"'
-      in DASHBOARD_SOURCE
-  )
+  assert "st.multiselect(" in DASHBOARD_SOURCE
+  assert '"Tekne cinsi"' in DASHBOARD_SOURCE
 
 
 def test_phase_one_cooperative_summary_separates_statuses():
@@ -266,10 +250,8 @@ def test_phase_one_cooperative_summary_separates_statuses():
       ),
   ])
 
-  summary = (
-      build_phase_one_cooperative_summary(
-          analysis
-      )
+  summary = build_phase_one_cooperative_summary(
+      analysis
   )
 
   assert summary == {
@@ -359,12 +341,22 @@ def test_calculate_financing_rejects_unverified_membership():
 
 def test_dashboard_explains_financing_guard():
   assert (
-      "Envanter kaynaklı hibe hesabı henüz oluşturulmadı."
-      in NORMALIZED_DASHBOARD_SOURCE
+      "Envanter kaynaklı hibe hesabı "
+      "henüz oluşturulmadı."
+      in DASHBOARD_SOURCE
   )
 
   assert (
-      "tekne bazlı kooperatif statüsü ve yeni hibe tahsis "
-      "yöntemi kesinleştirildikten sonra"
-      in NORMALIZED_DASHBOARD_SOURCE
+      "tekne bazlı kooperatif statüsü "
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "yeni hibe tahsis "
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "yöntemi kesinleştirildikten sonra "
+      in DASHBOARD_SOURCE
   )

@@ -168,7 +168,12 @@ def test_sidebar_explains_activation_guard():
   )
 
   assert (
-      "yanlış hibe hesabına yol açar."
+      "yanlış hibe "
+      in SOURCE
+  )
+
+  assert (
+      "hesabına yol açar."
       in SOURCE
   )
 

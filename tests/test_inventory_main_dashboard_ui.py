@@ -134,6 +134,28 @@ def test_inventory_dashboard_contains_expected_sections():
     assert label in DASHBOARD_SOURCE
 
 
+def test_inventory_dashboard_contains_cooperative_fleet_breakdown():
+  assert (
+      "Kooperatif Bazlı Filo Dağılımı"
+      in DASHBOARD_SOURCE
+  )
+
+  for column_label in (
+      "Kooperatif",
+      "Toplam",
+      "Faz 1",
+      "Faz 2",
+      "Yolcu Motoru",
+      "Gezinti / Tenezzüh",
+  ):
+    assert column_label in DASHBOARD_SOURCE
+
+  assert (
+      "analysis.cooperative_summary"
+      in DASHBOARD_SOURCE
+  )
+
+
 def test_inventory_dashboard_financing_scope_is_explicit():
   assert (
       "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar. "

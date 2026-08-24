@@ -47,6 +47,43 @@ def build_inventory_decision_table(analysis):
   return pd.DataFrame(rows)
 
 
+def build_cooperative_fleet_table(analysis):
+  rows = []
+
+  for cooperative_name, summary in (
+      analysis.cooperative_summary.items()
+  ):
+    rows.append({
+        "Kooperatif": cooperative_name,
+        "Toplam": summary["total"],
+        "Faz 1": summary["phase_1"],
+        "Faz 2": summary["phase_2"],
+        "Yolcu Motoru": summary["passenger_motor"],
+        "Gezinti / Tenezzüh": summary["excursion"],
+    })
+
+  if not rows:
+    return pd.DataFrame(
+        columns=[
+            "Kooperatif",
+            "Toplam",
+            "Faz 1",
+            "Faz 2",
+            "Yolcu Motoru",
+            "Gezinti / Tenezzüh",
+        ]
+    )
+
+  return (
+      pd.DataFrame(rows)
+      .sort_values(
+          by=["Toplam", "Kooperatif"],
+          ascending=[False, True],
+      )
+      .reset_index(drop=True)
+  )
+
+
 def build_phase_one_cooperative_summary(analysis):
   phase_one = [
       recommendation
@@ -147,6 +184,26 @@ def calculate_inventory_financing(
       "remaining_vessels": remaining_vessels,
       "remaining_investment_tl": remaining_investment,
   }
+
+
+def _render_cooperative_fleet_breakdown(analysis):
+  st.markdown("**Kooperatif Bazlı Filo Dağılımı**")
+
+  cooperative_df = build_cooperative_fleet_table(
+      analysis
+  )
+
+  if cooperative_df.empty:
+    st.caption(
+        "Envanterde kooperatif adı tanımlanmış tekne bulunmuyor."
+    )
+    return
+
+  st.dataframe(
+      cooperative_df,
+      hide_index=True,
+      use_container_width=True,
+  )
 
 
 def _render_phase_one_cooperative_status(analysis):
@@ -346,6 +403,8 @@ def render_fleet_inventory_dashboard(
       hide_index=True,
       use_container_width=True,
   )
+
+  _render_cooperative_fleet_breakdown(analysis)
 
   _render_phase_one_cooperative_status(analysis)
 

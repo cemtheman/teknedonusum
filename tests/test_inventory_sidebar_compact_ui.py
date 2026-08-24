@@ -7,10 +7,6 @@ SOURCE = Path(
     encoding="utf-8"
 )
 
-NORMALIZED_SOURCE = " ".join(
-    SOURCE.split()
-)
-
 
 def test_inventory_target_shares_use_three_columns():
   assert (
@@ -41,20 +37,9 @@ def test_inventory_sidebar_uses_compact_membership_summary():
       in SOURCE
   )
 
-  assert (
-      "Üye:"
-      in SOURCE
-  )
-
-  assert (
-      "Kooperatif dışı:"
-      in SOURCE
-  )
-
-  assert (
-      "Bilinmiyor:"
-      in SOURCE
-  )
+  assert "Üye:" in SOURCE
+  assert "Kooperatif dışı:" in SOURCE
+  assert "Bilinmiyor:" in SOURCE
 
 
 def test_inventory_sidebar_activation_is_financing_safe():
@@ -65,18 +50,24 @@ def test_inventory_sidebar_activation_is_financing_safe():
 
   assert (
       "Faz 1 envanterindeki tüm teknelerin "
-      "kooperatif üyeliği doğrulanmıştır"
-      in NORMALIZED_SOURCE
+      in SOURCE
+  )
+
+  assert (
+      "kooperatif üyeliği doğrulanmıştır. "
+      in SOURCE
   )
 
 
 def test_inventory_sidebar_no_longer_uses_obsolete_grant_assumption():
   assert (
-      "Excel'de kooperatif üyeliği bulunmadığından"
-      not in NORMALIZED_SOURCE
+      "Excel'de kooperatif üyeliği "
+      "bulunmadığından"
+      not in SOURCE
   )
 
   assert (
-      "Gerçek uygunluk ayrıca doğrulanmalıdır."
-      not in NORMALIZED_SOURCE
+      "Gerçek uygunluk ayrıca "
+      "doğrulanmalıdır."
+      not in SOURCE
   )

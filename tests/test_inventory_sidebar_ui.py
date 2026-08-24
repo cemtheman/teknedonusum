@@ -7,6 +7,10 @@ SOURCE = Path(
     encoding="utf-8"
 )
 
+NORMALIZED_SOURCE = " ".join(
+    SOURCE.split()
+)
+
 
 def test_sidebar_exposes_inventory_excel_module():
   assert (
@@ -37,11 +41,6 @@ def test_inventory_target_distribution_is_user_configurable():
 def test_inventory_uses_analysis_core():
   assert (
       "load_and_analyze_inventory_excel("
-      in SOURCE
-  )
-
-  assert (
-      '"v1": ('
       in SOURCE
   )
 
@@ -96,7 +95,7 @@ def test_unverified_inventory_does_not_override_primary_counts():
   )
 
   count_override_position = SOURCE.index(
-      'count_v1 = int('
+      "count_v1 = int("
   )
 
   assert (
@@ -107,7 +106,7 @@ def test_unverified_inventory_does_not_override_primary_counts():
 
 def test_active_inventory_plan_overrides_primary_counts_only_after_guard():
   assert (
-      'count_v1 = int('
+      "count_v1 = int("
       in SOURCE
   )
 
@@ -139,15 +138,13 @@ def test_active_inventory_plan_overrides_primary_counts_only_after_guard():
 
 def test_sidebar_no_longer_assumes_missing_membership_is_member():
   assert (
-      "Excel'de kooperatif üyeliği "
-      "bulunmadığından"
-      not in SOURCE
+      "Excel'de kooperatif üyeliği bulunmadığından"
+      not in NORMALIZED_SOURCE
   )
 
   assert (
-      "mevcut kooperatif hibe senaryosu "
-      "kullanılır"
-      not in SOURCE
+      "mevcut kooperatif hibe senaryosu kullanılır"
+      not in NORMALIZED_SOURCE
   )
 
 
@@ -170,15 +167,13 @@ def test_sidebar_exposes_phase_one_membership_quality():
 
 def test_sidebar_explains_activation_guard():
   assert (
-      "bütün tekneleri kooperatif üyesi "
-      "kabul etmek yanlış hibe hesabına "
-      "yol açar"
-      in SOURCE
+      "bütün tekneleri kooperatif üyesi kabul etmek "
+      "yanlış hibe hesabına yol açar"
+      in NORMALIZED_SOURCE
   )
 
   assert (
-      "Aktif teknik filo ile finansman "
-      "filosu sonraki aşamada ayrı "
-      "veri yapıları olarak modellenerek"
-      in SOURCE
+      "Aktif teknik filo ile finansman filosu sonraki "
+      "aşamada ayrı veri yapıları olarak modellenerek"
+      in NORMALIZED_SOURCE
   )

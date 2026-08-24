@@ -4,10 +4,10 @@ from datetime import date
 import streamlit as st
 
 from calculations.fleet_inventory_analysis import (
-    COOPERATIVE_MEMBER,
-    COOPERATIVE_NON_MEMBER,
-    COOPERATIVE_UNKNOWN,
     load_and_analyze_inventory_excel,
+)
+from calculations.inventory_target_allocation import (
+    allocate_inventory_target_fleet,
 )
 from config.operational_speed import (
     DEFAULT_OPERATION_SPEED_KNOTS,
@@ -45,37 +45,8 @@ def _render_cost_input(label, value):
     st.error("Maliyet 10.000 € ile 1.000.000 € arasında olmalıdır.")
     st.stop()
     return value
+
   return parsed_value
-
-
-def _phase_one_cooperative_counts(analysis):
-  counts = {
-      COOPERATIVE_MEMBER: 0,
-      COOPERATIVE_NON_MEMBER: 0,
-      COOPERATIVE_UNKNOWN: 0,
-  }
-
-  for recommendation in analysis.recommendations:
-    if recommendation.conversion_phase != "Faz 1":
-      continue
-
-    status = recommendation.vessel.cooperative_status
-    if status not in counts:
-      status = COOPERATIVE_UNKNOWN
-
-    counts[status] += 1
-
-  return counts
-
-
-def _inventory_plan_can_activate(analysis):
-  counts = _phase_one_cooperative_counts(analysis)
-  phase_one_total = sum(counts.values())
-
-  return (
-      phase_one_total > 0
-      and counts[COOPERATIVE_MEMBER] == phase_one_total
-  )
 
 
 def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
@@ -90,27 +61,47 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
     with st.expander("🚢 Filo Dönüşüm Hedefleri", expanded=False):
       st.caption("Kooperatif Üyesi Hedefleri (%55 & %70 Hibe)")
+
       count_v1 = st.number_input(
           "Tip 1 (12 m Tek Gövdeli - 24 Kişi) Adet",
-          min_value=0, max_value=200, value=50, step=1,
+          min_value=0,
+          max_value=200,
+          value=50,
+          step=1,
       )
+
       count_v2 = st.number_input(
           "Tip 2 (13,5 m Katamaran - 32 Kişi) Adet",
-          min_value=0, max_value=200, value=50, step=1,
+          min_value=0,
+          max_value=200,
+          value=50,
+          step=1,
       )
+
       count_v3 = st.number_input(
           "Tip 3 (14 m Katamaran - 54 Kişi) Adet",
-          min_value=0, max_value=200, value=40, step=1,
+          min_value=0,
+          max_value=200,
+          value=40,
+          step=1,
       )
 
       st.caption("Kooperatif Dışı (Bireysel) Hedefler (%40 Hibe)")
+
       count_v4_24 = st.number_input(
           "Tip 4A (12 m Tek Gövdeli - 24 Kişi) Adet",
-          min_value=0, max_value=200, value=30, step=1,
+          min_value=0,
+          max_value=200,
+          value=30,
+          step=1,
       )
+
       count_v4_32 = st.number_input(
           "Tip 4B (13,5 m Katamaran - 32 Kişi) Adet",
-          min_value=0, max_value=200, value=20, step=1,
+          min_value=0,
+          max_value=200,
+          value=20,
+          step=1,
       )
 
     with st.expander(
@@ -119,8 +110,8 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
     ):
       st.caption(
           "Tekne listesini Excel formatında yükleyin. Envanter önce dönüşüm "
-          "fazlarına ayrılır; Faz 1 yolcu motorları daha sonra hedef Tip 1/2/3 "
-          "filo dağılımına dönüştürülür."
+          "fazlarına ayrılır. Faz 1 yolcu motorları kooperatif üyelik statüsüne "
+          "göre mevcut teknik ve finansman profillerine dağıtılır."
       )
 
       inventory_file = st.file_uploader(
@@ -137,7 +128,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
         st.session_state["inventory_plan_active"] = False
 
       if inventory_file is not None:
-        st.markdown("**Hedef Faz 1 Filo Dağılımı**")
+        st.markdown("**Kooperatif Üyesi Faz 1 Hedef Dağılımı**")
 
         target_col1, target_col2, target_col3 = (
             st.columns(3)
@@ -179,13 +170,54 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
             + target_v3_percent
         )
 
+        st.markdown("**Kooperatif Dışı Faz 1 Hedef Dağılımı**")
+
+        non_member_col1, non_member_col2 = st.columns(2)
+
+        with non_member_col1:
+          target_v4_24_percent = st.number_input(
+              "Tip 4A (%)",
+              min_value=0,
+              max_value=100,
+              value=60,
+              step=5,
+              key="inventory_target_v4_24",
+          )
+
+        with non_member_col2:
+          target_v4_32_percent = st.number_input(
+              "Tip 4B (%)",
+              min_value=0,
+              max_value=100,
+              value=40,
+              step=5,
+              key="inventory_target_v4_32",
+          )
+
+        non_member_target_total_percent = (
+            target_v4_24_percent
+            + target_v4_32_percent
+        )
+
+        distribution_valid = True
+
         if target_total_percent != 100:
-          st.session_state["fleet_inventory_analysis"] = None
-          st.session_state["fleet_inventory_plan_active"] = False
-          st.session_state["inventory_plan_active"] = False
+          distribution_valid = False
           st.error(
               "Tip 1 + Tip 2 + Tip 3 hedef paylarının toplamı %100 olmalıdır."
           )
+
+        if non_member_target_total_percent != 100:
+          distribution_valid = False
+          st.error(
+              "Tip 4A + Tip 4B hedef paylarının toplamı %100 olmalıdır."
+          )
+
+        if not distribution_valid:
+          st.session_state["fleet_inventory_analysis"] = None
+          st.session_state["fleet_inventory_plan_active"] = False
+          st.session_state["inventory_plan_active"] = False
+
         else:
           try:
             inventory_analysis = load_and_analyze_inventory_excel(
@@ -196,25 +228,58 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                     "v3": target_v3_percent / 100.0,
                 },
             )
+
+            inventory_allocation = allocate_inventory_target_fleet(
+                inventory_analysis,
+                member_target_shares={
+                    "v1": target_v1_percent / 100.0,
+                    "v2": target_v2_percent / 100.0,
+                    "v3": target_v3_percent / 100.0,
+                },
+                non_member_target_shares={
+                    "v4_24": target_v4_24_percent / 100.0,
+                    "v4_32": target_v4_32_percent / 100.0,
+                },
+            )
+
           except Exception as exc:
             st.session_state["fleet_inventory_analysis"] = None
             st.session_state["fleet_inventory_plan_active"] = False
             st.session_state["inventory_plan_active"] = False
             st.error(f"Tekne listesi analiz edilemedi: {exc}")
+
           else:
-            st.session_state["fleet_inventory_analysis"] = inventory_analysis
-
-            total_inventory = len(inventory_analysis.recommendations)
-            phase_counts = inventory_analysis.phase_counts
-            target_counts = inventory_analysis.target_fleet.target_counts
-
-            cooperative_counts = _phase_one_cooperative_counts(
+            st.session_state["fleet_inventory_analysis"] = (
                 inventory_analysis
             )
-            phase_one_total = sum(cooperative_counts.values())
-            phase_one_member = cooperative_counts[COOPERATIVE_MEMBER]
-            phase_one_non_member = cooperative_counts[COOPERATIVE_NON_MEMBER]
-            phase_one_unknown = cooperative_counts[COOPERATIVE_UNKNOWN]
+
+            total_inventory = len(
+                inventory_analysis.recommendations
+            )
+
+            phase_counts = (
+                inventory_analysis.phase_counts
+            )
+
+            inventory_target_counts = (
+                inventory_allocation.target_counts
+            )
+
+            phase_one_total = (
+                inventory_allocation.phase_one_total
+            )
+
+            phase_one_member = (
+                inventory_allocation.member_vessels
+            )
+
+            phase_one_non_member = (
+                inventory_allocation.non_member_vessels
+            )
+
+            phase_one_unknown = (
+                inventory_allocation.unknown_vessels
+            )
 
             st.success(
                 f"{total_inventory} tekne başarıyla analiz edildi."
@@ -227,14 +292,8 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 f"İnceleme: {phase_counts.get('Özel İnceleme', 0)}"
             )
 
-            st.markdown("**Önerilen Faz 1 Hedef Filosu**")
-            st.caption(
-                f"Tip 1: {target_counts['v1']} · "
-                f"Tip 2: {target_counts['v2']} · "
-                f"Tip 3: {target_counts['v3']}"
-            )
-
             st.markdown("**Faz 1 Kooperatif Durumu**")
+
             st.caption(
                 f"Toplam: {phase_one_total} · "
                 f"Üye: {phase_one_member} · "
@@ -242,31 +301,39 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 f"Bilinmiyor: {phase_one_unknown}"
             )
 
-            activation_allowed = (
-                _inventory_plan_can_activate(
-                    inventory_analysis
-                )
+            st.markdown("**Önerilen Faz 1 Hedef Filosu**")
+
+            st.caption(
+                f"Tip 1: {inventory_target_counts['v1']} · "
+                f"Tip 2: {inventory_target_counts['v2']} · "
+                f"Tip 3: {inventory_target_counts['v3']} · "
+                f"Tip 4A: {inventory_target_counts['v4_24']} · "
+                f"Tip 4B: {inventory_target_counts['v4_32']}"
             )
+
+            activation_allowed = inventory_allocation.activation_ready
 
             if activation_allowed:
               st.success(
-                  "Faz 1 envanterindeki tüm teknelerin "
-                  "kooperatif üyeliği doğrulanmıştır. "
-                  "Mevcut Tip 1/2/3 finansman modeliyle "
-                  "aktif senaryoya aktarım yapılabilir."
+                  "Kooperatif üyesi Faz 1 tekneleri Tip 1/2/3 profillerine; "
+                  "kooperatif dışı Faz 1 tekneleri Tip 4A/4B profillerine "
+                  "ayrılarak aktif senaryoya aktarılabilir."
               )
+
             else:
               st.session_state["inventory_plan_active"] = False
+
               st.warning(
-                  "Envanter teknik olarak analiz edildi ancak ana simülasyon "
-                  "senaryosuna henüz aktarılamaz. Faz 1 filosunda kooperatif "
-                  "dışı veya üyeliği bilinmeyen tekne bulunduğunda bütün tekneleri "
-                  "kooperatif üyesi kabul etmek yanlış hibe hesabına yol açar."
+                  "Envanter teknik olarak analiz edildi ancak Faz 1 filosunda "
+                  "üyeliği bilinmeyen tekne bulunduğu için aktif senaryoya "
+                  "henüz aktarılamaz."
               )
+
               st.caption(
-                  "Teknik hedef filo önerisi kullanılabilir durumdadır. "
-                  "Aktif teknik filo ile finansman filosu sonraki aşamada "
-                  "ayrı veri yapıları olarak modellenerek bu sınırlama kaldırılacaktır."
+                  f"Üyeliği bilinmeyen Faz 1 tekne sayısı: "
+                  f"{inventory_allocation.unknown_vessels}. "
+                  "Bu teknelerin kooperatif statüsü doğrulanmadan finansman "
+                  "profili otomatik atanmaz."
               )
 
             inventory_plan_active = st.checkbox(
@@ -274,9 +341,10 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                 value=False,
                 disabled=not activation_allowed,
                 help=(
-                    "Mevcut ana simülasyon zinciri teknik filo adetleri ile finansman "
-                    "statüsünü aynı veri yapısında tuttuğundan, yalnız Faz 1'in tamamı "
-                    "doğrulanmış kooperatif üyesiyse aktif edilebilir."
+                    "Kooperatif üyesi Faz 1 filosu Tip 1/2/3, "
+                    "kooperatif dışı Faz 1 filosu Tip 4A/4B "
+                    "profillerine aktarılır. Yalnız üyelik statüsü "
+                    "bilinmeyen Faz 1 teknesi varsa aktivasyon engellenir."
                 ),
                 key="inventory_plan_active",
             )
@@ -286,28 +354,50 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
             )
 
             if inventory_plan_active:
-              count_v1 = int(target_counts["v1"])
-              count_v2 = int(target_counts["v2"])
-              count_v3 = int(target_counts["v3"])
+              count_v1 = int(
+                  inventory_target_counts["v1"]
+              )
 
-              count_v4_24 = 0
-              count_v4_32 = 0
+              count_v2 = int(
+                  inventory_target_counts["v2"]
+              )
+
+              count_v3 = int(
+                  inventory_target_counts["v3"]
+              )
+
+              count_v4_24 = int(
+                  inventory_target_counts["v4_24"]
+              )
+
+              count_v4_32 = int(
+                  inventory_target_counts["v4_32"]
+              )
 
               st.info(
                   "Aktif envanter senaryosu: "
-                  f"Tip 1 {count_v1} · Tip 2 {count_v2} · Tip 3 {count_v3}. "
-                  "Faz 1 kooperatif üyeliği doğrulanmış olduğundan mevcut "
-                  "kooperatif finansman profili kullanılıyor."
+                  f"Tip 1 {count_v1} · "
+                  f"Tip 2 {count_v2} · "
+                  f"Tip 3 {count_v3} · "
+                  f"Tip 4A {count_v4_24} · "
+                  f"Tip 4B {count_v4_32}. "
+                  "Kooperatif üyesi ve kooperatif dışı Faz 1 filoları "
+                  "mevcut finansman profilleriyle ayrı hesaplanıyor."
               )
 
     with st.expander("⚓ Operasyon Profili", expanded=False):
       st.caption(
           "Günlük rota ve hizmet hızı teknik boyutlandırmanın ana operasyon girdileridir."
       )
+
       daily_miles = st.number_input(
           "Günlük Rota Mesafesi (deniz mili)",
-          min_value=15.0, max_value=60.0, value=20.0, step=5.0,
+          min_value=15.0,
+          max_value=60.0,
+          value=20.0,
+          step=5.0,
       )
+
       cruise_speed = st.number_input(
           "Ortalama Seyir Hızı (Knot)",
           min_value=MIN_OPERATION_SPEED_KNOTS,
@@ -322,14 +412,20 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "panellerini kapsayan piyasa referanslarıdır. %8 ÖTV ve %20 KDV hariçtir. "
           "Tip 4A bedeli Tip 1 ile, Tip 4B bedeli Tip 2 ile aynıdır."
       )
+
       cost_eur_v1 = _render_cost_input(
-          "Tip 1 & Tip 4A anahtar teslim bedeli (€)", 108100
+          "Tip 1 & Tip 4A anahtar teslim bedeli (€)",
+          108100,
       )
+
       cost_eur_v2 = _render_cost_input(
-          "Tip 2 & Tip 4B anahtar teslim bedeli (€)", 144140
+          "Tip 2 & Tip 4B anahtar teslim bedeli (€)",
+          144140,
       )
+
       cost_eur_v3 = _render_cost_input(
-          "Tip 3 anahtar teslim bedeli (€)", 180180
+          "Tip 3 anahtar teslim bedeli (€)",
+          180180,
       )
 
     with st.expander("🌐 Piyasa & Enerji Fiyatları", expanded=False):
@@ -345,6 +441,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           value=float(live_eur),
           step=0.1,
       )
+
       diesel_price = st.number_input(
           "Dizel Yakıt Fiyatı TL/L "
           f"{'🟢 Canlı Aytemiz' if diesel_is_live else '🟡 Yedek değer'}",
@@ -353,6 +450,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           value=float(live_diesel),
           step=0.1,
       )
+
       elec_price = st.number_input(
           "Liman Şebeke Elektrik Fiyatı (TL/kWh)",
           min_value=3.0,
@@ -368,22 +466,50 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       )
 
       if "solar_latitude" not in st.session_state:
-        st.session_state["solar_latitude"] = float(DEFAULT_LATITUDE)
-      if "solar_longitude" not in st.session_state:
-        st.session_state["solar_longitude"] = float(DEFAULT_LONGITUDE)
+        st.session_state["solar_latitude"] = float(
+            DEFAULT_LATITUDE
+        )
 
-      location_name = st.text_input("Lokasyon", value=DEFAULT_LOCATION_NAME)
-      if st.button("Lokasyonu Çözümle", use_container_width=True):
+      if "solar_longitude" not in st.session_state:
+        st.session_state["solar_longitude"] = float(
+            DEFAULT_LONGITUDE
+        )
+
+      location_name = st.text_input(
+          "Lokasyon",
+          value=DEFAULT_LOCATION_NAME,
+      )
+
+      if st.button(
+          "Lokasyonu Çözümle",
+          use_container_width=True,
+      ):
         try:
-          resolved_name, resolved_latitude, resolved_longitude = geocode_location(
+          (
+              resolved_name,
+              resolved_latitude,
+              resolved_longitude,
+          ) = geocode_location(
               location_name
           )
+
         except Exception as exc:
-          st.error(f"Lokasyon çözümlenemedi: {exc}")
+          st.error(
+              f"Lokasyon çözümlenemedi: {exc}"
+          )
+
         else:
-          st.session_state["solar_latitude"] = resolved_latitude
-          st.session_state["solar_longitude"] = resolved_longitude
-          st.caption(f"Çözümlenen lokasyon: {resolved_name}")
+          st.session_state["solar_latitude"] = (
+              resolved_latitude
+          )
+
+          st.session_state["solar_longitude"] = (
+              resolved_longitude
+          )
+
+          st.caption(
+              f"Çözümlenen lokasyon: {resolved_name}"
+          )
 
       latitude = st.number_input(
           "Enlem",
@@ -393,6 +519,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           format="%.4f",
           key="solar_latitude",
       )
+
       longitude = st.number_input(
           "Boylam",
           min_value=-180.0,
@@ -403,16 +530,28 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
       )
 
       season_start = st.date_input(
-          "Sezon Başlangıcı", value=date(2026, 4, 1), format="DD.MM.YYYY"
+          "Sezon Başlangıcı",
+          value=date(2026, 4, 1),
+          format="DD.MM.YYYY",
       )
+
       season_end = st.date_input(
-          "Sezon Bitişi", value=date(2026, 9, 30), format="DD.MM.YYYY"
+          "Sezon Bitişi",
+          value=date(2026, 9, 30),
+          format="DD.MM.YYYY",
       )
+
       if season_end < season_start:
-        st.error("Sezon bitiş tarihi başlangıç tarihinden önce olamaz.")
+        st.error(
+            "Sezon bitiş tarihi başlangıç tarihinden önce olamaz."
+        )
         st.stop()
 
-      season_days = (season_end - season_start).days + 1
+      season_days = (
+          season_end
+          - season_start
+      ).days + 1
+
       st.number_input(
           "Sezon Süresi (gün)",
           min_value=1,
@@ -420,6 +559,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           step=1,
           disabled=True,
       )
+
       operating_days = st.number_input(
           "Fiili Operasyon Günü",
           min_value=1,
@@ -431,15 +571,22 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
               "Güneş üretimi ise sezonun tüm takvim günleri için hesaplanır."
           ),
       )
+
       st.caption(
-          f"Operasyon oranı: %{operating_days / season_days * 100:.1f} · "
+          f"Operasyon oranı: "
+          f"%{operating_days / season_days * 100:.1f} · "
           f"{operating_days}/{season_days} gün"
       )
 
       try:
         solar_resource = build_season_solar_resource(
-            location_name, latitude, longitude, season_start, season_end
+            location_name,
+            latitude,
+            longitude,
+            season_start,
+            season_end,
         )
+
       except Exception as exc:
         st.error(
             "PVGIS solar kaynağı alınamadı. Lokasyon/koordinatları ve internet "
@@ -448,8 +595,9 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
         st.stop()
 
       st.caption(
-          f"PVGIS sezonu: {solar_resource.season_days} gün · ortalama özgül PV "
-          f"üretimi {solar_resource.average_daily_specific_yield_kwh_per_kwp:.2f} "
+          f"PVGIS sezonu: {solar_resource.season_days} gün · "
+          f"ortalama özgül PV üretimi "
+          f"{solar_resource.average_daily_specific_yield_kwh_per_kwp:.2f} "
           "kWh/kWp-gün"
       )
 
@@ -458,6 +606,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           "Dört ana kaynağın ilk yıl için programa ayrılabilecek toplam hibe "
           "bütçesini TL olarak girin."
       )
+
       grant_budget_ministry_tl = st.number_input(
           "Çevre, Şehircilik ve İklim Değişikliği Bakanlığı (TL)",
           min_value=0,
@@ -465,6 +614,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           value=200_000_000,
           step=1_000_000,
       )
+
       grant_budget_geka_tl = st.number_input(
           "GEKA (TL)",
           min_value=0,
@@ -472,6 +622,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           value=0,
           step=1_000_000,
       )
+
       grant_budget_yikob_tl = st.number_input(
           "YİKOB (TL)",
           min_value=0,
@@ -479,6 +630,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           value=100_000_000,
           step=1_000_000,
       )
+
       grant_budget_zero_waste_tl = st.number_input(
           "Sıfır Atık Vakfı (TL)",
           min_value=0,

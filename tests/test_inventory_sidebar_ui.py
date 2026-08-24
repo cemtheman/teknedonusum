@@ -18,7 +18,7 @@ def test_sidebar_exposes_inventory_excel_module():
   assert 'type=["xlsx"]' in SOURCE
 
 
-def test_inventory_target_distribution_is_user_configurable():
+def test_inventory_member_target_distribution_is_user_configurable():
   assert '"Tip 1 (%)"' in SOURCE
   assert '"Tip 2 (%)"' in SOURCE
   assert '"Tip 3 (%)"' in SOURCE
@@ -30,6 +30,21 @@ def test_inventory_target_distribution_is_user_configurable():
 
   assert (
       "target_total_percent != 100"
+      in SOURCE
+  )
+
+
+def test_inventory_non_member_target_distribution_is_user_configurable():
+  assert (
+      "Kooperatif Dışı Faz 1 Hedef Dağılımı"
+      in SOURCE
+  )
+
+  assert '"Tip 4A (%)"' in SOURCE
+  assert '"Tip 4B (%)"' in SOURCE
+
+  assert (
+      "non_member_target_total_percent != 100"
       in SOURCE
   )
 
@@ -56,6 +71,23 @@ def test_inventory_uses_analysis_core():
   )
 
 
+def test_inventory_uses_status_aware_target_allocation():
+  assert (
+      "allocate_inventory_target_fleet("
+      in SOURCE
+  )
+
+  assert (
+      '"v4_24": target_v4_24_percent / 100.0'
+      in SOURCE
+  )
+
+  assert (
+      '"v4_32": target_v4_32_percent / 100.0'
+      in SOURCE
+  )
+
+
 def test_inventory_plan_requires_explicit_activation():
   assert (
       '"Envanter planını aktif senaryo olarak kullan"'
@@ -68,19 +100,39 @@ def test_inventory_plan_requires_explicit_activation():
   )
 
 
-def test_inventory_activation_requires_verified_cooperative_status():
+def test_inventory_activation_uses_allocation_readiness():
   assert (
-      "def _inventory_plan_can_activate("
-      in SOURCE
-  )
-
-  assert (
-      "COOPERATIVE_MEMBER"
+      "activation_allowed = inventory_allocation.activation_ready"
       in SOURCE
   )
 
   assert (
       "disabled=not activation_allowed"
+      in SOURCE
+  )
+
+
+def test_inventory_activation_does_not_require_all_phase_one_to_be_members():
+  assert (
+      "counts[COOPERATIVE_MEMBER] == phase_one_total"
+      not in SOURCE
+  )
+
+  assert (
+      "Faz 1 envanterindeki tüm teknelerin "
+      "kooperatif üyeliği doğrulanmıştır."
+      not in SOURCE
+  )
+
+
+def test_inventory_unknown_membership_still_blocks_activation():
+  assert (
+      "inventory_allocation.unknown_vessels"
+      in SOURCE
+  )
+
+  assert (
+      "üyeliği bilinmeyen"
       in SOURCE
   )
 
@@ -100,35 +152,47 @@ def test_unverified_inventory_does_not_override_primary_counts():
   )
 
 
-def test_active_inventory_plan_overrides_primary_counts_only_after_guard():
+def test_active_inventory_plan_overrides_all_existing_fleet_profiles():
   assert (
       "count_v1 = int("
       in SOURCE
   )
 
   assert (
-      'target_counts["v1"]'
+      'inventory_target_counts["v1"]'
       in SOURCE
   )
 
   assert (
-      'target_counts["v2"]'
+      'inventory_target_counts["v2"]'
       in SOURCE
   )
 
   assert (
-      'target_counts["v3"]'
+      'inventory_target_counts["v3"]'
       in SOURCE
   )
 
+  assert (
+      'inventory_target_counts["v4_24"]'
+      in SOURCE
+  )
+
+  assert (
+      'inventory_target_counts["v4_32"]'
+      in SOURCE
+  )
+
+
+def test_active_inventory_plan_does_not_zero_non_member_profiles():
   assert (
       "count_v4_24 = 0"
-      in SOURCE
+      not in SOURCE
   )
 
   assert (
       "count_v4_32 = 0"
-      in SOURCE
+      not in SOURCE
   )
 
 
@@ -156,14 +220,24 @@ def test_sidebar_exposes_phase_one_membership_quality():
   assert "Bilinmiyor:" in SOURCE
 
 
-def test_sidebar_activation_guard_is_present_and_enforced():
+def test_sidebar_explains_status_aware_active_inventory():
   assert (
-      "activation_allowed = ("
+      "Kooperatif üyesi Faz 1 tekneleri "
+      "Tip 1/2/3"
       in SOURCE
   )
 
   assert (
-      "_inventory_plan_can_activate("
+      "kooperatif dışı Faz 1 tekneleri "
+      "Tip 4A/4B"
+      in SOURCE
+  )
+
+
+def test_sidebar_activation_guard_is_present_and_enforced():
+  assert (
+      "activation_allowed = "
+      "inventory_allocation.activation_ready"
       in SOURCE
   )
 

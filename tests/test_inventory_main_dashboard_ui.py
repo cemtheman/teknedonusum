@@ -84,7 +84,12 @@ def test_sidebar_persists_inventory_analysis_in_session_state():
   )
 
   assert (
-      "= inventory_analysis"
+      "inventory_analysis"
+      in INPUTS_SOURCE
+  )
+
+  assert (
+      'st.session_state["fleet_inventory_analysis"]'
       in INPUTS_SOURCE
   )
 

@@ -7,10 +7,6 @@ SOURCE = Path(
     encoding="utf-8"
 )
 
-NORMALIZED_SOURCE = " ".join(
-    SOURCE.split()
-)
-
 
 def test_sidebar_exposes_inventory_excel_module():
   assert (
@@ -138,13 +134,15 @@ def test_active_inventory_plan_overrides_primary_counts_only_after_guard():
 
 def test_sidebar_no_longer_assumes_missing_membership_is_member():
   assert (
-      "Excel'de kooperatif üyeliği bulunmadığından"
-      not in NORMALIZED_SOURCE
+      "Excel'de kooperatif üyeliği "
+      "bulunmadığından"
+      not in SOURCE
   )
 
   assert (
-      "mevcut kooperatif hibe senaryosu kullanılır"
-      not in NORMALIZED_SOURCE
+      "mevcut kooperatif hibe senaryosu "
+      "kullanılır"
+      not in SOURCE
   )
 
 
@@ -154,26 +152,37 @@ def test_sidebar_exposes_phase_one_membership_quality():
       in SOURCE
   )
 
-  assert (
-      "Kooperatif dışı:"
-      in SOURCE
-  )
-
-  assert (
-      "Bilinmiyor:"
-      in SOURCE
-  )
+  assert "Kooperatif dışı:" in SOURCE
+  assert "Bilinmiyor:" in SOURCE
 
 
 def test_sidebar_explains_activation_guard():
   assert (
-      "bütün tekneleri kooperatif üyesi kabul etmek "
-      "yanlış hibe hesabına yol açar"
-      in NORMALIZED_SOURCE
+      "bütün tekneleri "
+      in SOURCE
   )
 
   assert (
-      "Aktif teknik filo ile finansman filosu sonraki "
-      "aşamada ayrı veri yapıları olarak modellenerek"
-      in NORMALIZED_SOURCE
+      "kooperatif üyesi kabul etmek "
+      in SOURCE
+  )
+
+  assert (
+      "yanlış hibe hesabına yol açar."
+      in SOURCE
+  )
+
+  assert (
+      "Aktif teknik filo "
+      in SOURCE
+  )
+
+  assert (
+      "finansman filosu sonraki "
+      in SOURCE
+  )
+
+  assert (
+      "ayrı veri yapıları olarak modellenerek "
+      in SOURCE
   )

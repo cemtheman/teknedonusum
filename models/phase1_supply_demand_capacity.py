@@ -5,10 +5,29 @@ Teknelere altyapı atamaz, yatırım önceliği belirlemez, şarj programı olu�
 ve uygulama kararı üretmez.
 """
 
+import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
 from numbers import Real
+
+
+_PLATE_PATTERN = re.compile(r"^(T|Ö)-([0-9]{3})$")
+
+
+class ActivityGroup(str, Enum):
+  """Teknenin ticari veya özel faaliyet grubu."""
+
+  COMMERCIAL = "commercial"
+  PRIVATE = "private"
+
+
+class VerificationStatus(str, Enum):
+  """Envanter kaydının saha doğrulama durumu."""
+
+  SYNTHETIC = "synthetic"
+  REQUIRES_FIELD_VERIFICATION = "requires_field_verification"
+  FIELD_VERIFIED = "field_verified"
 
 
 class InputBasis(str, Enum):
@@ -86,6 +105,77 @@ def _require_optional_aware_datetime(
 ) -> None:
   if value is not None:
     _require_aware_datetime(field_name, value)
+
+
+@dataclass(frozen=True)
+class VesselInventory:
+  """Bir teknenin temel envanter ve plaka kaydı."""
+
+  vessel_id: str
+  plate_number: str
+  vessel_name: str
+  owner_name: str
+  vessel_type: str
+  activity_group: ActivityGroup
+  length_m: float
+  beam_m: float
+  cooperative_id: str | None
+  verification_status: VerificationStatus
+
+  def __post_init__(self) -> None:
+    _require_non_blank("vessel_id", self.vessel_id)
+    _require_non_blank("plate_number", self.plate_number)
+    _require_non_blank("vessel_name", self.vessel_name)
+    _require_non_blank("owner_name", self.owner_name)
+    _require_non_blank("vessel_type", self.vessel_type)
+
+    plate_match = _PLATE_PATTERN.fullmatch(self.plate_number)
+
+    if plate_match is None or plate_match.group(2) == "000":
+      raise ValueError(
+        "plate_number alanı T-001 veya Ö-001 biçiminde olmalıdır"
+      )
+
+    if not isinstance(self.activity_group, ActivityGroup):
+      raise ValueError(
+        "activity_group alanı ActivityGroup türünde olmalıdır"
+      )
+
+    plate_prefix = plate_match.group(1)
+
+    if (
+      plate_prefix == "T"
+      and self.activity_group is not ActivityGroup.COMMERCIAL
+    ):
+      raise ValueError(
+        "T plaka serisi yalnız ticari teknelerde kullanılabilir"
+      )
+
+    if (
+      plate_prefix == "Ö"
+      and self.activity_group is not ActivityGroup.PRIVATE
+    ):
+      raise ValueError(
+        "Ö plaka serisi yalnız özel teknelerde kullanılabilir"
+      )
+
+    _require_positive("length_m", self.length_m)
+    _require_positive("beam_m", self.beam_m)
+
+    if self.cooperative_id is not None:
+      _require_non_blank(
+        "cooperative_id",
+        self.cooperative_id,
+      )
+
+    if not isinstance(
+      self.verification_status,
+      VerificationStatus,
+    ):
+      raise ValueError(
+        "verification_status alanı "
+        "VerificationStatus türünde olmalıdır"
+      )
 
 
 @dataclass(frozen=True)

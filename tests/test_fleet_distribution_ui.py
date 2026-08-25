@@ -314,3 +314,60 @@ def test_summary_table_uses_compact_svg_vessel_icons():
       "height:34px"
       in source
   )
+
+
+def test_top_kpis_use_two_by_two_layout_and_fit_container():
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
+
+  metric_card_source = (
+      source
+      .split(
+          "def _metric_card(",
+          1,
+      )[1]
+      .split(
+          "def _render_fleet_top_kpis(",
+          1,
+      )[0]
+  )
+
+  top_kpi_source = (
+      source
+      .split(
+          "def _render_fleet_top_kpis(",
+          1,
+      )[1]
+      .split(
+          "def _vessel_icon_svg(",
+          1,
+      )[0]
+  )
+
+  assert (
+      "st.columns(2)"
+      in top_kpi_source
+  )
+
+  assert (
+      "st.columns(4)"
+      not in top_kpi_source
+  )
+
+  assert (
+      "width:100%;"
+      in metric_card_source
+  )
+
+  assert (
+      "box-sizing:border-box;"
+      in metric_card_source
+  )
+
+  assert (
+      "min-width:0;"
+      in metric_card_source
+  )

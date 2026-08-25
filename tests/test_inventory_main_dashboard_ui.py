@@ -41,6 +41,24 @@ DASHBOARD_SOURCE = Path(
 )
 
 
+def _function_source(
+    source,
+    function_name,
+    next_function_name,
+):
+  return (
+      source
+      .split(
+          f"def {function_name}(",
+          1,
+      )[1]
+      .split(
+          f"def {next_function_name}(",
+          1,
+      )[0]
+  )
+
+
 def _vessel(
     row_number,
     name,
@@ -213,10 +231,10 @@ def test_app_renders_inventory_dashboard_before_fleet_dashboard():
 def test_inventory_dashboard_contains_expected_sections():
   for label in (
       "📊 Envanter Dönüşüm Analizi",
-      "Faz 1 Hedef Filo Dağılımı",
-      "Faz 1 Kooperatif Statüsü",
+      "Faz 1 · Yolcu Motorları",
+      "Faz 1 Finansman Profil Dağılımı",
       "Faz 1 Finansman İhtiyacı",
-      "Tekne Bazlı Dönüşüm Kararları",
+      "Tekne bazlı dönüşüm kararları",
   ):
     assert label in DASHBOARD_SOURCE
 
@@ -250,8 +268,18 @@ def test_inventory_dashboard_financing_scope_is_explicit():
   )
 
   assert (
-      "Faz 2 hibrit tekneler ile Faz 3 özel tekneler"
+      "Faz 2 ve Faz 3 için"
       in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "Faz 2 hibrit tekneler"
+      not in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "Faz 2 · Hibrit"
+      not in DASHBOARD_SOURCE
   )
 
 
@@ -624,5 +652,144 @@ def test_dashboard_only_blocks_unknown_membership():
 
   assert (
       "COOPERATIVE_MEMBER"
+      not in DASHBOARD_SOURCE
+  )
+
+
+def test_main_inventory_summary_prioritizes_phase_one():
+  render_source = (
+      DASHBOARD_SOURCE.split(
+          "def render_fleet_inventory_dashboard(",
+          1,
+      )[1]
+  )
+
+  assert (
+      "Faz 1 · Yolcu Motorları"
+      in render_source
+  )
+
+  assert (
+      "st.columns(3)"
+      in render_source
+  )
+
+  assert (
+      "st.columns(5)"
+      not in render_source
+  )
+
+  assert (
+      '"Kooperatif Üyesi"'
+      in render_source
+  )
+
+  assert (
+      '"Kooperatif Dışı"'
+      in render_source
+  )
+
+
+def test_unknown_membership_is_quiet_when_zero():
+  assert (
+      "Üyelik verisi eksik:"
+      in DASHBOARD_SOURCE
+  )
+
+  phase_status_source = _function_source(
+      DASHBOARD_SOURCE,
+      "_render_phase_one_cooperative_status",
+      "_render_target_allocation",
+  )
+
+  assert (
+      "st.columns(4)"
+      not in phase_status_source
+  )
+
+
+def test_target_allocation_uses_scenario_not_optimum_language():
+  target_source = _function_source(
+      DASHBOARD_SOURCE,
+      "_render_target_allocation",
+      "_render_financing",
+  )
+
+  assert (
+      "Faz 1 Finansman Profil Dağılımı"
+      in target_source
+  )
+
+  assert (
+      '"Finansman Profili"'
+      in target_source
+  )
+
+  assert (
+      '"Senaryo Payı"'
+      in target_source
+  )
+
+  assert (
+      "Faz 1 Hedef Filo Dağılımı"
+      not in target_source
+  )
+
+  assert (
+      '"Hedef Tekne Tipi"'
+      not in target_source
+  )
+
+  assert (
+      '"Grup İçi Hedef Pay"'
+      not in target_source
+  )
+
+
+def test_financing_metrics_do_not_use_four_column_layout():
+  financing_source = _function_source(
+      DASHBOARD_SOURCE,
+      "_render_financing",
+      "render_fleet_inventory_dashboard",
+  )
+
+  assert (
+      "st.columns(4)"
+      not in financing_source
+  )
+
+  assert (
+      "st.columns(2)"
+      in financing_source
+  )
+
+
+def test_secondary_inventory_details_are_collapsible():
+  assert (
+      "Kooperatif bazlı filo ayrıntısı"
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "Tekne bazlı dönüşüm kararları"
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      DASHBOARD_SOURCE.count(
+          "with st.expander("
+      )
+      >= 2
+  )
+
+
+def test_phase_two_is_not_presented_as_locked_hybrid_solution():
+  assert (
+      "Faz 2 · Hibrit"
+      not in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "Faz 2 hibrit"
       not in DASHBOARD_SOURCE
   )

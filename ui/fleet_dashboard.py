@@ -147,6 +147,8 @@ def _metric_card(
       background:#FFFFFF;
       padding:18px 20px;
       min-height:112px;
+      width:100%;
+      box-sizing:border-box;
       display:flex;
       align-items:center;
       gap:16px;
@@ -154,18 +156,23 @@ def _metric_card(
     <div style="
         font-size:2rem;
         width:50px;
+        flex:0 0 50px;
         text-align:center;">{icon}</div>
-    <div>
+    <div style="
+        flex:1;
+        min-width:0;">
       <div style="
           color:#334155;
           font-size:0.82rem;
           font-weight:650;
+          line-height:1.35;
           margin-bottom:5px;">{label}</div>
       <div style="
           color:{accent};
-          font-size:1.75rem;
-          line-height:1;
-          font-weight:800;">{value}</div>
+          font-size:clamp(1.35rem,2.2vw,1.75rem);
+          line-height:1.08;
+          font-weight:800;
+          overflow-wrap:anywhere;">{value}</div>
     </div>
   </div>
   """
@@ -174,54 +181,66 @@ def _metric_card(
 def _render_fleet_top_kpis(
     fleet: FleetResult,
 ):
-  c1, c2, c3, c4 = st.columns(4)
-
-  cards = [
+  rows = [
       (
-          c1,
-          "🚤",
-          "Hedef Dönüştürülecek Tekne",
-          f"{fleet.total_vessels} Adet",
-          "#0F172A",
+          (
+              "🚤",
+              "Hedef Dönüştürülecek Tekne",
+              f"{fleet.total_vessels} Adet",
+              "#0F172A",
+          ),
+          (
+              "👥",
+              "Toplam Filo Yolcu Kapasitesi",
+              f"{fleet.total_capacity:,} Kişi",
+              "#0F172A",
+          ),
       ),
       (
-          c2,
-          "👥",
-          "Toplam Filo Yolcu Kapasitesi",
-          f"{fleet.total_capacity:,} Kişi",
-          "#0F172A",
-      ),
-      (
-          c3,
-          "🎁",
-          "İhtiyaç Duyulan Toplam Hibe",
-          f"₺{format_integer_tr(fleet.fleet_total_grant)}",
-          "#0F172A",
-      ),
-      (
-          c4,
-          "🪙",
-          "Toplam Net Özkaynak Yatırımı",
-          f"₺{format_integer_tr(fleet.fleet_total_capex)}",
-          "#0F172A",
+          (
+              "🎁",
+              "İhtiyaç Duyulan Toplam Hibe",
+              f"₺{format_integer_tr(fleet.fleet_total_grant)}",
+              "#0F172A",
+          ),
+          (
+              "🪙",
+              "Toplam Net Özkaynak Yatırımı",
+              f"₺{format_integer_tr(fleet.fleet_total_capex)}",
+              "#0F172A",
+          ),
       ),
   ]
 
-  for (
-      column,
-      icon,
-      label,
-      value,
-      accent,
-  ) in cards:
-    with column:
+  for row_index, row_cards in enumerate(rows):
+    c1, c2 = st.columns(2)
+
+    for (
+        column,
+        (
+            icon,
+            label,
+            value,
+            accent,
+        ),
+    ) in zip(
+        (c1, c2),
+        row_cards,
+    ):
+      with column:
+        st.markdown(
+            _metric_card(
+                icon,
+                label,
+                value,
+                accent,
+            ),
+            unsafe_allow_html=True,
+        )
+
+    if row_index == 0:
       st.markdown(
-          _metric_card(
-              icon,
-              label,
-              value,
-              accent,
-          ),
+          "<div style='height:8px'></div>",
           unsafe_allow_html=True,
       )
 

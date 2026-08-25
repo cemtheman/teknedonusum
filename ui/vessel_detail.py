@@ -10,7 +10,6 @@ def _format_decimal_tr(value):
   return f"{value:.1f}".replace(".", ",")
 
 
-
 def render_vessel_details(
     vessel_specs,
     inputs: SimulationInputs,
@@ -18,6 +17,7 @@ def render_vessel_details(
 ):
   st.divider()
   st.subheader("💶 Tekne Bazlı Finansal Analizler")
+
   st.caption(
       "Teknik ön boyutlandırma üstteki karşılaştırma tablosunda tek kez "
       "sunulur. Bu bölüm yatırım, işletme gideri, tasarruf ve amortisman "
@@ -25,7 +25,10 @@ def render_vessel_details(
   )
 
   for v_key, spec in vessel_specs.items():
-    with st.expander(f"📌 {spec['name']}", expanded=False):
+    with st.expander(
+        f"📌 {spec['name']}",
+        expanded=False,
+    ):
       try:
         detail = build_vessel_detail_analysis(
             v_key,
@@ -33,6 +36,7 @@ def render_vessel_details(
             inputs,
             typical_hourly_specific_pv=typical_hourly_specific_pv,
         )
+
       except (TypeError, ValueError):
         st.warning(
             "Bu tekne için detay analizi hesaplanamadı. v0.2 teknik zinciri "
@@ -42,33 +46,52 @@ def render_vessel_details(
 
       sizing = detail.sizing
 
-      kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-      with kpi1:
+      top_left, top_right = st.columns(2)
+
+      with top_left:
         st.metric(
             "Hibe Sonrası Özkaynak Yatırımı",
             f"₺{format_integer_tr(detail.net_capex_tl)}",
         )
-      with kpi2:
+
+      with top_right:
         st.metric(
             "Sezonluk Net Tasarruf",
             f"₺{format_integer_tr(detail.net_savings_tl)}",
         )
-      with kpi3:
+
+      st.markdown(
+          "<div style='height:6px'></div>",
+          unsafe_allow_html=True,
+      )
+
+      bottom_left, bottom_right = st.columns(2)
+
+      with bottom_left:
         st.metric(
             "Yatırımın Geri Dönüş Süresi",
             f"{detail.payback_seasons:.1f} Sezon "
             f"({int(detail.payback_months)} Ay)",
         )
-      with kpi4:
+
+      with bottom_right:
         st.metric(
             "Sezonluk CO2 Salınım Azaltımı",
             f"{detail.net_co2_tonnes:.1f} Ton",
         )
 
+      st.markdown(
+          "<div style='height:8px'></div>",
+          unsafe_allow_html=True,
+      )
+
       col_left, col_right = st.columns([6, 6])
 
       with col_left:
-        st.markdown("**Yatırım ve Hibe Özeti**")
+        st.markdown(
+            "**Yatırım ve Hibe Özeti**"
+        )
+
         capex_df = pd.DataFrame({
             "Kalem": [
                 "Anahtar Teslim Piyasa Bedeli",
@@ -84,15 +107,27 @@ def render_vessel_details(
                 f"₺{format_integer_tr(detail.net_capex_tl)}",
             ],
             "Açıklama": [
-                "Gövde, tahrik sistemi, batarya ve güneş paneli dahil piyasa bedeli",
+                (
+                    "Gövde, tahrik sistemi, batarya ve güneş paneli "
+                    "dahil piyasa bedeli"
+                ),
                 spec["priority"],
-                "Anahtar teslim bedelden hibe düşüldükten sonraki yatırımcı sermayesi",
+                (
+                    "Anahtar teslim bedelden hibe düşüldükten sonraki "
+                    "yatırımcı sermayesi"
+                ),
             ],
         })
-        st.table(capex_df)
+
+        st.table(
+            capex_df
+        )
 
       with col_right:
-        st.markdown("**Sezonluk İşletme Giderleri ve Tasarruf Dökümü**")
+        st.markdown(
+            "**Sezonluk İşletme Giderleri ve Tasarruf Dökümü**"
+        )
+
         opex_df = pd.DataFrame({
             "Gider Kalemi": [
                 (
@@ -119,7 +154,10 @@ def render_vessel_details(
                 f"₺{format_integer_tr(detail.net_savings_tl)}",
             ],
         })
-        st.table(opex_df)
+
+        st.table(
+            opex_df
+        )
 
       st.caption(
           "Teknik güç, enerji talebi ve batarya sonuçları üstteki teknik "

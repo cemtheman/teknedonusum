@@ -44,7 +44,7 @@ def test_taglines_have_lower_visual_weight_than_brand_names():
   assert "font-size:0.78rem" in SOURCE
 
 
-def test_main_content_top_spacing_is_compact():
+def test_main_content_top_spacing_is_compact_on_desktop():
   assert (
       '[data-testid="stMainBlockContainer"]'
       in SOURCE
@@ -52,6 +52,23 @@ def test_main_content_top_spacing_is_compact():
 
   assert (
       "padding-top:1.5rem;"
+      in SOURCE
+  )
+
+
+def test_main_content_has_safe_mobile_top_spacing():
+  assert (
+      "@media (max-width: 768px)"
+      in SOURCE
+  )
+
+  assert (
+      '[data-testid="stMainBlockContainer"] {'
+      in SOURCE
+  )
+
+  assert (
+      "padding-top:4.5rem;"
       in SOURCE
   )
 

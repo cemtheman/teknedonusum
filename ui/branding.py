@@ -224,6 +224,10 @@ def render_sidebar_brand():
           overflow-x: hidden;
         }
 
+        [data-testid="stMainBlockContainer"] {
+          padding-top:4.5rem;
+        }
+
         .sidebar-brand-shell {
           transform:translateY(-2rem);
           margin-bottom:-2rem;

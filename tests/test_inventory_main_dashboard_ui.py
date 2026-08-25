@@ -1,13 +1,18 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
+import ui.fleet_inventory_dashboard as dashboard_module
 from calculations.fleet_inventory_analysis import (
     COOPERATIVE_MEMBER,
     COOPERATIVE_NON_MEMBER,
     COOPERATIVE_UNKNOWN,
     InventoryVessel,
     analyze_inventory,
+)
+from calculations.inventory_target_allocation import (
+    allocate_inventory_target_fleet,
 )
 from ui.fleet_inventory_dashboard import (
     build_inventory_decision_table,
@@ -77,6 +82,49 @@ def _analysis(
   ])
 
 
+def _mixed_phase_one_analysis():
+  vessels = []
+
+  for index in range(1, 6):
+    vessels.append(
+        _vessel(
+            index,
+            f"Üye {index}",
+            f"Donatan {index}",
+            "Yolcu Motoru",
+            cooperative_status=COOPERATIVE_MEMBER,
+        )
+    )
+
+  for index in range(6, 11):
+    vessels.append(
+        _vessel(
+            index,
+            f"Dışı {index}",
+            f"Donatan {index}",
+            "Yolcu Motoru",
+            cooperative_status=COOPERATIVE_NON_MEMBER,
+        )
+    )
+
+  return analyze_inventory(vessels)
+
+
+def _allocation(analysis):
+  return allocate_inventory_target_fleet(
+      analysis,
+      member_target_shares={
+          "v1": 0.50,
+          "v2": 0.30,
+          "v3": 0.20,
+      },
+      non_member_target_shares={
+          "v4_24": 0.60,
+          "v4_32": 0.40,
+      },
+  )
+
+
 def test_sidebar_persists_inventory_analysis_in_session_state():
   assert (
       '"fleet_inventory_analysis"'
@@ -99,6 +147,23 @@ def test_sidebar_persists_inventory_analysis_in_session_state():
   )
 
 
+def test_sidebar_persists_status_aware_inventory_allocation():
+  assert (
+      '"fleet_inventory_allocation"'
+      in INPUTS_SOURCE
+  )
+
+  assert (
+      'st.session_state["fleet_inventory_allocation"]'
+      in INPUTS_SOURCE
+  )
+
+  assert (
+      "inventory_allocation"
+      in INPUTS_SOURCE
+  )
+
+
 def test_sidebar_clears_stale_inventory_when_file_is_removed():
   assert (
       "if inventory_file is None:"
@@ -111,8 +176,25 @@ def test_sidebar_clears_stale_inventory_when_file_is_removed():
   )
 
   assert (
+      '"fleet_inventory_allocation"'
+      in INPUTS_SOURCE
+  )
+
+  assert (
       "] = None"
       in INPUTS_SOURCE
+  )
+
+
+def test_app_passes_inventory_allocation_to_dashboard():
+  assert (
+      'st.session_state.get("fleet_inventory_allocation")'
+      in APP_SOURCE
+  )
+
+  assert (
+      "allocation="
+      in APP_SOURCE
   )
 
 
@@ -163,34 +245,48 @@ def test_inventory_dashboard_contains_cooperative_fleet_breakdown():
 
 def test_inventory_dashboard_financing_scope_is_explicit():
   assert (
-      "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar. "
+      "Bu finansman özeti yalnız Faz 1 hedef filosunu kapsar."
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "Faz 2 hibrit tekneler ile Faz 3 özel tekneler "
+      "Faz 2 hibrit tekneler ile Faz 3 özel tekneler"
       in DASHBOARD_SOURCE
   )
 
 
-def test_dashboard_no_longer_assumes_missing_membership_is_member():
+def test_dashboard_no_longer_uses_obsolete_all_member_financing_copy():
   assert (
-      "Excel dosyasında kooperatif üyeliği bulunmadığından"
+      "bütün Faz 1 filosunu "
+      "kooperatif üyesi kabul ederek hibe hesaplamak"
       not in DASHBOARD_SOURCE
   )
 
   assert (
-      "bütün Faz 1 filosunu "
+      "yeni hibe tahsis "
+      "yöntemi kesinleştirildikten sonra"
+      not in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "yalnız kooperatif üyeliği doğrulanmış Faz 1"
+      not in DASHBOARD_SOURCE
+  )
+
+
+def test_dashboard_explains_status_aware_financing():
+  assert (
+      "Tip 1/2/3"
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "kooperatif üyesi kabul ederek hibe hesaplamak "
+      "Tip 4A/4B"
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "doğru değildir."
+      "kooperatif dışı"
       in DASHBOARD_SOURCE
   )
 
@@ -238,11 +334,25 @@ def test_decision_table_exposes_vessel_level_recommendation():
 
 
 def test_inventory_dashboard_has_phase_and_type_filters():
-  assert "st.selectbox(" in DASHBOARD_SOURCE
-  assert '"Dönüşüm fazı"' in DASHBOARD_SOURCE
+  assert (
+      "st.selectbox("
+      in DASHBOARD_SOURCE
+  )
 
-  assert "st.multiselect(" in DASHBOARD_SOURCE
-  assert '"Tekne cinsi"' in DASHBOARD_SOURCE
+  assert (
+      '"Dönüşüm fazı"'
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "st.multiselect("
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      '"Tekne cinsi"'
+      in DASHBOARD_SOURCE
+  )
 
 
 def test_phase_one_cooperative_summary_separates_statuses():
@@ -294,35 +404,47 @@ def test_financing_is_not_ready_when_membership_is_unknown():
       phase_one_status=COOPERATIVE_UNKNOWN
   )
 
+  allocation = _allocation(
+      analysis
+  )
+
   assert (
       inventory_financing_is_ready(
-          analysis
+          allocation
       )
       is False
   )
 
 
-def test_financing_is_not_ready_for_non_member_phase_one_vessel():
+def test_financing_is_ready_for_non_member_phase_one_vessel():
   analysis = _analysis(
       phase_one_status=COOPERATIVE_NON_MEMBER
   )
 
+  allocation = _allocation(
+      analysis
+  )
+
   assert (
       inventory_financing_is_ready(
-          analysis
+          allocation
       )
-      is False
+      is True
   )
 
 
-def test_financing_is_ready_when_all_phase_one_members_are_verified():
+def test_financing_is_ready_for_member_phase_one_vessel():
   analysis = _analysis(
       phase_one_status=COOPERATIVE_MEMBER
   )
 
+  allocation = _allocation(
+      analysis
+  )
+
   assert (
       inventory_financing_is_ready(
-          analysis
+          allocation
       )
       is True
   )
@@ -338,52 +460,169 @@ def test_financing_is_not_ready_without_phase_one_vessels():
       ),
   ])
 
+  allocation = _allocation(
+      analysis
+  )
+
   assert (
       inventory_financing_is_ready(
-          analysis
+          allocation
       )
       is False
   )
 
 
-def test_calculate_financing_rejects_unverified_membership():
+def test_calculate_financing_rejects_unknown_membership():
   analysis = _analysis(
       phase_one_status=COOPERATIVE_UNKNOWN
   )
 
+  allocation = _allocation(
+      analysis
+  )
+
   with pytest.raises(
       ValueError,
-      match=(
-          "tüm Faz 1 teknelerinin "
-          "kooperatif üyeliği"
-      ),
+      match="üyeliği bilinmeyen",
   ):
     calculate_inventory_financing(
-        analysis,
+        allocation,
         vessel_specs={},
         grants_per_type={},
         inputs=None,
     )
 
 
-def test_dashboard_explains_financing_guard():
+def test_calculate_financing_uses_all_five_status_aware_profiles(
+    monkeypatch,
+):
+  analysis = _mixed_phase_one_analysis()
+
+  allocation = _allocation(
+      analysis
+  )
+
+  vessel_specs = {
+      "v1": {
+          "totalCost": 100.0,
+      },
+      "v2": {
+          "totalCost": 100.0,
+      },
+      "v3": {
+          "totalCost": 100.0,
+      },
+      "v4_24": {
+          "totalCost": 100.0,
+      },
+      "v4_32": {
+          "totalCost": 100.0,
+      },
+  }
+
+  grants_per_type = {
+      "v1": 50.0,
+      "v2": 50.0,
+      "v3": 50.0,
+      "v4_24": 40.0,
+      "v4_32": 40.0,
+  }
+
+  inputs = SimpleNamespace(
+      grant_budget_ministry_tl=1_000_000.0,
+      grant_budget_geka_tl=0.0,
+      grant_budget_yikob_tl=0.0,
+      grant_budget_zero_waste_tl=0.0,
+  )
+
+  fake_program = SimpleNamespace(
+      funded_vessels=10,
+      unlocked_investment_tl=1000.0,
+      allocated_grant_tl=460.0,
+  )
+
+  monkeypatch.setattr(
+      dashboard_module,
+      "calculate_first_year_grant_program",
+      lambda *args, **kwargs: fake_program,
+  )
+
+  financing = calculate_inventory_financing(
+      allocation,
+      vessel_specs,
+      grants_per_type,
+      inputs,
+  )
+
+  assert financing["counts"] == {
+      "v1": 3,
+      "v2": 1,
+      "v3": 1,
+      "v4_24": 3,
+      "v4_32": 2,
+  }
+
   assert (
-      "Envanter kaynaklı hibe hesabı "
-      "henüz oluşturulmadı."
+      sum(
+          financing["counts"].values()
+      )
+      == 10
+  )
+
+  assert (
+      financing["total_investment_tl"]
+      == pytest.approx(1000.0)
+  )
+
+  assert (
+      financing["total_grant_need_tl"]
+      == pytest.approx(450.0)
+  )
+
+  assert (
+      financing["total_owner_equity_tl"]
+      == pytest.approx(550.0)
+  )
+
+
+def test_dashboard_financing_uses_supplied_allocation():
+  assert (
+      "allocation,"
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "tekne bazlı kooperatif statüsü "
+      "allocation.target_counts"
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "yeni hibe tahsis "
+      'counts["v4_24"]'
+      in DASHBOARD_SOURCE
+      or '"v4_24":'
       in DASHBOARD_SOURCE
   )
 
   assert (
-      "yöntemi kesinleştirildikten sonra "
+      'counts["v4_32"]'
       in DASHBOARD_SOURCE
+      or '"v4_32":'
+      in DASHBOARD_SOURCE
+  )
+
+
+def test_dashboard_only_blocks_unknown_membership():
+  assert (
+      "allocation.unknown_vessels"
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "üyeliği bilinmeyen"
+      in DASHBOARD_SOURCE
+  )
+
+  assert (
+      "COOPERATIVE_MEMBER"
+      not in DASHBOARD_SOURCE
   )

@@ -1,9 +1,6 @@
 import pandas as pd
 import streamlit as st
 
-from calculations.fleet_inventory_analysis import (
-    COOPERATIVE_MEMBER,
-)
 from calculations.grant_program import calculate_first_year_grant_program
 from ui.formatting import format_integer_tr
 
@@ -19,6 +16,16 @@ PROFILE_LABELS = {
     "v1": "Tip 1 · 12 m Tek Gövdeli · 24 yolcu",
     "v2": "Tip 2 · 13,5 m Katamaran · 32 yolcu",
     "v3": "Tip 3 · 14 m Katamaran · 54 yolcu",
+    "v4_24": "Tip 4A · 12 m Tek Gövdeli · 24 yolcu",
+    "v4_32": "Tip 4B · 13,5 m Katamaran · 32 yolcu",
+}
+
+PROFILE_GROUPS = {
+    "v1": "Kooperatif Üyesi",
+    "v2": "Kooperatif Üyesi",
+    "v3": "Kooperatif Üyesi",
+    "v4_24": "Kooperatif Dışı",
+    "v4_32": "Kooperatif Dışı",
 }
 
 
@@ -105,42 +112,38 @@ def build_phase_one_cooperative_summary(analysis):
   }
 
 
-def inventory_financing_is_ready(analysis):
-  phase_one = [
-      recommendation
-      for recommendation in analysis.recommendations
-      if recommendation.conversion_phase == "Faz 1"
-  ]
-
-  if not phase_one:
+def inventory_financing_is_ready(allocation):
+  if allocation is None:
     return False
 
-  return all(
-      recommendation.vessel.cooperative_status == COOPERATIVE_MEMBER
-      for recommendation in phase_one
+  return (
+      allocation.phase_one_total > 0
+      and allocation.unknown_vessels == 0
+      and allocation.activation_ready
   )
 
 
 def calculate_inventory_financing(
-    analysis,
+    allocation,
     vessel_specs,
     grants_per_type,
     inputs,
 ):
-  if not inventory_financing_is_ready(analysis):
+  if not inventory_financing_is_ready(allocation):
     raise ValueError(
-        "Faz 1 finansmanı hesaplanamaz: tüm Faz 1 teknelerinin "
-        "kooperatif üyeliği doğrulanmış olmalıdır."
+        "Faz 1 finansmanı hesaplanamaz: üyeliği bilinmeyen "
+        "Faz 1 tekneleri bulunmaktadır."
     )
 
-  target_counts = analysis.target_fleet.target_counts
-
   counts = {
-      "v1": int(target_counts["v1"]),
-      "v2": int(target_counts["v2"]),
-      "v3": int(target_counts["v3"]),
-      "v4_24": 0,
-      "v4_32": 0,
+      key: int(allocation.target_counts[key])
+      for key in (
+          "v1",
+          "v2",
+          "v3",
+          "v4_24",
+          "v4_32",
+      )
   }
 
   total_investment = sum(
@@ -217,14 +220,17 @@ def _render_phase_one_cooperative_status(analysis):
       "Faz 1 Toplam",
       summary["total"],
   )
+
   c2.metric(
       "Kooperatif Üyesi",
       summary["member"],
   )
+
   c3.metric(
       "Kooperatif Dışı",
       summary["non_member"],
   )
+
   c4.metric(
       "Üyeliği Bilinmiyor",
       summary["unknown"],
@@ -233,8 +239,53 @@ def _render_phase_one_cooperative_status(analysis):
   return summary
 
 
+def _render_target_allocation(allocation):
+  st.markdown("**Faz 1 Hedef Filo Dağılımı**")
+
+  if allocation is None:
+    st.caption(
+        "Faz 1 hedef dağılımı için geçerli envanter tahsisi bulunmuyor."
+    )
+    return
+
+  rows = []
+
+  for key in (
+      "v1",
+      "v2",
+      "v3",
+  ):
+    rows.append({
+        "Finansman Grubu": PROFILE_GROUPS[key],
+        "Hedef Tekne Tipi": PROFILE_LABELS[key],
+        "Grup İçi Hedef Pay": (
+            f"%{allocation.member_target_shares[key] * 100:.0f}"
+        ),
+        "Tekne Adedi": allocation.target_counts[key],
+    })
+
+  for key in (
+      "v4_24",
+      "v4_32",
+  ):
+    rows.append({
+        "Finansman Grubu": PROFILE_GROUPS[key],
+        "Hedef Tekne Tipi": PROFILE_LABELS[key],
+        "Grup İçi Hedef Pay": (
+            f"%{allocation.non_member_target_shares[key] * 100:.0f}"
+        ),
+        "Tekne Adedi": allocation.target_counts[key],
+    })
+
+  st.dataframe(
+      pd.DataFrame(rows),
+      hide_index=True,
+      use_container_width=True,
+  )
+
+
 def _render_financing(
-    analysis,
+    allocation,
     vessel_specs,
     inputs,
     fleet,
@@ -248,25 +299,32 @@ def _render_financing(
       "bu toplamların içine dahil edilmez."
   )
 
-  if not inventory_financing_is_ready(analysis):
-    st.warning(
-        "Envanter kaynaklı hibe hesabı henüz oluşturulmadı. "
-        "Mevcut Tip 1/2/3 hibe modeli kooperatif üyesi tekneler "
-        "için tanımlıdır. Faz 1 envanterinde kooperatif dışı veya "
-        "üyeliği bilinmeyen tekne bulunduğunda bütün Faz 1 filosunu "
-        "kooperatif üyesi kabul ederek hibe hesaplamak doğru değildir."
+  if not inventory_financing_is_ready(allocation):
+    unknown_vessels = (
+        allocation.unknown_vessels
+        if allocation is not None
+        else 0
     )
 
-    st.info(
-        "Teknik hedef filo analizi kullanılabilir. Finansman hesabı "
-        "ise tekne bazlı kooperatif statüsü ve yeni hibe tahsis "
-        "yöntemi kesinleştirildikten sonra üretilecektir."
+    st.warning(
+        "Envanter kaynaklı Faz 1 finansman hesabı üretilemedi. "
+        "Kooperatif üyesi tekneler Tip 1/2/3, kooperatif dışı "
+        "tekneler Tip 4A/4B profilleriyle hesaplanabilir; ancak "
+        "üyeliği bilinmeyen Faz 1 teknesine finansman profili "
+        "otomatik atanmaz."
     )
+
+    if unknown_vessels:
+      st.info(
+          f"Üyeliği bilinmeyen Faz 1 tekne sayısı: {unknown_vessels}. "
+          "Kooperatif statüsü doğrulandığında finansman hesabı otomatik "
+          "olarak kullanılabilir hale gelir."
+      )
 
     return
 
   financing = calculate_inventory_financing(
-      analysis,
+      allocation,
       vessel_specs,
       fleet.grants_per_type,
       inputs,
@@ -318,16 +376,19 @@ def _render_financing(
       ),
   )
 
+  counts = financing["counts"]
+
   st.caption(
-      "Bu hesap yalnız kooperatif üyeliği doğrulanmış Faz 1 "
-      "envanteri için mevcut Tip 1/2/3 kooperatif hibe "
-      "senaryosunu kullanır."
+      "Kooperatif üyesi Faz 1 filosu Tip 1/2/3; kooperatif dışı "
+      "Faz 1 filosu Tip 4A/4B finansman profilleriyle hesaplandı. "
+      f"Profil toplamı: {sum(counts.values())} tekne."
   )
 
 
 def render_fleet_inventory_dashboard(
     analysis,
     *,
+    allocation,
     plan_active,
     vessel_specs,
     inputs,
@@ -340,13 +401,12 @@ def render_fleet_inventory_dashboard(
 
   total_inventory = len(analysis.recommendations)
   phase_counts = analysis.phase_counts
-  target_counts = analysis.target_fleet.target_counts
 
   st.caption(
       f"Yüklenen envanterde {total_inventory} tekne analiz edildi. "
       "Dönüşüm fazları mevcut tekne cinsine göre; Faz 1 hedef filo "
-      "dağılımı ise belirlenen Tip 1/2/3 planlama oranlarına göre "
-      "oluşturulur."
+      "dağılımı ise kooperatif statüsüne göre mevcut Tip 1–Tip 4B "
+      "teknik ve finansman profillerine ayrılır."
   )
 
   c1, c2, c3, c4, c5 = st.columns(5)
@@ -355,18 +415,22 @@ def render_fleet_inventory_dashboard(
       "Toplam Envanter",
       total_inventory,
   )
+
   c2.metric(
       "Faz 1 · Tam Elektrik",
       phase_counts.get("Faz 1", 0),
   )
+
   c3.metric(
       "Faz 2 · Hibrit",
       phase_counts.get("Faz 2", 0),
   )
+
   c4.metric(
       "Faz 3 · Özel",
       phase_counts.get("Faz 3", 0),
   )
+
   c5.metric(
       "Özel İnceleme",
       phase_counts.get("Özel İnceleme", 0),
@@ -375,51 +439,46 @@ def render_fleet_inventory_dashboard(
   if plan_active:
     st.success(
         "Envanter planı aktif senaryo olarak kullanılıyor. "
-        "Ana teknik filo ve enerji hesapları aşağıdaki Faz 1 "
-        "hedef dağılımını esas alıyor. Envanter finansmanı ayrıca "
-        "kooperatif statüsü doğrulamasına tabidir."
+        "Ana teknik filo, enerji ve Faz 1 finansman hesapları "
+        "aynı statü-duyarlı hedef dağılımını esas alıyor."
     )
+
   else:
     st.info(
         "Envanter analiz edildi ancak aktif senaryo yapılmadı. "
         "Ana hesaplar manuel filo hedeflerini kullanmaya devam ediyor."
     )
 
-  st.markdown("**Faz 1 Hedef Filo Dağılımı**")
-
-  target_df = pd.DataFrame([
-      {
-          "Hedef Tekne Tipi": PROFILE_LABELS[key],
-          "Hedef Pay": (
-              f"%{analysis.target_fleet.target_shares[key] * 100:.0f}"
-          ),
-          "Tekne Adedi": target_counts[key],
-      }
-      for key in ("v1", "v2", "v3")
-  ])
-
-  st.dataframe(
-      target_df,
-      hide_index=True,
-      use_container_width=True,
+  _render_target_allocation(
+      allocation
   )
 
-  _render_cooperative_fleet_breakdown(analysis)
+  _render_cooperative_fleet_breakdown(
+      analysis
+  )
 
-  _render_phase_one_cooperative_status(analysis)
+  _render_phase_one_cooperative_status(
+      analysis
+  )
 
   _render_financing(
-      analysis,
+      allocation,
       vessel_specs,
       inputs,
       fleet,
   )
 
-  st.markdown("**Tekne Bazlı Dönüşüm Kararları**")
+  st.markdown(
+      "**Tekne Bazlı Dönüşüm Kararları**"
+  )
 
-  decision_df = build_inventory_decision_table(analysis)
+  decision_df = build_inventory_decision_table(
+      analysis
+  )
 
-  filter_left, filter_right = st.columns([0.35, 0.65])
+  filter_left, filter_right = st.columns(
+      [0.35, 0.65]
+  )
 
   with filter_left:
     phase_filter = st.selectbox(
@@ -445,12 +504,15 @@ def render_fleet_inventory_dashboard(
 
   if phase_filter != "Tümü":
     filtered = filtered[
-        filtered["Dönüşüm Fazı"] == phase_filter
+        filtered["Dönüşüm Fazı"]
+        == phase_filter
     ]
 
   if vessel_type_filter:
     filtered = filtered[
-        filtered["Tekne Cinsi"].isin(vessel_type_filter)
+        filtered["Tekne Cinsi"].isin(
+            vessel_type_filter
+        )
     ]
 
   st.caption(

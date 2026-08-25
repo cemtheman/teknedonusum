@@ -89,6 +89,7 @@ def main():
 
   render_fleet_inventory_dashboard(
       st.session_state.get("fleet_inventory_analysis"),
+      allocation=st.session_state.get("fleet_inventory_allocation"),
       plan_active=st.session_state.get(
           "fleet_inventory_plan_active",
           False,
@@ -115,6 +116,7 @@ def main():
   )
 
   render_brand_footer()
+
 
 if __name__ == "__main__":
   main()

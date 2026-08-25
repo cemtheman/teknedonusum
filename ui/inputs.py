@@ -124,6 +124,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
       if inventory_file is None:
         st.session_state["fleet_inventory_analysis"] = None
+        st.session_state["fleet_inventory_allocation"] = None
         st.session_state["fleet_inventory_plan_active"] = False
         st.session_state["inventory_plan_active"] = False
 
@@ -215,6 +216,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
         if not distribution_valid:
           st.session_state["fleet_inventory_analysis"] = None
+          st.session_state["fleet_inventory_allocation"] = None
           st.session_state["fleet_inventory_plan_active"] = False
           st.session_state["inventory_plan_active"] = False
 
@@ -244,6 +246,7 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
 
           except Exception as exc:
             st.session_state["fleet_inventory_analysis"] = None
+            st.session_state["fleet_inventory_allocation"] = None
             st.session_state["fleet_inventory_plan_active"] = False
             st.session_state["inventory_plan_active"] = False
             st.error(f"Tekne listesi analiz edilemedi: {exc}")
@@ -251,6 +254,10 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
           else:
             st.session_state["fleet_inventory_analysis"] = (
                 inventory_analysis
+            )
+
+            st.session_state["fleet_inventory_allocation"] = (
+                inventory_allocation
             )
 
             total_inventory = len(

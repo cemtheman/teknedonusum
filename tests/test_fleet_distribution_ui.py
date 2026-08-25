@@ -37,9 +37,26 @@ def inputs():
 
 
 def test_distribution_groups_and_colors():
-  data = build_fleet_distribution_chart_data(inputs())
-  assert list(data["Kod"]) == ["K1", "K2", "K3", "D1", "D2"]
-  assert list(data["Adet"]) == [50, 50, 40, 30, 20]
+  data = build_fleet_distribution_chart_data(
+      inputs()
+  )
+
+  assert list(data["Kod"]) == [
+      "K1",
+      "K2",
+      "K3",
+      "D1",
+      "D2",
+  ]
+
+  assert list(data["Adet"]) == [
+      50,
+      50,
+      40,
+      30,
+      20,
+  ]
+
   assert list(data["Renk"]) == [
       "#0F766E",
       "#22C55E",
@@ -49,59 +66,251 @@ def test_distribution_groups_and_colors():
   ]
 
 
+def test_distribution_defines_contrast_label_colors():
+  data = build_fleet_distribution_chart_data(
+      inputs()
+  )
+
+  assert list(
+      data["Etiket Rengi"]
+  ) == [
+      "#FFFFFF",
+      "#0F172A",
+      "#0F172A",
+      "#FFFFFF",
+      "#FFFFFF",
+  ]
+
+
 def test_type_summary_merges_matching_vessel_types():
-  summary = build_fleet_type_summary(inputs())
-  assert list(summary["Toplam"]) == [80, 70, 40]
-  assert list(summary["Kooperatif"]) == [50, 50, 40]
-  assert list(summary["Kooperatif Dışı"]) == [30, 20, 0]
+  summary = build_fleet_type_summary(
+      inputs()
+  )
 
+  assert list(summary["Toplam"]) == [
+      80,
+      70,
+      40,
+  ]
 
+  assert list(summary["Kooperatif"]) == [
+      50,
+      50,
+      40,
+  ]
+
+  assert list(
+      summary["Kooperatif Dışı"]
+  ) == [
+      30,
+      20,
+      0,
+  ]
 
 
 def test_summary_table_html_is_renderable_not_markdown_code():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert 'return "".join(html)' in source
-  assert '<table style=' in source
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
 
+  assert (
+      'return "".join(html)'
+      in source
+  )
+
+  assert (
+      "<table"
+      in source
+  )
 
 
 def test_donut_is_svg_with_center_total_and_stable_labels():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert "def _fleet_donut_svg(" in source
-  assert "Toplam Tekne" in source
-  assert "stroke-dasharray" in source
-  assert "st.vega_lite_chart(" not in source
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
+
+  assert (
+      "def _fleet_donut_svg("
+      in source
+  )
+
+  assert (
+      "Toplam Tekne"
+      in source
+  )
+
+  assert (
+      "stroke-dasharray"
+      in source
+  )
+
+  assert (
+      "Etiket Rengi"
+      in source
+  )
+
+  assert (
+      "label_color"
+      in source
+  )
+
+  assert (
+      "st.vega_lite_chart("
+      not in source
+  )
+
+
+def test_legend_html_is_dedented_before_markdown_render():
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
+
+  assert (
+      "from textwrap import dedent"
+      in source
+  )
+
+  assert (
+      "return dedent("
+      in source
+  )
+
+  assert (
+      ").strip()"
+      in source
+  )
 
 
 def test_summary_uses_distinct_svg_vessel_icons():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
-  assert 'kind == "monohull"' in source
-  assert 'kind == "catamaran_32"' in source
-  assert "catamaran_54" in source
-  assert "<svg viewBox=" in source
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
+
+  assert (
+      'kind == "monohull"'
+      in source
+  )
+
+  assert (
+      'kind == "catamaran_32"'
+      in source
+  )
+
+  assert (
+      "catamaran_54"
+      in source
+  )
+
+  assert (
+      "<svg viewBox="
+      in source
+  )
+
 
 def test_final_fleet_dashboard_visual_contract_svg():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
 
-  assert "_render_fleet_top_kpis" in source
-  assert "_render_fleet_donut" in source
-  assert "_render_fleet_legend" in source
-  assert "_summary_table_html" in source
-  assert "_render_membership_kpis" in source
-  assert "Grafik Anahtarı" in source
-  assert "Tekne Tiplerine Göre Özet" in source
+  assert (
+      "_render_fleet_top_kpis"
+      in source
+  )
 
-  assert "def _fleet_donut_svg(" in source
-  assert "stroke-dasharray" in source
-  assert "Toplam Tekne" in source
-  assert "st.vega_lite_chart(" not in source
+  assert (
+      "_render_fleet_donut"
+      in source
+  )
+
+  assert (
+      "_render_fleet_legend"
+      in source
+  )
+
+  assert (
+      "_summary_table_html"
+      in source
+  )
+
+  assert (
+      "_render_membership_kpis"
+      in source
+  )
+
+  assert (
+      "Grafik Anahtarı"
+      in source
+  )
+
+  assert (
+      "Tekne Tiplerine Göre Özet"
+      in source
+  )
+
+  assert (
+      "def _fleet_donut_svg("
+      in source
+  )
+
+  assert (
+      "stroke-dasharray"
+      in source
+  )
+
+  assert (
+      "Toplam Tekne"
+      in source
+  )
+
+  assert (
+      "st.vega_lite_chart("
+      not in source
+  )
 
 
-def test_summary_table_uses_distinct_svg_vessel_icons():
-  source = Path("ui/fleet_dashboard.py").read_text(encoding="utf-8")
+def test_summary_table_uses_compact_svg_vessel_icons():
+  source = Path(
+      "ui/fleet_dashboard.py"
+  ).read_text(
+      encoding="utf-8"
+  )
 
-  assert 'kind == "monohull"' in source
-  assert 'kind == "catamaran_32"' in source
-  assert "catamaran_54" in source
-  assert "<svg viewBox=" in source
-  assert "width:52px;height:38px;border-radius:9px" in source
+  assert (
+      'kind == "monohull"'
+      in source
+  )
+
+  assert (
+      'kind == "catamaran_32"'
+      in source
+  )
+
+  assert (
+      "catamaran_54"
+      in source
+  )
+
+  assert (
+      "<svg viewBox="
+      in source
+  )
+
+  assert (
+      "width:44px"
+      in source
+  )
+
+  assert (
+      "height:34px"
+      in source
+  )

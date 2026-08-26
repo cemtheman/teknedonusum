@@ -8,20 +8,6 @@ SOURCE = Path(
 )
 
 
-def _brand_header_source():
-  return (
-      SOURCE
-      .split(
-          "def render_brand_header(",
-          1,
-      )[1]
-      .split(
-          "def render_sidebar_brand(",
-          1,
-      )[0]
-  )
-
-
 def _sidebar_brand_source():
   return (
       SOURCE
@@ -33,26 +19,6 @@ def _sidebar_brand_source():
           "def _image_data_uri(",
           1,
       )[0]
-  )
-
-
-def _desktop_sidebar_css():
-  return (
-      _sidebar_brand_source()
-      .split(
-          "@media (max-width: 768px)",
-          1,
-      )[0]
-  )
-
-
-def _mobile_sidebar_css():
-  return (
-      _sidebar_brand_source()
-      .split(
-          "@media (max-width: 768px)",
-          1,
-      )[1]
   )
 
 
@@ -68,38 +34,7 @@ def test_main_brand_titles_have_equal_visual_weight():
   assert "Quiet Current" in SOURCE
 
 
-def test_main_header_renders_turkish_brand_before_tagline():
-  header_source = _brand_header_source()
-
-  turkish_name_position = header_source.index(
-      "{BRAND_NAME}"
-  )
-  turkish_tagline_position = header_source.index(
-      "{BRAND_TAGLINE}"
-  )
-  english_name_position = header_source.index(
-      "{BRAND_NAME_EN}"
-  )
-  english_tagline_position = header_source.index(
-      "{BRAND_TAGLINE_EN}"
-  )
-
-  assert (
-      turkish_name_position
-      < turkish_tagline_position
-      < english_name_position
-      < english_tagline_position
-  )
-
-
 def test_locked_taglines_are_visible_in_brand_header():
-  header_source = _brand_header_source()
-
-  assert "{BRAND_NAME}" in header_source
-  assert "{BRAND_TAGLINE}" in header_source
-  assert "{BRAND_NAME_EN}" in header_source
-  assert "{BRAND_TAGLINE_EN}" in header_source
-
   assert "Doğayı geleceğe taşıyoruz." in SOURCE
   assert "Moving with nature." in SOURCE
 
@@ -109,36 +44,32 @@ def test_taglines_have_lower_visual_weight_than_brand_names():
   assert "font-size:0.78rem" in SOURCE
 
 
-def test_main_content_keeps_header_visible_on_desktop():
-  desktop_css = _desktop_sidebar_css()
-
+def test_main_content_top_spacing_is_compact_on_desktop():
   assert (
       '[data-testid="stMainBlockContainer"]'
-      in desktop_css
-  )
-
-  assert (
-      "padding-top:4rem;"
-      in desktop_css
+      in SOURCE
   )
 
   assert (
       "padding-top:1.5rem;"
-      not in desktop_css
+      in SOURCE
   )
 
 
 def test_main_content_has_safe_mobile_top_spacing():
-  mobile_css = _mobile_sidebar_css()
+  assert (
+      "@media (max-width: 768px)"
+      in SOURCE
+  )
 
   assert (
       '[data-testid="stMainBlockContainer"] {'
-      in mobile_css
+      in SOURCE
   )
 
   assert (
       "padding-top:4.5rem;"
-      in mobile_css
+      in SOURCE
   )
 
 

@@ -66,7 +66,6 @@ def _annual_estimate(**overrides):
     "tracking_method": (
       VisitorTrackingMethod.COMBINED_INDIRECT
     ),
-    "road_vehicle_entry_fee_try": 200.0,
     "input_basis": InputBasis.DECLARED,
     "source_note": (
       "Ortaca Belediyesi verilerine dayalı mockup: "
@@ -111,7 +110,6 @@ def test_mockup_preserves_2025_annual_indirect_estimate():
 
   assert estimate.reference_year == 2025
   assert estimate.estimated_annual_visitors == 1_000_000
-  assert estimate.road_vehicle_entry_fee_try == 200.0
   assert (
     estimate.tracking_method
     is VisitorTrackingMethod.COMBINED_INDIRECT
@@ -307,14 +305,17 @@ def test_annual_visitor_estimate_must_be_positive_integer(
     )
 
 
-def test_vehicle_entry_fee_cannot_be_negative():
-  with pytest.raises(
-    ValueError,
-    match="road_vehicle_entry_fee_try alanı",
-  ):
-    _annual_estimate(
-      road_vehicle_entry_fee_try=-1.0
-    )
+def test_annual_schema_excludes_entry_fee_fields():
+  field_names = {
+    field.name
+    for field in fields(AnnualVisitorDemandEstimate)
+  }
+
+  assert field_names.isdisjoint({
+    "road_vehicle_entry_fee_try",
+    "vehicle_entry_fee_try",
+    "parking_fee_try",
+  })
 
 
 def test_tracking_method_requires_strict_enum():

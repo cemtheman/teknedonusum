@@ -9,9 +9,6 @@ arz noktası ataması veya optimizasyon sonucuna dönüştürmez.
 
 from dataclasses import dataclass
 from enum import Enum
-from math import isfinite
-from numbers import Real
-
 from models.phase1_supply_demand_capacity import (
   InputBasis,
 )
@@ -97,29 +94,6 @@ def _require_positive_integer(
   if value <= 0:
     raise ValueError(
       f"{field_name} alanı pozitif bir tam sayı olmalıdır"
-    )
-
-
-def _require_optional_non_negative_number(
-  field_name: str,
-  value: object,
-) -> None:
-  if value is None:
-    return
-
-  if isinstance(value, bool) or not isinstance(value, Real):
-    raise ValueError(
-      f"{field_name} alanı sayısal olmalıdır"
-    )
-
-  if not isfinite(float(value)):
-    raise ValueError(
-      f"{field_name} alanı sonlu bir sayı olmalıdır"
-    )
-
-  if value < 0:
-    raise ValueError(
-      f"{field_name} alanı sıfırdan küçük olamaz"
     )
 
 
@@ -232,7 +206,6 @@ class AnnualVisitorDemandEstimate:
   reference_year: int
   estimated_annual_visitors: int
   tracking_method: VisitorTrackingMethod
-  road_vehicle_entry_fee_try: float | None
   input_basis: InputBasis
   source_note: str
 
@@ -265,8 +238,4 @@ class AnnualVisitorDemandEstimate:
         "VisitorTrackingMethod türünde olmalıdır"
       )
 
-    _require_optional_non_negative_number(
-      "road_vehicle_entry_fee_try",
-      self.road_vehicle_entry_fee_try,
-    )
     _require_input_basis(self.input_basis)

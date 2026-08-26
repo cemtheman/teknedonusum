@@ -14,7 +14,6 @@ from services.solar_hourly import (
 from ui.branding import (
     FAVICON_PATH,
     render_brand_footer,
-    render_brand_header,
 )
 from ui.fleet_dashboard import render_fleet_dashboard
 from ui.fleet_inventory_dashboard import render_fleet_inventory_dashboard
@@ -38,7 +37,8 @@ def main():
 
   inputs = render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live)
 
-  render_brand_header(inputs.location_name)
+  # Render the first main-pane content before the remote PVGIS request.
+  render_scenario_overview(inputs)
 
   vessel_specs = build_vessel_specs(
       inputs.cost_eur_v1,
@@ -84,8 +84,6 @@ def main():
       season_end=inputs.season_end,
       typical_hourly_specific_pv=typical_hourly_specific_pv,
   )
-
-  render_scenario_overview(inputs)
 
   render_fleet_inventory_dashboard(
       st.session_state.get("fleet_inventory_analysis"),

@@ -44,14 +44,14 @@ def test_taglines_have_lower_visual_weight_than_brand_names():
   assert "font-size:0.78rem" in SOURCE
 
 
-def test_main_content_top_spacing_is_compact_on_desktop():
+def test_main_content_top_spacing_clears_desktop_toolbar():
   assert (
       '[data-testid="stMainBlockContainer"]'
       in SOURCE
   )
 
   assert (
-      "padding-top:1.5rem;"
+      "padding-top:4rem;"
       in SOURCE
   )
 

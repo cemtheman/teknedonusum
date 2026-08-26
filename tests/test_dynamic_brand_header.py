@@ -20,6 +20,7 @@ def test_brand_description_does_not_include_location():
   assert "Dalyan" not in description
   assert "Muğla" not in description
 
+
 def test_main_header_has_no_duplicate_logo_image():
   start = BRANDING.index("def render_brand_header")
   end = BRANDING.index("def render_sidebar_brand", start)
@@ -29,7 +30,5 @@ def test_main_header_has_no_duplicate_logo_image():
   assert "BRAND_ICON_PATH" not in block
 
 
-def test_brand_header_is_rendered_after_sidebar_inputs():
-  sidebar_pos = APP.index("inputs = render_sidebar(")
-  header_pos = APP.index("render_brand_header(inputs.location_name)")
-  assert sidebar_pos < header_pos
+def test_primary_app_does_not_render_main_brand_header():
+  assert "render_brand_header" not in APP

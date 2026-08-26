@@ -158,7 +158,7 @@ def render_sidebar_brand():
       """
       <style>
       [data-testid="stMainBlockContainer"] {
-        padding-top:1.5rem;
+        padding-top:4rem;
       }
 
       /*

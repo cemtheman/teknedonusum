@@ -112,23 +112,33 @@ Her yeni işte sıra şöyledir:
 8. Yalnız beklenen dosyaları açıkça stage et; commit, push ve GitHub Actions
    sonucunu doğrula.
 
-## 6. Açık konu ve sıradaki adım
+## 6. Rota hizmet faaliyeti kararı ve sıradaki adım
 
-Yolculuk talebi katmanı tamamlandı. Sıradaki teknik konu, bu doğrulanmış talebi
-ayrı bir aşağı-akış hizmet kapasitesi katmanında ele almanın metodolojisini
-kilitlemektir.
+27 Ağustos 2026 tarihinde saha verisi granülerliği şu şekilde kilitlenmiştir:
 
-Kod yazmadan önce açıkça karara bağlanması gereken girdiler:
+- Bir teknenin günlük gidiş-dönüş sayısı tekne veya kooperatife göre değişir.
+- Şimdilik güvenilir biçimde yalnız rota toplamı toplanabilir.
+- Bu nedenle küresel tekne başı veya kooperatif başı sefer varsayımı yapılmaz.
+- İlk aşağı-akış sözleşmesi, her `JourneyDemandPeriod` kaydına bağlı rota toplamı
+  tekne gidiş-dönüş faaliyetini saklar.
 
-- rota bazlı hangi filo/tekne havuzunun hizmet verdiği,
-- doğrulanmış kullanılabilir yolcu kapasitesi,
-- doluluk/yük faktörünün veri dayanağı,
-- tekne başına günlük gidiş-dönüş yapabilme sınırı,
-- hizmet penceresi ve saha operasyon kısıtları.
+`RouteServiceActivityPeriod` yalnız ham ve denetlenebilir faaliyet girdisidir:
 
-Bu girdiler tanımlanmadan sefer sayısı, gerekli tekne adedi, kapasite yeterliliği
-veya filo ataması hesaplanmayacaktır. İlk sonraki dilim kod değil, bu metodoloji
-ve veri sözleşmesi kararının kilitlenmesidir.
+- benzersiz hizmet faaliyeti kimliği,
+- bağlı yolculuk talebi dönemi kimliği,
+- rota kimliği,
+- dönem toplamı tekne gidiş-dönüş sayısı,
+- veri dayanağı, doğrulama durumu ve kaynak notu.
+
+Bu sözleşme tekne/kooperatif kimliği, yolcu kapasitesi, doluluk oranı, filo
+ataması, enerji, gelir veya optimizasyon alanı içermez. Yolcu kapasitesi ve
+hizmet veren tekne havuzu bilinmediği sürece kapasite yeterliliği ya da gerekli
+tekne sayısı hesaplanmaz.
+
+Sonraki bağımsız TDD dilimi, doğrulanmış yolculuk talebi ile rota hizmet
+faaliyetini kimlik ve rota bakımından uzlaştıran karar üretmeyen analizdir. Bu
+analiz en fazla dönem/gün başına rota sefer yoğunluğu ve tekne gidiş-dönüşü
+başına ortalama yolcu göstergelerini üretebilir.
 
 ## 7. Bilinçli olarak değiştirilmemesi gerekenler
 

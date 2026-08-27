@@ -297,6 +297,14 @@ Gerçek uygulama öncesinde tekne bazlı mevcut motor gücü, gerçek deplasman,
 
 ---
 
+## Geliştirme sürekliliği
+
+Yeni bir değişikliğe başlamadan önce [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
+okunmalı; mevcut güvenilir baseline, korunacak kararlar ve açık işler bu
+belgede doğrulanmalıdır.
+
+---
+
 ## Proje durumu
 
 **Sessiz Akım v0.2 — aktif geliştirme / karar-destek platformu**

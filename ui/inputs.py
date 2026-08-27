@@ -6,6 +6,12 @@ import streamlit as st
 from calculations.fleet_inventory_analysis import (
     load_and_analyze_inventory_excel,
 )
+from calculations.phase1_journey_demand_analysis import (
+    summarize_phase1_journey_demand,
+)
+from calculations.phase1_journey_demand_import import (
+    load_phase1_mockup_journey_demand_excel,
+)
 from calculations.inventory_target_allocation import (
     allocate_inventory_target_fleet,
 )
@@ -391,6 +397,69 @@ def render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live):
                   "Kooperatif üyesi ve kooperatif dışı Faz 1 filoları "
                   "mevcut finansman profilleriyle ayrı hesaplanıyor."
               )
+
+    with st.expander(
+        "🧭 Dönemsel Yolculuk Talebi",
+        expanded=False,
+    ):
+      st.caption(
+          "1 Nisan–30 Eylül sezonuna ait rota ve dönem bazlı "
+          "yolculuk talebi Excel dosyasını yükleyin. Veriler "
+          "tekne veya sefer ataması yapılmadan doğrulanır ve özetlenir."
+      )
+
+      journey_demand_file = st.file_uploader(
+          "Yolculuk Talebi (.xlsx)",
+          type=["xlsx"],
+          key="journey_demand_excel",
+      )
+
+      if journey_demand_file is None:
+        st.session_state["journey_demand_periods"] = None
+        st.session_state["journey_demand_summaries"] = None
+
+      else:
+        try:
+          journey_demand_periods = (
+              load_phase1_mockup_journey_demand_excel(
+                  journey_demand_file
+              )
+          )
+          journey_demand_summaries = (
+              summarize_phase1_journey_demand(
+                  journey_demand_periods
+              )
+          )
+
+        except Exception as exc:
+          st.session_state["journey_demand_periods"] = None
+          st.session_state["journey_demand_summaries"] = None
+          st.error(
+              f"Yolculuk talebi analiz edilemedi: {exc}"
+          )
+
+        else:
+          st.session_state["journey_demand_periods"] = (
+              journey_demand_periods
+          )
+          st.session_state["journey_demand_summaries"] = (
+              journey_demand_summaries
+          )
+
+          total_demand = sum(
+              summary.total_round_trip_passenger_demand
+              for summary in journey_demand_summaries
+          )
+
+          st.success(
+              f"{len(journey_demand_periods)} dönem ve "
+              f"{len(journey_demand_summaries)} rota "
+              "başarıyla analiz edildi."
+          )
+          st.caption(
+              "Toplam gidiş-dönüş yolcu talebi: "
+              f"{format_integer_tr(total_demand)}."
+          )
 
     with st.expander("⚓ Operasyon Profili", expanded=False):
       st.caption(

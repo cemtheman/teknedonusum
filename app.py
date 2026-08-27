@@ -19,6 +19,7 @@ from ui.fleet_dashboard import render_fleet_dashboard
 from ui.fleet_inventory_dashboard import render_fleet_inventory_dashboard
 from ui.grant_program import render_grant_program
 from ui.inputs import render_sidebar
+from ui.journey_demand_dashboard import render_journey_demand_dashboard
 from ui.normative_comparison import render_normative_comparison_section
 from ui.scenario_overview import render_scenario_overview
 from ui.vessel_detail import render_vessel_details
@@ -37,8 +38,12 @@ def main():
 
   inputs = render_sidebar(live_eur, eur_is_live, live_diesel, diesel_is_live)
 
-  # Render the first main-pane content before the remote PVGIS request.
+  # Render local main-pane content before the remote PVGIS request.
   render_scenario_overview(inputs)
+  render_journey_demand_dashboard(
+      st.session_state.get("journey_demand_periods"),
+      st.session_state.get("journey_demand_summaries"),
+  )
 
   vessel_specs = build_vessel_specs(
       inputs.cost_eur_v1,
